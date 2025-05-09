@@ -3,12 +3,18 @@
     IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { FASTQC                 } from '../modules/nf-core/fastqc/main'
-include { MULTIQC                } from '../modules/nf-core/multiqc/main'
-include { paramsSummaryMap       } from 'plugin/nf-schema'
-include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_nanoporemetabarcoding_pipeline'
+include { FASTQC                       } from '../modules/nf-core/fastqc/main'
+include { MULTIQC                      } from '../modules/nf-core/multiqc/main'
+include { PORECHOP_PORECHOP            } from '../modules/nf-core/porechop/porechop/main'
+include { NANOPLOT                     } from '../modules/nf-core/nanoplot/main'
+include { NANOFILT                     } from '../modules/nf-core/nanofilt/main'
+include { SEQKIT_SEQ as SEQKIT_REVCOMP } from '../modules/nf-core/seqkit/seq/main'
+include { CUTADAPT                     } from '../modules/nf-core/cutadapt/main'
+include { CUTADAPT as CUTADAPT_REVCOMP } from '../modules/nf-core/cutadapt/main'
+include { paramsSummaryMap             } from 'plugin/nf-schema'
+include { paramsSummaryMultiqc         } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { softwareVersionsToYAML       } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { methodsDescriptionText       } from '../subworkflows/local/utils_nfcore_nanoporemetabarcoding_pipeline'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -24,11 +30,86 @@ workflow NANOPOREMETABARCODING {
 
     ch_versions = Channel.empty()
     ch_multiqc_files = Channel.empty()
+
+    ch_input = ch_samplesheet
+             | map {
+                meta, fastq ->
+                [[id:meta.id, single_end:true], fastq] // Needs to be declared as single end to run PYCHOPPER
+             }
+
+    //
+    // MODULE: Run Nanoplot
+    //
+
+    NANOFILT (
+        ch_input,
+        []
+    )
+
+    //
+    // MODULE: Run CUTADAPT
+    //
+
+    // Run cutadapt to demultiplex and trim reads based on forward barcodes (tag + primer)
+
+    CUTADAPT (
+        ch_input
+    )
+
+    // After trimmed reads are demultiplexed and barcodes are removed, reads are concatenated
+    // into a single FASTQ file. FASTQ files are then reverse complemented using seqkit
+    // and cutadapt is run again to trim and demultiplex based on reverse barcodes
+
+    ch_reads = CUTADAPT.out.reads
+             | map {
+                meta, fastqs ->
+                fastqs
+             }
+             | flatten()
+             | collectFile(name: "all_reads.fastq.gz", storeDir: "${workDir}/tmp")
+             | map { file -> [[id:'all_reads', single_end:true], file] }
+
+    //
+    // MODULE: Run SEQKIT reverse complement
+    //
+
+    SEQKIT_REVCOMP (
+        ch_reads
+    )
+
+    // Run cutadapt on the reverse complemented reads
+
+    CUTADAPT_REVCOMP (
+        SEQKIT_REVCOMP.out.fastx
+    )
+
+    // Prepare raw, cleaned and demultiplexed reads for Nanoplot
+
+    ch_raw       = ch_input
+                 | map {
+                    meta, fastq ->
+                    [[id:"raw_${meta.id}"], fastq]
+                 }
+
+    ch_filt     = NANOFILT.out.filtreads
+                 | map {
+                    meta, fastq ->
+                    [[id:"filt_${meta.id}"], fastq]
+                 }
+
+    //
+    // MODULE: Run Nanoplot
+    //
+
+    //NANOPLOT (
+    //    ch_raw.mix(ch_filt).mix(CUTADAPT.out.reads)
+    //)
+
     //
     // MODULE: Run FastQC
     //
     FASTQC (
-        ch_samplesheet
+        ch_input
     )
     ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]})
     ch_versions = ch_versions.mix(FASTQC.out.versions.first())
@@ -76,16 +157,17 @@ workflow NANOPOREMETABARCODING {
         )
     )
 
-    MULTIQC (
-        ch_multiqc_files.collect(),
-        ch_multiqc_config.toList(),
-        ch_multiqc_custom_config.toList(),
-        ch_multiqc_logo.toList(),
-        [],
-        []
-    )
+    //MULTIQC (
+    //    ch_multiqc_files.collect(),
+    //    ch_multiqc_config.toList(),
+    //    ch_multiqc_custom_config.toList(),
+    //    ch_multiqc_logo.toList(),
+    //    [],
+    //    []
+    //)
 
-    emit:multiqc_report = MULTIQC.out.report.toList() // channel: /path/to/multiqc_report.html
+    emit:
+    //multiqc_report = MULTIQC.out.report.toList() // channel: /path/to/multiqc_report.html
     versions       = ch_versions                 // channel: [ path(versions.yml) ]
 
 }
