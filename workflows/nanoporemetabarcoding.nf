@@ -3,18 +3,19 @@
     IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { FASTQC                       } from '../modules/nf-core/fastqc/main'
-include { MULTIQC                      } from '../modules/nf-core/multiqc/main'
-include { PORECHOP_PORECHOP            } from '../modules/nf-core/porechop/porechop/main'
-include { NANOPLOT                     } from '../modules/nf-core/nanoplot/main'
-include { NANOFILT                     } from '../modules/nf-core/nanofilt/main'
-include { SEQKIT_SEQ as SEQKIT_REVCOMP } from '../modules/nf-core/seqkit/seq/main'
-include { CUTADAPT                     } from '../modules/nf-core/cutadapt/main'
-include { CUTADAPT as CUTADAPT_REVCOMP } from '../modules/nf-core/cutadapt/main'
-include { paramsSummaryMap             } from 'plugin/nf-schema'
-include { paramsSummaryMultiqc         } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { softwareVersionsToYAML       } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { methodsDescriptionText       } from '../subworkflows/local/utils_nfcore_nanoporemetabarcoding_pipeline'
+include { FASTQC                         } from '../modules/nf-core/fastqc/main'
+include { MULTIQC                        } from '../modules/nf-core/multiqc/main'
+include { PORECHOP_PORECHOP              } from '../modules/nf-core/porechop/porechop/main'
+include { NANOPLOT                       } from '../modules/nf-core/nanoplot/main'
+include { NANOFILT                       } from '../modules/nf-core/nanofilt/main'
+include { SEQKIT_SEQ as SEQKIT_REVCOMP_A } from '../modules/nf-core/seqkit/seq/main'
+include { SEQKIT_SEQ as SEQKIT_REVCOMP_B } from '../modules/nf-core/seqkit/seq/main'
+include { CUTADAPT as CUTADAPT_F         } from '../modules/nf-core/cutadapt/main'
+include { CUTADAPT as CUTADAPT_R         } from '../modules/nf-core/cutadapt/main'
+include { paramsSummaryMap               } from 'plugin/nf-schema'
+include { paramsSummaryMultiqc           } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { softwareVersionsToYAML         } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { methodsDescriptionText         } from '../subworkflows/local/utils_nfcore_nanoporemetabarcoding_pipeline'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -41,6 +42,8 @@ workflow NANOPOREMETABARCODING {
     // MODULE: Run Nanoplot
     //
 
+    // Check modules.config for arguments to pass to Nanofilt
+
     NANOFILT (
         ch_input,
         []
@@ -51,8 +54,9 @@ workflow NANOPOREMETABARCODING {
     //
 
     // Run cutadapt to demultiplex and trim reads based on forward barcodes (tag + primer)
+    // set in the nextflow.config file
 
-    CUTADAPT (
+    CUTADAPT_F (
         ch_input
     )
 
@@ -60,27 +64,48 @@ workflow NANOPOREMETABARCODING {
     // into a single FASTQ file. FASTQ files are then reverse complemented using seqkit
     // and cutadapt is run again to trim and demultiplex based on reverse barcodes
 
-    ch_reads = CUTADAPT.out.reads
-             | map {
-                meta, fastqs ->
-                fastqs
-             }
-             | flatten()
-             | collectFile(name: "all_reads.fastq.gz", storeDir: "${workDir}/tmp")
-             | map { file -> [[id:'all_reads', single_end:true], file] }
+    //ch_reads = CUTADAPT.out.reads
+    //         | map {
+    //            meta, fastqs ->
+    //            fastqs
+    //         }
+    //         | flatten()
+    //         | collectFile(name: "all_reads.fastq.gz", storeDir: "${workDir}/tmp")
+    //         | map { file -> [[id:'all_reads', single_end:true], file] }
+
+
+    // Flatten the output channel (FASTQs) from cutadapt demultiplex into indidual channels (FASTQ)
+    // (check for the function flattenAndMap in the functions section)
+    ch_input_f = flattenAndMap(CUTADAPT_F.out.reads)
 
     //
     // MODULE: Run SEQKIT reverse complement
     //
 
-    SEQKIT_REVCOMP (
-        ch_reads
+    // Barcodes are attached to both ends of the reads, so we need to reverse complement the reads
+    // to trim and demultiplex based the other end
+
+    SEQKIT_REVCOMP_A (
+        ch_input_f
     )
 
     // Run cutadapt on the reverse complemented reads
 
-    CUTADAPT_REVCOMP (
-        SEQKIT_REVCOMP.out.fastx
+    CUTADAPT_R (
+        SEQKIT_REVCOMP_A.out.fastx
+    )
+
+    // Filter out FASTQs with less than 10 reads
+    ch_input_filte = CUTADAPT_R.out.reads
+                   | filter { meta, fastq ->
+                        def count = fastq.countFastq()
+                        count > 10 // Filter out FASTQs with less than 1000 reads
+                   }
+
+
+    // Reverse complement the reads again to get back to the original orientation
+    SEQKIT_REVCOMP_B (
+        ch_input_f
     )
 
     // Prepare raw, cleaned and demultiplexed reads for Nanoplot
@@ -101,9 +126,9 @@ workflow NANOPOREMETABARCODING {
     // MODULE: Run Nanoplot
     //
 
-    //NANOPLOT (
-    //    ch_raw.mix(ch_filt).mix(CUTADAPT.out.reads)
-    //)
+    NANOPLOT (
+        ch_raw.mix(ch_filt).mix(CUTADAPT_F.out.reads)
+    )
 
     //
     // MODULE: Run FastQC
@@ -171,6 +196,32 @@ workflow NANOPOREMETABARCODING {
     versions       = ch_versions                 // channel: [ path(versions.yml) ]
 
 }
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    FUNCTIONS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+// When demultiplexing, cutadapt emits a channel with FASTQs, but the next modules
+// input single values. Use flattenAndMap so that each FASTQ is emitted seprately
+// Function to flatten output channel (FASTQs) from cutadapt demultiplex into indidual channels (FASTQ)
+
+def flattenAndMap(ch_fastqs) {
+    ch_fastq = ch_fastqs
+             | map { meta, fastqs ->
+                   fastqs
+             }
+             | flatten
+             | map { fastq ->
+                   def name = fastq.name.toString().replaceAll(/\.trim\.fastq\.gz$/, '') // Remove extension
+                   tuple( [id:name, single_end:true], fastq ) // Return tuple
+             }
+    return ( ch_fastq )
+}
+
+// Export the function
+return this
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
