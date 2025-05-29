@@ -12,6 +12,8 @@ include { SEQKIT_SEQ as SEQKIT_REVCOMP_A } from '../modules/nf-core/seqkit/seq/m
 include { SEQKIT_SEQ as SEQKIT_REVCOMP_B } from '../modules/nf-core/seqkit/seq/main'
 include { CUTADAPT as CUTADAPT_F         } from '../modules/nf-core/cutadapt/main'
 include { CUTADAPT as CUTADAPT_R         } from '../modules/nf-core/cutadapt/main'
+include { AMPLICON_SORTER                } from '../modules/local/amplicon_sorter'
+include { GUNZIP                         } from '../modules/nf-core/gunzip/main'
 include { paramsSummaryMap               } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc           } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML         } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -96,16 +98,16 @@ workflow NANOPOREMETABARCODING {
     )
 
     // Filter out FASTQs with less than 10 reads
-    ch_input_filte = CUTADAPT_R.out.reads
-                   | filter { meta, fastq ->
-                        def count = fastq.countFastq()
-                        count > 10 // Filter out FASTQs with less than 1000 reads
-                   }
-
+    ch_input_filtered = CUTADAPT_R.out.reads
+                      | flattenAndMap
+                      | filter { meta, fastq ->
+                           def count = fastq.countFastq()
+                          count > 20 // Filter out FASTQs with less than 1000 reads
+                      }
 
     // Reverse complement the reads again to get back to the original orientation
     SEQKIT_REVCOMP_B (
-        ch_input_f
+        ch_input_filtered
     )
 
     // Prepare raw, cleaned and demultiplexed reads for Nanoplot
@@ -126,9 +128,9 @@ workflow NANOPOREMETABARCODING {
     // MODULE: Run Nanoplot
     //
 
-    NANOPLOT (
-        ch_raw.mix(ch_filt).mix(CUTADAPT_F.out.reads)
-    )
+    //NANOPLOT (
+    //    ch_raw.mix(ch_filt).mix(CUTADAPT_F.out.reads)
+    //)
 
     //
     // MODULE: Run FastQC
@@ -138,6 +140,39 @@ workflow NANOPOREMETABARCODING {
     )
     ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]})
     ch_versions = ch_versions.mix(FASTQC.out.versions.first())
+
+    //
+    // MODULE: Run Gunzip
+    //
+
+    GUNZIP (
+        SEQKIT_REVCOMP_B.out.fastx
+    )
+
+    //
+    // MODULE: Run Amplicon Sorter
+    //
+
+    AMPLICON_SORTER (
+        GUNZIP.out.gunzip
+    )
+
+    //AMPLICON_SORTER.out.fastas.view()
+    ch_minimap = AMPLICON_SORTER.out.fastas
+               | transpose()
+               //| flatMap { meta, fastas ->
+               //           fastas.collect { fasta -> [meta, fasta] }
+               //}
+               | view()
+               //| map { meta, fastas ->
+               //    fastas
+               //}
+               //| flatten()
+
+    //           | flatten()
+    //           | splitFasta(record: [id: true, seqString: true])
+    //           | filter { record -> record.id ==~ /^\d+$/ }
+    //           | view()
 
     //
     // Collate and save software versions
