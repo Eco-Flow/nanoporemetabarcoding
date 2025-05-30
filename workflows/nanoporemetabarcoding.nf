@@ -3,21 +3,26 @@
     IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { FASTQC                         } from '../modules/nf-core/fastqc/main'
-include { MULTIQC                        } from '../modules/nf-core/multiqc/main'
-include { PORECHOP_PORECHOP              } from '../modules/nf-core/porechop/porechop/main'
-include { NANOPLOT                       } from '../modules/nf-core/nanoplot/main'
-include { NANOFILT                       } from '../modules/nf-core/nanofilt/main'
-include { SEQKIT_SEQ as SEQKIT_REVCOMP_A } from '../modules/nf-core/seqkit/seq/main'
-include { SEQKIT_SEQ as SEQKIT_REVCOMP_B } from '../modules/nf-core/seqkit/seq/main'
-include { CUTADAPT as CUTADAPT_F         } from '../modules/nf-core/cutadapt/main'
-include { CUTADAPT as CUTADAPT_R         } from '../modules/nf-core/cutadapt/main'
-include { AMPLICON_SORTER                } from '../modules/local/amplicon_sorter'
-include { GUNZIP                         } from '../modules/nf-core/gunzip/main'
-include { paramsSummaryMap               } from 'plugin/nf-schema'
-include { paramsSummaryMultiqc           } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { softwareVersionsToYAML         } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { methodsDescriptionText         } from '../subworkflows/local/utils_nfcore_nanoporemetabarcoding_pipeline'
+include { FASTQC                          } from '../modules/nf-core/fastqc/main'
+include { MULTIQC                         } from '../modules/nf-core/multiqc/main'
+include { PORECHOP_PORECHOP               } from '../modules/nf-core/porechop/porechop/main'
+include { NANOPLOT                        } from '../modules/nf-core/nanoplot/main'
+include { NANOFILT                        } from '../modules/nf-core/nanofilt/main'
+include { SEQKIT_SEQ as SEQKIT_REVCOMP_A  } from '../modules/nf-core/seqkit/seq/main'
+include { SEQKIT_SEQ as SEQKIT_REVCOMP_B  } from '../modules/nf-core/seqkit/seq/main'
+include { CUTADAPT as CUTADAPT_F          } from '../modules/nf-core/cutadapt/main'
+include { CUTADAPT as CUTADAPT_R          } from '../modules/nf-core/cutadapt/main'
+include { AMPLICON_SORTER                 } from '../modules/local/amplicon_sorter'
+include { SEQKIT_GREP as SEQKIT_AMPLICONS } from '../modules/nf-core/seqkit/grep/main'
+include { SEQKIT_GREP as SEQKIT_CONSENSUS } from '../modules/nf-core/seqkit/grep/main'
+include { GUNZIP                          } from '../modules/nf-core/gunzip/main'
+include { GUNZIP as GUNZIP_SEQKIT_GREP_A  } from '../modules/nf-core/gunzip/main'
+include { GUNZIP as GUNZIP_SEQKIT_GREP_C  } from '../modules/nf-core/gunzip/main'
+include { MEDAKA                          } from '../modules/nf-core/medaka/main'
+include { paramsSummaryMap                } from 'plugin/nf-schema'
+include { paramsSummaryMultiqc            } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { softwareVersionsToYAML          } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { methodsDescriptionText          } from '../subworkflows/local/utils_nfcore_nanoporemetabarcoding_pipeline'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -142,7 +147,7 @@ workflow NANOPOREMETABARCODING {
     ch_versions = ch_versions.mix(FASTQC.out.versions.first())
 
     //
-    // MODULE: Run Gunzip
+    // MODULE: Run Gunzip. Might be better to use gunzip from amplicon sorter
     //
 
     GUNZIP (
@@ -158,21 +163,76 @@ workflow NANOPOREMETABARCODING {
     )
 
     //AMPLICON_SORTER.out.fastas.view()
-    ch_minimap = AMPLICON_SORTER.out.fastas
-               | transpose()
-               //| flatMap { meta, fastas ->
-               //           fastas.collect { fasta -> [meta, fasta] }
-               //}
-               | view()
-               //| map { meta, fastas ->
-               //    fastas
-               //}
-               //| flatten()
+    ch_group = AMPLICON_SORTER.out.fastas
+             | transpose()
+             | map { meta, fasta ->
+                    // Get the filename without extension
+                 def basename = fasta.baseName
+                 // Extract the last part after the final underscore (assuming format from amplicon sorter: name_X_Y)
+                 def parts = basename.split('_')
+                 def group = "${parts[-2]}_${parts[-1]}" // Get group name from the last two parts of the fasta name without extension
 
-    //           | flatten()
-    //           | splitFasta(record: [id: true, seqString: true])
-    //           | filter { record -> record.id ==~ /^\d+$/ }
-    //           | view()
+                 def new_meta = meta + [group: group]
+                 [new_meta, fasta]
+             }
+
+    //
+    // MODULE: Run Seqkit Grep
+    //
+
+    // Split FASTA files into individual into consensus sequences and amplicon sequences
+    // for minimap. Retain group information in the meta
+    pattern_amplicons = Channel.of("^\\d+\$") // Amplicon sequences are named with a number
+                      | collectFile(name: 'pattern.txt')
+    pattern_consensus = Channel.of("^consensus\$") // Consensus sequences are named 'consensus'
+                      | collectFile(name: 'pattern.txt')
+
+    SEQKIT_AMPLICONS (
+        ch_group,
+        pattern_amplicons.first()
+    )
+
+    GUNZIP_SEQKIT_GREP_A (
+        SEQKIT_AMPLICONS.out.filter
+    )
+
+    SEQKIT_CONSENSUS (
+        ch_group,
+        pattern_consensus.first()
+    )
+
+    GUNZIP_SEQKIT_GREP_C (
+        SEQKIT_CONSENSUS.out.filter
+    )
+
+    // Join consensus and amplicon sequences based on metadata and separate them in
+    // a multichannel (keeps them in sync but can be processed separately)
+    ch_minimap = GUNZIP_SEQKIT_GREP_A.out.gunzip
+               | join(GUNZIP_SEQKIT_GREP_C.out.gunzip)
+               | multiMap { meta, amps, cons -> // meta: metadata, amps: amplicon sequences, cons: consensus sequences
+                            amps : [ meta, amps] // Return a tuple with metadata and amplicon sequences
+                            cons : [ meta, cons ] // Return a tuple with metadata and consensus sequences
+                }
+    // For running medaka without running minimap2. Medaka already aligns basecalls (amplicons here)
+    // to the consensus sequences, so perhaps we can skip minimap2 step
+    ch_medaka = GUNZIP_SEQKIT_GREP_A.out.gunzip
+              | join(GUNZIP_SEQKIT_GREP_C.out.gunzip)
+
+    //ch_medaka.view()
+
+    //
+    // MODULE: Run Minimap2
+    //
+
+    MEDAKA (
+        ch_medaka
+    )
+
+    //
+    // MODULE: Run Medaka
+    //
+
+
 
     //
     // Collate and save software versions
