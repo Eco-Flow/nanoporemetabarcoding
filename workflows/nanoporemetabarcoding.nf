@@ -121,14 +121,13 @@ workflow NANOPOREMETABARCODING {
     // Barcodes are attached to both ends of the reads, so we need to reverse complement the reads
     // to trim and demultiplex based the other end
 
-    //SEQKIT_REVCOMP_A (
-    //    ch_input_f
-    //)
-
-    // Run cutadapt on the reverse complemented reads
-
-    CUTADAPT_R (
+    SEQKIT_REVCOMP_B (
         CAT_CAT.out.file_out
+    )
+
+    // Run cutadapt on the reverse complemented reads to trim reverse barcodes
+    CUTADAPT_R (
+       SEQKIT_REVCOMP_B.out.fastx 
     )
 
     // Filter out FASTQs with less than 10 reads
@@ -139,6 +138,7 @@ workflow NANOPOREMETABARCODING {
                            count > 100 && !meta.id.contains('unknown') // Filter out FASTQs with less than 1000 reads
                       }
 
+    ch_input_filtered.view()
     // Prepare raw, cleaned and demultiplexed reads for Nanoplot
 
     ch_raw       = ch_input
