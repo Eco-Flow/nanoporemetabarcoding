@@ -11,7 +11,7 @@ process AMPLICON_SORTER {
     tuple val(meta), path("${meta.id}/consensusfile.fasta")   , emit: consensus, optional: true
     tuple val(meta), path("${meta.id}/results.txt")           , emit: results_txt, optional: true
     tuple val(meta), path("${meta.id}/results.csv")           , emit: results_csv, optional: true
-    tuple val(meta), path("${meta.id}/*_[0-9]*_[0-9]*.fasta") , emit: fastas, optional: true // Numbers only as there are unisgned sequences with _nongroup_ and _unique_ labels
+    tuple val(meta), path("${meta.id}/*/*_[0-9]*_[0-9]*.fasta") , emit: fastas, optional: true // Numbers only as there are unisgned sequences with _nongroup_ and _unique_ labels
     path "versions.yml"                                 , emit: versions
 
     when:

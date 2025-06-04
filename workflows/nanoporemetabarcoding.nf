@@ -138,7 +138,6 @@ workflow NANOPOREMETABARCODING {
                            count > 100 && !meta.id.contains('unknown') // Filter out FASTQs with less than 1000 reads
                       }
 
-    ch_input_filtered.view()
     // Prepare raw, cleaned and demultiplexed reads for Nanoplot
 
     ch_raw       = ch_input
@@ -177,7 +176,7 @@ workflow NANOPOREMETABARCODING {
     GUNZIP (
         ch_input_filtered
     )
-
+ 
     //
     // MODULE: Run Amplicon Sorter
     //
@@ -185,7 +184,7 @@ workflow NANOPOREMETABARCODING {
     AMPLICON_SORTER (
         GUNZIP.out.gunzip
     )
-
+    
     //Get group information from amplicon sorter output FASTA files
     ch_group = AMPLICON_SORTER.out.fastas
              | transpose()
@@ -199,6 +198,8 @@ workflow NANOPOREMETABARCODING {
                  def new_meta = meta + [group: group]
                  [new_meta, fasta]
              }
+    
+    ch_group.view()
 
     //
     // MODULE: Run Seqkit Grep
