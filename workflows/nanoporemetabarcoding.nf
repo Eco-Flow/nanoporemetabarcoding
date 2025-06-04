@@ -21,6 +21,8 @@ include { GUNZIP as GUNZIP_SEQKIT_GREP_A  } from '../modules/nf-core/gunzip/main
 include { GUNZIP as GUNZIP_SEQKIT_GREP_C  } from '../modules/nf-core/gunzip/main'
 include { MEDAKA                          } from '../modules/nf-core/medaka/main'
 include { CAT_CAT                         } from '../modules/nf-core/cat/cat/main'
+//include { DIAMOND_BLASTX                  } from '../modules/nf-core/diamond/blastx/main'
+include { BLAST_BLASTN                    } from '../modules/nf-core/blast/blastn/main'
 include { paramsSummaryMap                } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc            } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML          } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -127,7 +129,7 @@ workflow NANOPOREMETABARCODING {
 
     // Run cutadapt on the reverse complemented reads to trim reverse barcodes
     CUTADAPT_R (
-       SEQKIT_REVCOMP_B.out.fastx 
+       SEQKIT_REVCOMP_B.out.fastx
     )
 
     // Filter out FASTQs with less than 10 reads
@@ -176,7 +178,7 @@ workflow NANOPOREMETABARCODING {
     GUNZIP (
         ch_input_filtered
     )
- 
+
     //
     // MODULE: Run Amplicon Sorter
     //
@@ -184,7 +186,7 @@ workflow NANOPOREMETABARCODING {
     AMPLICON_SORTER (
         GUNZIP.out.gunzip
     )
-    
+
     //Get group information from amplicon sorter output FASTA files
     ch_group = AMPLICON_SORTER.out.fastas
              | transpose()
@@ -198,8 +200,6 @@ workflow NANOPOREMETABARCODING {
                  def new_meta = meta + [group: group]
                  [new_meta, fasta]
              }
-    
-    ch_group.view()
 
     //
     // MODULE: Run Seqkit Grep
@@ -239,7 +239,7 @@ workflow NANOPOREMETABARCODING {
                             cons : [ meta, cons ] // Return a tuple with metadata and consensus sequences
                 }
     // For running medaka without running minimap2. Medaka already aligns basecalls (amplicons here)
-    // to the consensus sequences, so perhaps we can skip minimap2 step
+    // to the consensus sequences, so perhaps we can skip minimap2 step, at least for now
     ch_medaka = GUNZIP_SEQKIT_GREP_A.out.gunzip
               | join(GUNZIP_SEQKIT_GREP_C.out.gunzip)
 
@@ -247,15 +247,24 @@ workflow NANOPOREMETABARCODING {
     // MODULE: Run Minimap2
     //
 
-    MEDAKA (
-        ch_medaka
-    )
+
 
     //
     // MODULE: Run Medaka
     //
 
+    MEDAKA (
+        ch_medaka
+    )
 
+    //
+    // MODULE: Run BLAST
+    //
+
+    BLAST_BLASTN (
+        ch_medaka.out.assembly,
+        blast_db.first()
+    )
 
     //
     // Collate and save software versions
