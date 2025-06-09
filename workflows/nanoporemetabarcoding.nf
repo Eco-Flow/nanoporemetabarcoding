@@ -22,6 +22,7 @@ include { GUNZIP as GUNZIP_SEQKIT_GREP_C  } from '../modules/nf-core/gunzip/main
 include { MEDAKA                          } from '../modules/nf-core/medaka/main'
 include { CAT_CAT                         } from '../modules/nf-core/cat/cat/main'
 //include { DIAMOND_BLASTX                  } from '../modules/nf-core/diamond/blastx/main'
+include { BLAST_MAKEBLASTDB               } from '../modules/nf-core/blast/makeblastdb/main'
 include { BLAST_BLASTN                    } from '../modules/nf-core/blast/blastn/main'
 include { paramsSummaryMap                } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc            } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -258,12 +259,33 @@ workflow NANOPOREMETABARCODING {
     )
 
     //
+    // MODULE: Run makeblastdb
+    //
+    
+    // Prepare ch_databse channel to build a custom database for blast
+    ch_database = Channel.fromPath(params.custom_db)
+                | map { db ->
+                        [[id:'database'], db]
+                }
+
+
+    BLAST_MAKEBLASTDB (
+        ch_database
+    )
+
+    // Mix in case an already built blast database is already give. People should only input a
+    // path to make the database or give the built database. This shouldn't be possible,
+    // will write code later to prevent it
+    ch_blast = BLAST_MAKEBLASTDB.out.db //.mix(params.blast_db)
+
+    //
     // MODULE: Run BLAST
     //
 
+
     BLAST_BLASTN (
-        ch_medaka.out.assembly,
-        blast_db.first()
+        MEDAKA.out.assembly,
+        ch_blast.first()
     )
 
     //
