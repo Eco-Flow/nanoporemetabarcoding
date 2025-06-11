@@ -19,7 +19,9 @@
 
 ## Introduction
 
-**nf-core/nanoporemetabarcoding** is a bioinformatics pipeline that ...
+**nf-core/nanoporemetabarcoding** is a bioinformatics pipeline for processing nanopore metabarcoding data.
+
+Steps:
 
 <!-- TODO nf-core:
    Complete this sentence with a 2-3 sentence summary of what types of data the pipeline ingests, a brief overview of the
@@ -29,7 +31,20 @@
 
 <!-- TODO nf-core: Include a figure that guides the user through the major workflow steps. Many nf-core
      workflows use the "tube map" design for that. See https://nf-co.re/docs/contributing/design_guidelines#examples for examples.   -->
-<!-- TODO nf-core: Fill in short bullet-pointed list of the default steps in the pipeline -->1. Read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))2. Present QC for raw reads ([`MultiQC`](http://multiqc.info/))
+<!-- TODO nf-core: Fill in short bullet-pointed list of the default steps in the pipeline -->
+
+1. Filtering and trimming ([`NanoFilt`](https://github.com/wdecoster/nanofilt))
+2. Read QC ([`NanoPlot`](https://github.com/wdecoster/NanoPlot))
+    - Ran on both raw and filtered and trimmed reads
+3. Tags+primer based demultiplexing and trimming ([`Cutadapt`](https://github.com/marcelm/cutadapt))
+    - For both forward and reverse tags+primers
+4. Group amplicons into "species" (consensus sequences) ([`AmpliconSorter`](https://github.com/avierstr/amplicon_sorter))
+5. Consensus sequence correction ([`Medaka`](https://github.com/nanoporetech/medaka))
+6. Create custom BLAST database ([`makeblastdb`](https://www.ncbi.nlm.nih.gov/books/NBK279690/))
+7. Consensus sequence annotation based on database ([`blastn`](https://www.ncbi.nlm.nih.gov/books/NBK279690/))
+
+<!-- 1. Read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))2. Present QC for raw reads ([`MultiQC`](http://multiqc.info/)) -->
+
 
 ## Usage
 
@@ -38,19 +53,53 @@
 
 <!-- TODO nf-core: Describe the minimum required steps to execute the pipeline, e.g. how to prepare samplesheets.
      Explain what rows and columns represent. For instance (please edit as appropriate):
+-->
 
+Check the config file `nextflow.config` in the params block and fill parameters with the proper values:
+
+**Cutadapt options:**
+
+```
+    // Tags+primers paths in fasta format
+    tags_f                      = '/home/ucbtfrd/pipelines/nanoporemetabarcoding/test_data/primers_f.fasta'
+    tags_r                      = '/home/ucbtfrd/pipelines/nanoporemetabarcoding/test_data/primers_r.fasta'
+```
+
+**Blast options:**
+```
+    // Path to built blast database
+    blast_db                   = null
+    // Path to custom databse to be built
+    custom_db                  = '/home/ucbtfrd/pipelines/nanoporemetabarcoding/bold_db/BOLD_Public.28-Mar-2025_short-id.fasta'
+    // Output format of blast results
+    outfmt                     = 6
+    // evalue cutoff
+    evalue                     = 0.001
+    // Maximum number of hits per query
+    max_target_seqs            = 5
+    // Maximum number of HSPs per subject (subjects in the database)
+    max_hsps                   = null
+    // Minimum query coverage per HSP
+    qcov_hsp_perc              = 90
+```
+
+**Nanofilt options:**
+```
+    // Nanofilt options
+    nano_quality                = null
+    nano_read_length            = 250
+```
 First, prepare a samplesheet with your input data that looks as follows:
 
 `samplesheet.csv`:
 
 ```csv
-sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
+sample,fastq
+sample,sample.fastq.gz
 ```
 
 Each row represents a fastq file (single-end) or a pair of fastq files (paired end).
 
--->
 
 Now, you can run the pipeline using:
 
@@ -70,9 +119,11 @@ For more details and further functionality, please refer to the [usage documenta
 
 ## Pipeline output
 
-To see the results of an example test run with a full size dataset refer to the [results](https://nf-co.re/nanoporemetabarcoding/results) tab on the nf-core website pipeline page.
+<!-- To see the results of an example test run with a full size dataset refer to the [results](https://nf-co.re/nanoporemetabarcoding/results) tab on the nf-core website pipeline page.
 For more details about the output files and reports, please refer to the
-[output documentation](https://nf-co.re/nanoporemetabarcoding/output).
+[output documentation](https://nf-co.re/nanoporemetabarcoding/output). -->
+
+<!-- For an example of some of the relevant results check the `./results` folder in this repo. -->
 
 ## Credits
 
