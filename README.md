@@ -36,10 +36,12 @@ Steps:
 1. Filtering and trimming ([`NanoFilt`](https://github.com/wdecoster/nanofilt))
 2. Read QC ([`NanoPlot`](https://github.com/wdecoster/NanoPlot))
     - Ran on both raw and filtered and trimmed reads
-3. Tags+primer based demultiplexing and trimming ([`Cutadapt`](https://github.com/marcelm/cutadapt))
-    - For both forward and reverse tags+primers
-4. Group amplicons into "species" (consensus sequences) ([`AmpliconSorter`](https://github.com/avierstr/amplicon_sorter))
+3. Tags+primer based demultiplexing and trimming ([`Cutadapt`](https://github.com/marcelm/cutadapt)). Divided in two steps:
+    1. First, demultiplexing based on the forward tags+primers
+    2. Then, demultiplexing is based on the combination of forward and reverse tags+primers
+4. Group amplicons reads into "species" (consensus sequences) ([`amplicon_sorter`](https://github.com/avierstr/amplicon_sorter))
 5. Consensus sequence correction ([`Medaka`](https://github.com/nanoporetech/medaka))
+  - Correction using the consensus sequence from aplicon_sorter as reference and the grouped amplicon reads as the based called data
 6. Create custom BLAST database ([`makeblastdb`](https://www.ncbi.nlm.nih.gov/books/NBK279690/))
 7. Consensus sequence annotation based on database ([`blastn`](https://www.ncbi.nlm.nih.gov/books/NBK279690/))
 
