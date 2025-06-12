@@ -162,15 +162,16 @@ workflow NANOPOREMETABARCODING {
     NANOPLOT (
         ch_raw.mix(ch_filt).mix(ch_input_filtered)
     )
-
+    ch_multiqc_files = ch_multiqc_files.mix(NANOPLOT.out.txt.collectFile() { meta, stats -> ["${meta.id}.txt", stats.text] }).collect() // Original name out.txt channel is stats.txt, so multiqc keeps overwritting
+ 
     //
     // MODULE: Run FastQC
     //
-    FASTQC (
-        ch_input
-    )
-    ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]})
-    ch_versions = ch_versions.mix(FASTQC.out.versions.first())
+    //FASTQC (
+    //    ch_input
+    //)
+    //ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]})
+    //ch_versions = ch_versions.mix(FASTQC.out.versions.first())
 
     //
     // MODULE: Run Gunzip. Might be better to use gunzip from amplicon sorter
@@ -331,17 +332,17 @@ workflow NANOPOREMETABARCODING {
         )
     )
 
-    //MULTIQC (
-    //    ch_multiqc_files.collect(),
-    //    ch_multiqc_config.toList(),
-    //    ch_multiqc_custom_config.toList(),
-    //    ch_multiqc_logo.toList(),
-    //    [],
-    //    []
-    //)
+    MULTIQC (
+        ch_multiqc_files.collect(),
+        ch_multiqc_config.toList(),
+        ch_multiqc_custom_config.toList(),
+        ch_multiqc_logo.toList(),
+        [],
+        []
+    )
 
     emit:
-    //multiqc_report = MULTIQC.out.report.toList() // channel: /path/to/multiqc_report.html
+    multiqc_report = MULTIQC.out.report.toList() // channel: /path/to/multiqc_report.html
     versions       = ch_versions                 // channel: [ path(versions.yml) ]
 
 }
