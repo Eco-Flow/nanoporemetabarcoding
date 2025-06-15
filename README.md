@@ -57,14 +57,48 @@ Steps:
      Explain what rows and columns represent. For instance (please edit as appropriate):
 -->
 
+First, prepare a samplesheet with your input data that looks as follows:
+
+`samplesheet.csv`:
+
+```csv
+sample,fastq
+sample_name,path/to/sample.fastq.gz
+```
+
+The first column represents the sample name or sample id, and the second the location to the corresponding FASTQ file.
+
+
+Now, you can run the pipeline using:
+
+<!-- TODO nf-core: update the following command to include all required parameters for a minimal example -->
+
+```bash
+nextflow run nf-core/nanoporemetabarcoding \
+   -profile <docker/singularity/.../institute> \
+   --input samplesheet.csv \
+   --outdir <OUTDIR>
+```
+
+> [!WARNING]
+> Please provide pipeline parameters via the CLI or Nextflow `-params-file` option. Custom config files including those provided by the `-c` Nextflow option can be used to provide any configuration _**except for parameters**_; see [docs](https://nf-co.re/docs/usage/getting_started/configuration#custom-configuration-files).
+
+For more details and further functionality, please refer to the [usage documentation](https://nf-co.re/nanoporemetabarcoding/usage) and the [parameter documentation](https://nf-co.re/nanoporemetabarcoding/parameters).
+
+## Params
+
 Check the config file `nextflow.config` in the params block and fill parameters with the proper values:
 
-**Cutadapt options:**
+**Demultiplex options:**
 
 ```
-    // Tags+primers paths in fasta format
+    // Cutadapt options
     tags_f                      = '/home/ucbtfrd/pipelines/nanoporemetabarcoding/test_data/primers_f.fasta'
     tags_r                      = '/home/ucbtfrd/pipelines/nanoporemetabarcoding/test_data/primers_r.fasta'
+    error_rate                  = 2 // Error rate for adapter removal
+
+    // After demultiplexing, filter FASTQs with less than x reads
+    filt_fastq                  = 100
 ```
 
 **Blast options:**
@@ -72,7 +106,7 @@ Check the config file `nextflow.config` in the params block and fill parameters 
     // Path to built blast database
     blast_db                   = null
     // Path to custom databse to be built
-    custom_db                  = '/home/ucbtfrd/pipelines/nanoporemetabarcoding/bold_db/BOLD_Public.28-Mar-2025_short-id.fasta'
+    custom_db                  = '/path/to/custom/databse.fasta'
     // Output format of blast results
     outfmt                     = 6
     // evalue cutoff
@@ -91,33 +125,19 @@ Check the config file `nextflow.config` in the params block and fill parameters 
     nano_quality                = null
     nano_read_length            = 250
 ```
-First, prepare a samplesheet with your input data that looks as follows:
 
-`samplesheet.csv`:
-
-```csv
-sample,fastq
-sample,sample.fastq.gz
-```
-
-Each row represents a fastq file (single-end) or a pair of fastq files (paired end).
-
-
-Now, you can run the pipeline using:
-
-<!-- TODO nf-core: update the following command to include all required parameters for a minimal example -->
+Alternatively, you can provide/modify pipeline options calling them as command line arguments. For example:
 
 ```bash
 nextflow run nf-core/nanoporemetabarcoding \
    -profile <docker/singularity/.../institute> \
    --input samplesheet.csv \
    --outdir <OUTDIR>
+   --nano_quality 10
+   --evalue e-10
+   --tags_f path/to/forward/tags+primers.fasta
+   --tags_r path/to/reverse/tags+primers.fasta
 ```
-
-> [!WARNING]
-> Please provide pipeline parameters via the CLI or Nextflow `-params-file` option. Custom config files including those provided by the `-c` Nextflow option can be used to provide any configuration _**except for parameters**_; see [docs](https://nf-co.re/docs/usage/getting_started/configuration#custom-configuration-files).
-
-For more details and further functionality, please refer to the [usage documentation](https://nf-co.re/nanoporemetabarcoding/usage) and the [parameter documentation](https://nf-co.re/nanoporemetabarcoding/parameters).
 
 ## Pipeline output
 

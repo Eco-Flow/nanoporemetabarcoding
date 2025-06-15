@@ -101,6 +101,7 @@ workflow NANOPOREMETABARCODING {
 
     // Remmove 'unknown_' prefix from metadata and flatten the output channel.
     // This is done so that reads can be concatenated based on the metadata
+    // This reads are not unknown anymore
     ch_unknown = flattenAndMap(CUTADAPT_F_RC.out.reads)
                | map { meta, fastq ->
                    def cleaned_meta = meta.id.replaceFirst(/unknown_/, '') // Remove the 'unknown_' prefix to be able to merge
@@ -138,7 +139,7 @@ workflow NANOPOREMETABARCODING {
                       | flattenAndMap
                       | filter { meta, fastq ->
                            def count = fastq.countFastq()
-                           count > 100 && !meta.id.contains('unknown') // Filter out FASTQs with less than 1000 reads
+                           count > params.filt_fastq && !meta.id.contains('unknown') // Filter out FASTQs with less than x reads and with unknown primer combinations
                       }
 
     // Prepare raw, cleaned and demultiplexed reads for Nanoplot
@@ -163,7 +164,7 @@ workflow NANOPOREMETABARCODING {
         ch_raw.mix(ch_filt).mix(ch_input_filtered)
     )
     ch_multiqc_files = ch_multiqc_files.mix(NANOPLOT.out.txt.collectFile() { meta, stats -> ["${meta.id}.txt", stats.text] }).collect() // Original name out.txt channel is stats.txt, so multiqc keeps overwritting
- 
+
     //
     // MODULE: Run FastQC
     //
@@ -207,13 +208,15 @@ workflow NANOPOREMETABARCODING {
     // MODULE: Run Seqkit Grep
     //
 
-    // Split FASTA files into individual into consensus sequences and amplicon sequences
-    // for minimap/medaka. Retain group information in the meta
+    // Split FASTA files into individual consensus sequence and amplicon sequences
+    // for minimap/medaka. Retain group information in the meta so that each consesus
+    // sequence is processed together with its respective grouped amplicon sequences
     pattern_amplicons = Channel.of("^\\d+\$") // Amplicon sequences are named with a number
                       | collectFile(name: 'pattern.txt')
     pattern_consensus = Channel.of("^consensus\$") // Consensus sequences are named 'consensus'
                       | collectFile(name: 'pattern.txt')
 
+    // Split into amplicons (each fasta is a group of amplicons without the consensus)
     SEQKIT_AMPLICONS (
         ch_group,
         pattern_amplicons.first()
@@ -223,6 +226,7 @@ workflow NANOPOREMETABARCODING {
         SEQKIT_AMPLICONS.out.filter
     )
 
+    // Split into consensus (each fasta is a consensus without the grouped amplicons)
     SEQKIT_CONSENSUS (
         ch_group,
         pattern_consensus.first()
@@ -233,15 +237,17 @@ workflow NANOPOREMETABARCODING {
     )
 
     // Join consensus and amplicon sequences based on metadata and separate them in
-    // a multichannel (keeps them in sync but can be processed separately)
-    ch_minimap = GUNZIP_SEQKIT_GREP_A.out.gunzip
-               | join(GUNZIP_SEQKIT_GREP_C.out.gunzip)
+    // a multichannel (keeps grouped amplicons and their respective consensus sequence in sync)
+    ch_minimap = GUNZIP_SEQKIT_GREP_A.out.gunzip // Grouped amplicons
+               | join(GUNZIP_SEQKIT_GREP_C.out.gunzip) // Consensus
                | multiMap { meta, amps, cons -> // meta: metadata, amps: amplicon sequences, cons: consensus sequences
                             amps : [ meta, amps] // Return a tuple with metadata and amplicon sequences
                             cons : [ meta, cons ] // Return a tuple with metadata and consensus sequences
                 }
+
     // For running medaka without running minimap2. Medaka already aligns basecalls (amplicons here)
     // to the consensus sequences, so perhaps we can skip minimap2 step, at least for now
+    // Make sure this is working as expected
     ch_medaka = GUNZIP_SEQKIT_GREP_A.out.gunzip
               | join(GUNZIP_SEQKIT_GREP_C.out.gunzip)
 
@@ -262,7 +268,7 @@ workflow NANOPOREMETABARCODING {
     //
     // MODULE: Run makeblastdb
     //
-    
+
     // Prepare ch_databse channel to build a custom database for blast
     ch_database = Channel.fromPath(params.custom_db)
                 | map { db ->
