@@ -21,6 +21,10 @@
 
 **nf-core/nanoporemetabarcoding** is a bioinformatics pipeline for processing nanopore metabarcoding data.
 
+Overview:
+
+![pipeline_diagram](docs/images/pipeline_overview.png)
+
 Steps:
 
 <!-- TODO nf-core:
