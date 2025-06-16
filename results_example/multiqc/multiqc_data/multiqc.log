@@ -1,0 +1,547 @@
+[2025-06-16 10:57:21,952] multiqc.config                                     [INFO   ]  Loading config settings from: multiqc_config.yml
+[2025-06-16 10:57:21,982] multiqc.core.version_check                         [WARNING]  MultiQC Version v1.29 now available!
+[2025-06-16 10:57:21,982] multiqc.core.file_search                           [INFO   ]  Search path: /home/ucbtfrd/Scratch/nanoporemetabarcoding/44/938d99f1c8daef454f0c2aef518023
+[2025-06-16 10:57:22,095] multiqc.modules.custom_content.custom_content      [INFO   ]  nf-core-nanoporemetabarcoding-summary: Found 1 sample (html)
+[2025-06-16 10:57:22,095] multiqc.modules.custom_content.custom_content      [INFO   ]  nf-core-nanoporemetabarcoding-methods-description: Found 1 sample (html)
+[2025-06-16 10:57:22,104] multiqc.modules.nanostat.nanostat                  [INFO   ]  Found 36 reports
+[2025-06-16 10:57:22,313] multiqc.core.write_results                         [INFO   ]  Rendering plots. Export plots to formats png, svg, pdf is requested, so it might take a while. To disable plot export, set `export_plots: false` in config, or remove the `--export-plots` command line flag
+[2025-06-16 10:57:24,357] multiqc.plots.plotly.plot                          [ERROR  ]  Unable to export plot to PDF image: Failed to start Kaleido subprocess. Error stream:
+
+[0616/105723.868406:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0616/105723.964945:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0616/105723.965716:WARNING:discardable_shared_memory_manager.cc(194)] Less than 64MB of free space in temporary directory for shared memory files: 0
+[0616/105723.972990:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0616/105724.165101:ERROR:platform_shared_memory_region_posix.cc(250)] Creating shared memory in /tmpdir/job/2497502.undefined/.org.chromium.Chromium.C6xnMJ failed: No such file or directory (2)
+[0616/105724.165156:ERROR:platform_shared_memory_region_posix.cc(253)] Unable to access(W_OK|X_OK) /tmpdir/job/2497502.undefined: No such file or directory (2)
+Received signal 6
+#0 0x55ab85081d79 base::debug::CollectStackTrace()
+#1 0x55ab84fff633 base::debug::StackTrace::StackTrace()
+#2 0x55ab8508195b base::debug::(anonymous namespace)::StackDumpSignalHandler()
+#3 0x2accb9faa050 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x3c04f)
+#4 0x2accb9ff8e2c (/usr/lib/x86_64-linux-gnu/libc.so.6+0x8ae2b)
+#5 0x2accb9fa9fb2 gsignal
+#6 0x2accb9f94472 abort
+#7 0x55ab8502d30a base::internal::OnNoMemoryInternal()
+#8 0x55ab8502d329 base::(anonymous namespace)::OnNoMemory()
+#9 0x55ab8502d319 base::TerminateBecauseOutOfMemory()
+#10 0x55ab850170ab base::FieldTrialList::InstantiateFieldTrialAllocatorIfNeeded()
+#11 0x55ab85017239 base::FieldTrialList::CopyFieldTrialStateToFlags()
+#12 0x55ab83b72f82 content::GpuProcessHost::LaunchGpuProcess()
+#13 0x55ab83b71910 content::GpuProcessHost::Init()
+#14 0x55ab83b716c2 content::GpuProcessHost::Get()
+#15 0x55ab83f8eb6e base::internal::Invoker<>::RunOnce()
+#16 0x55ab85045306 base::TaskAnnotator::RunTask()
+#17 0x55ab85056cf6 base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::DoWorkImpl()
+#18 0x55ab850569ea base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::DoWork()
+#19 0x55ab850a3899 base::MessagePumpLibevent::Run()
+#20 0x55ab8505759b base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::Run()
+#21 0x55ab850309bd base::RunLoop::Run()
+#22 0x55ab83a18f18 content::BrowserProcessSubThread::IOThreadRun()
+#23 0x55ab8506f874 base::Thread::ThreadMain()
+#24 0x55ab85091caa base::(anonymous namespace)::ThreadFunc()
+#25 0x2accb9ff7134 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x89133)
+#26 0x2accba076a40 __clone
+  r8: 0000000000000000  r9: 000033ead030c15f r10: 0000000000000008 r11: 0000000000000246
+ r12: 0000000000000006 r13: 000055ab819a5eb0 r14: 000033ead0239cc0 r15: 000033ead030e240
+  di: 0000000000000165  si: 00000000000001c6  bp: 00002accbacb66c0  bx: 00000000000001c6
+  dx: 0000000000000006  ax: 0000000000000000  cx: ffffffffffffffff  sp: 00002accbacb5070
+  ip: 00002accb9ff8e2c efl: 0000000000000246 cgf: 0000000000000033 erf: 0000000000000000
+ trp: 0000000000000000 msk: 0000000000000000 cr2: 0000000000000000
+[end of stack trace]
+Calling _exit(1). Core file will not be generated.
+
+[2025-06-16 10:57:24,560] multiqc.plots.plotly.plot                          [ERROR  ]  Unable to export plot to SVG image: Failed to start Kaleido subprocess. Error stream:
+
+[0616/105724.425812:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0616/105724.445905:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0616/105724.448594:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0616/105724.449296:WARNING:discardable_shared_memory_manager.cc(194)] Less than 64MB of free space in temporary directory for shared memory files: 0
+[0616/105724.454669:ERROR:platform_shared_memory_region_posix.cc(250)] Creating shared memory in /tmpdir/job/2497502.undefined/.org.chromium.Chromium.d0krfQ failed: No such file or directory (2)
+[0616/105724.454710:ERROR:platform_shared_memory_region_posix.cc(253)] Unable to access(W_OK|X_OK) /tmpdir/job/2497502.undefined: No such file or directory (2)
+Received signal 6
+#0 0x560c5c152d79 base::debug::CollectStackTrace()
+#1 0x560c5c0d0633 base::debug::StackTrace::StackTrace()
+#2 0x560c5c15295b base::debug::(anonymous namespace)::StackDumpSignalHandler()
+#3 0x2ad0fc46f050 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x3c04f)
+#4 0x2ad0fc4bde2c (/usr/lib/x86_64-linux-gnu/libc.so.6+0x8ae2b)
+#5 0x2ad0fc46efb2 gsignal
+#6 0x2ad0fc459472 abort
+#7 0x560c5c0fe30a base::internal::OnNoMemoryInternal()
+#8 0x560c5c0fe329 base::(anonymous namespace)::OnNoMemory()
+#9 0x560c5c0fe319 base::TerminateBecauseOutOfMemory()
+#10 0x560c5c0e80ab base::FieldTrialList::InstantiateFieldTrialAllocatorIfNeeded()
+#11 0x560c5c0e8239 base::FieldTrialList::CopyFieldTrialStateToFlags()
+#12 0x560c5ac43f82 content::GpuProcessHost::LaunchGpuProcess()
+#13 0x560c5ac42910 content::GpuProcessHost::Init()
+#14 0x560c5ac426c2 content::GpuProcessHost::Get()
+#15 0x560c5b05fb6e base::internal::Invoker<>::RunOnce()
+#16 0x560c5c116306 base::TaskAnnotator::RunTask()
+#17 0x560c5c127cf6 base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::DoWorkImpl()
+#18 0x560c5c1279ea base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::DoWork()
+#19 0x560c5c174899 base::MessagePumpLibevent::Run()
+#20 0x560c5c12859b base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::Run()
+#21 0x560c5c1019bd base::RunLoop::Run()
+#22 0x560c5aae9f18 content::BrowserProcessSubThread::IOThreadRun()
+#23 0x560c5c140874 base::Thread::ThreadMain()
+#24 0x560c5c162caa base::(anonymous namespace)::ThreadFunc()
+#25 0x2ad0fc4bc134 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x89133)
+#26 0x2ad0fc53ba40 __clone
+  r8: 0000000000000000  r9: 00002e68c5b7815f r10: 0000000000000008 r11: 0000000000000246
+ r12: 0000000000000006 r13: 0000560c58a76eb0 r14: 00002e68c5b39cc0 r15: 00002e68c5bf9fc0
+  di: 00000000000001f6  si: 00000000000001fc  bp: 00002ad0fd17b6c0  bx: 00000000000001fc
+  dx: 0000000000000006  ax: 0000000000000000  cx: ffffffffffffffff  sp: 00002ad0fd17a070
+  ip: 00002ad0fc4bde2c efl: 0000000000000246 cgf: 0000000000000033 erf: 0000000000000000
+ trp: 0000000000000000 msk: 0000000000000000 cr2: 0000000000000000
+[end of stack trace]
+Calling _exit(1). Core file will not be generated.
+
+[2025-06-16 10:57:24,770] multiqc.plots.plotly.plot                          [ERROR  ]  Unable to export plot to PNG image: Failed to start Kaleido subprocess. Error stream:
+
+[0616/105724.635575:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0616/105724.656012:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0616/105724.658582:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0616/105724.659291:WARNING:discardable_shared_memory_manager.cc(194)] Less than 64MB of free space in temporary directory for shared memory files: 0
+[0616/105724.664601:ERROR:platform_shared_memory_region_posix.cc(250)] Creating shared memory in /tmpdir/job/2497502.undefined/.org.chromium.Chromium.Cfcl5m failed: No such file or directory (2)
+[0616/105724.664644:ERROR:platform_shared_memory_region_posix.cc(253)] Unable to access(W_OK|X_OK) /tmpdir/job/2497502.undefined: No such file or directory (2)
+Received signal 6
+#0 0x559c55d83d79 base::debug::CollectStackTrace()
+#1 0x559c55d01633 base::debug::StackTrace::StackTrace()
+#2 0x559c55d8395b base::debug::(anonymous namespace)::StackDumpSignalHandler()
+#3 0x2b4e41c08050 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x3c04f)
+#4 0x2b4e41c56e2c (/usr/lib/x86_64-linux-gnu/libc.so.6+0x8ae2b)
+#5 0x2b4e41c07fb2 gsignal
+#6 0x2b4e41bf2472 abort
+#7 0x559c55d2f30a base::internal::OnNoMemoryInternal()
+#8 0x559c55d2f329 base::(anonymous namespace)::OnNoMemory()
+#9 0x559c55d2f319 base::TerminateBecauseOutOfMemory()
+#10 0x559c55d190ab base::FieldTrialList::InstantiateFieldTrialAllocatorIfNeeded()
+#11 0x559c55d19239 base::FieldTrialList::CopyFieldTrialStateToFlags()
+#12 0x559c54874f82 content::GpuProcessHost::LaunchGpuProcess()
+#13 0x559c54873910 content::GpuProcessHost::Init()
+#14 0x559c548736c2 content::GpuProcessHost::Get()
+#15 0x559c54c90b6e base::internal::Invoker<>::RunOnce()
+#16 0x559c55d47306 base::TaskAnnotator::RunTask()
+#17 0x559c55d58cf6 base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::DoWorkImpl()
+#18 0x559c55d589ea base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::DoWork()
+#19 0x559c55da5899 base::MessagePumpLibevent::Run()
+#20 0x559c55d5959b base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::Run()
+#21 0x559c55d329bd base::RunLoop::Run()
+#22 0x559c5471af18 content::BrowserProcessSubThread::IOThreadRun()
+#23 0x559c55d71874 base::Thread::ThreadMain()
+#24 0x559c55d93caa base::(anonymous namespace)::ThreadFunc()
+#25 0x2b4e41c55134 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x89133)
+#26 0x2b4e41cd4a40 __clone
+  r8: 0000000000000000  r9: 0000164d945b615f r10: 0000000000000008 r11: 0000000000000246
+ r12: 0000000000000006 r13: 0000559c526a7eb0 r14: 0000164d94577cc0 r15: 0000164d94637fc0
+  di: 0000000000000209  si: 000000000000020f  bp: 00002b4e429146c0  bx: 000000000000020f
+  dx: 0000000000000006  ax: 0000000000000000  cx: ffffffffffffffff  sp: 00002b4e42913070
+  ip: 00002b4e41c56e2c efl: 0000000000000246 cgf: 0000000000000033 erf: 0000000000000000
+ trp: 0000000000000000 msk: 0000000000000000 cr2: 0000000000000000
+[end of stack trace]
+Calling _exit(1). Core file will not be generated.
+
+[2025-06-16 10:57:25,013] multiqc.plots.plotly.plot                          [ERROR  ]  Unable to export plot to PDF image: Failed to start Kaleido subprocess. Error stream:
+
+[0616/105724.878225:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0616/105724.898042:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0616/105724.901228:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0616/105724.901946:WARNING:discardable_shared_memory_manager.cc(194)] Less than 64MB of free space in temporary directory for shared memory files: 0
+[0616/105724.907359:ERROR:platform_shared_memory_region_posix.cc(250)] Creating shared memory in /tmpdir/job/2497502.undefined/.org.chromium.Chromium.hjz4fV failed: No such file or directory (2)
+[0616/105724.907400:ERROR:platform_shared_memory_region_posix.cc(253)] Unable to access(W_OK|X_OK) /tmpdir/job/2497502.undefined: No such file or directory (2)
+Received signal 6
+#0 0x55e557c88d79 base::debug::CollectStackTrace()
+#1 0x55e557c06633 base::debug::StackTrace::StackTrace()
+#2 0x55e557c8895b base::debug::(anonymous namespace)::StackDumpSignalHandler()
+#3 0x2af0f32d4050 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x3c04f)
+#4 0x2af0f3322e2c (/usr/lib/x86_64-linux-gnu/libc.so.6+0x8ae2b)
+#5 0x2af0f32d3fb2 gsignal
+#6 0x2af0f32be472 abort
+#7 0x55e557c3430a base::internal::OnNoMemoryInternal()
+#8 0x55e557c34329 base::(anonymous namespace)::OnNoMemory()
+#9 0x55e557c34319 base::TerminateBecauseOutOfMemory()
+#10 0x55e557c1e0ab base::FieldTrialList::InstantiateFieldTrialAllocatorIfNeeded()
+#11 0x55e557c1e239 base::FieldTrialList::CopyFieldTrialStateToFlags()
+#12 0x55e556779f82 content::GpuProcessHost::LaunchGpuProcess()
+#13 0x55e556778910 content::GpuProcessHost::Init()
+#14 0x55e5567786c2 content::GpuProcessHost::Get()
+#15 0x55e556b95b6e base::internal::Invoker<>::RunOnce()
+#16 0x55e557c4c306 base::TaskAnnotator::RunTask()
+#17 0x55e557c5dcf6 base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::DoWorkImpl()
+#18 0x55e557c5d9ea base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::DoWork()
+#19 0x55e557caa899 base::MessagePumpLibevent::Run()
+#20 0x55e557c5e59b base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::Run()
+#21 0x55e557c379bd base::RunLoop::Run()
+#22 0x55e55661ff18 content::BrowserProcessSubThread::IOThreadRun()
+#23 0x55e557c76874 base::Thread::ThreadMain()
+#24 0x55e557c98caa base::(anonymous namespace)::ThreadFunc()
+#25 0x2af0f3321134 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x89133)
+#26 0x2af0f33a0a40 __clone
+  r8: 0000000000000000  r9: 000019233b35915f r10: 0000000000000008 r11: 0000000000000246
+ r12: 0000000000000006 r13: 000055e5545aceb0 r14: 000019233b31acc0 r15: 000019233b3dafc0
+  di: 000000000000021c  si: 0000000000000222  bp: 00002af0f3fe06c0  bx: 0000000000000222
+  dx: 0000000000000006  ax: 0000000000000000  cx: ffffffffffffffff  sp: 00002af0f3fdf070
+  ip: 00002af0f3322e2c efl: 0000000000000246 cgf: 0000000000000033 erf: 0000000000000000
+ trp: 0000000000000000 msk: 0000000000000000 cr2: 0000000000000000
+[end of stack trace]
+Calling _exit(1). Core file will not be generated.
+
+[2025-06-16 10:57:25,251] multiqc.plots.plotly.plot                          [ERROR  ]  Unable to export plot to SVG image: Failed to start Kaleido subprocess. Error stream:
+
+[0616/105725.087929:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0616/105725.106335:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0616/105725.107157:WARNING:discardable_shared_memory_manager.cc(194)] Less than 64MB of free space in temporary directory for shared memory files: 0
+[0616/105725.122814:ERROR:platform_shared_memory_region_posix.cc(250)] Creating shared memory in /tmpdir/job/2497502.undefined/.org.chromium.Chromium.btAtnv failed: No such file or directory (2)
+[0616/105725.122863:ERROR:platform_shared_memory_region_posix.cc(253)] Unable to access(W_OK|X_OK) /tmpdir/job/2497502.undefined: No such file or directory (2)
+Received signal 6
+#0 0x55ddb5040d79 base::debug::CollectStackTrace()
+#1 0x55ddb4fbe633 base::debug::StackTrace::StackTrace()
+#2 0x55ddb504095b base::debug::(anonymous namespace)::StackDumpSignalHandler()[0616/105725.142546:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+
+#3 0x2ac2779e7050 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x3c04f)
+#4 0x2ac277a35e2c (/usr/lib/x86_64-linux-gnu/libc.so.6+0x8ae2b)
+#5 0x2ac2779e6fb2 gsignal
+#6 0x2ac2779d1472 abort
+#7 0x55ddb4fec30a base::internal::OnNoMemoryInternal()
+#8 0x55ddb4fec329 base::(anonymous namespace)::OnNoMemory()
+#9 0x55ddb4fec319 base::TerminateBecauseOutOfMemory()
+#10 0x55ddb4fd60ab base::FieldTrialList::InstantiateFieldTrialAllocatorIfNeeded()
+#11 0x55ddb4fd6239 base::FieldTrialList::CopyFieldTrialStateToFlags()
+#12 0x55ddb3b31f82 content::GpuProcessHost::LaunchGpuProcess()
+#13 0x55ddb3b30910 content::GpuProcessHost::Init()
+#14 0x55ddb3b306c2 content::GpuProcessHost::Get()
+#15 0x55ddb3f4db6e base::internal::Invoker<>::RunOnce()
+#16 0x55ddb5004306 base::TaskAnnotator::RunTask()
+#17 0x55ddb5015cf6 base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::DoWorkImpl()
+#18 0x55ddb50159ea base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::DoWork()
+#19 0x55ddb5062899 base::MessagePumpLibevent::Run()
+#20 0x55ddb501659b base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::Run()
+#21 0x55ddb4fef9bd base::RunLoop::Run()
+#22 0x55ddb39d7f18 content::BrowserProcessSubThread::IOThreadRun()
+#23 0x55ddb502e874 base::Thread::ThreadMain()
+#24 0x55ddb5050caa base::(anonymous namespace)::ThreadFunc()
+#25 0x2ac277a34134 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x89133)
+#26 0x2ac277ab3a40 __clone
+  r8: 0000000000000000  r9: 00001609aa6b3f9f r10: 0000000000000008 r11: 0000000000000246
+ r12: 0000000000000006 r13: 000055ddb1964eb0 r14: 00001609aa5f3cc0 r15: 00001609aa6afb80
+  di: 0000000000000236  si: 0000000000000246  bp: 00002ac2786f36c0  bx: 0000000000000246
+  dx: 0000000000000006  ax: 0000000000000000  cx: ffffffffffffffff  sp: 00002ac2786f2070
+  ip: 00002ac277a35e2c efl: 0000000000000246 cgf: 0000000000000033 erf: 0000000000000000
+ trp: 0000000000000000 msk: 0000000000000000 cr2: 0000000000000000
+[end of stack trace]
+Calling _exit(1). Core file will not be generated.
+
+[2025-06-16 10:57:25,479] multiqc.plots.plotly.plot                          [ERROR  ]  Unable to export plot to PNG image: Failed to start Kaleido subprocess. Error stream:
+
+[0616/105725.316224:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0616/105725.331982:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0616/105725.343302:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0616/105725.344043:WARNING:discardable_shared_memory_manager.cc(194)] Less than 64MB of free space in temporary directory for shared memory files: 0
+[0616/105725.350043:ERROR:platform_shared_memory_region_posix.cc(250)] Creating shared memory in /tmpdir/job/2497502.undefined/.org.chromium.Chromium.6WAlbK failed: No such file or directory (2)
+[0616/105725.350090:ERROR:platform_shared_memory_region_posix.cc(253)] Unable to access(W_OK|X_OK) /tmpdir/job/2497502.undefined: No such file or directory (2)
+Received signal 6
+#0 0x55c41d2a2d79 base::debug::CollectStackTrace()
+#1 0x55c41d220633 base::debug::StackTrace::StackTrace()
+#2 0x55c41d2a295b base::debug::(anonymous namespace)::StackDumpSignalHandler()
+#3 0x2afe66c27050 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x3c04f)
+#4 0x2afe66c75e2c (/usr/lib/x86_64-linux-gnu/libc.so.6+0x8ae2b)
+#5 0x2afe66c26fb2 gsignal
+#6 0x2afe66c11472 abort
+#7 0x55c41d24e30a base::internal::OnNoMemoryInternal()
+#8 0x55c41d24e329 base::(anonymous namespace)::OnNoMemory()
+#9 0x55c41d24e319 base::TerminateBecauseOutOfMemory()
+#10 0x55c41d2380ab base::FieldTrialList::InstantiateFieldTrialAllocatorIfNeeded()
+#11 0x55c41d238239 base::FieldTrialList::CopyFieldTrialStateToFlags()
+#12 0x55c41bd93f82 content::GpuProcessHost::LaunchGpuProcess()
+#13 0x55c41bd92910 content::GpuProcessHost::Init()
+#14 0x55c41bd926c2 content::GpuProcessHost::Get()
+#15 0x55c41c1afb6e base::internal::Invoker<>::RunOnce()
+#16 0x55c41d266306 base::TaskAnnotator::RunTask()
+#17 0x55c41d277cf6 base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::DoWorkImpl()
+#18 0x55c41d2779ea base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::DoWork()
+#19 0x55c41d2c4899 base::MessagePumpLibevent::Run()
+#20 0x55c41d27859b base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::Run()
+#21 0x55c41d2519bd base::RunLoop::Run()
+#22 0x55c41bc39f18 content::BrowserProcessSubThread::IOThreadRun()
+#23 0x55c41d290874 base::Thread::ThreadMain()
+#24 0x55c41d2b2caa base::(anonymous namespace)::ThreadFunc()
+#25 0x2afe66c74134 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x89133)
+#26 0x2afe66cf3a40 __clone
+  r8: 0000000000000000  r9: 000033b40a6cc45f r10: 0000000000000008 r11: 0000000000000246
+ r12: 0000000000000006 r13: 000055c419bc6eb0 r14: 000033b40a604cc0 r15: 000033b40a6d5780
+  di: 000000000000026e  si: 0000000000000279  bp: 00002afe679336c0  bx: 0000000000000279
+  dx: 0000000000000006  ax: 0000000000000000  cx: ffffffffffffffff  sp: 00002afe67932070
+  ip: 00002afe66c75e2c efl: 0000000000000246 cgf: 0000000000000033 erf: 0000000000000000
+ trp: 0000000000000000 msk: 0000000000000000 cr2: 0000000000000000
+[end of stack trace]
+Calling _exit(1). Core file will not be generated.
+
+[2025-06-16 10:57:25,680] multiqc.plots.plotly.plot                          [ERROR  ]  Unable to export plot to PDF image: Failed to start Kaleido subprocess. Error stream:
+
+[0616/105725.545872:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0616/105725.565989:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0616/105725.568747:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0616/105725.569483:WARNING:discardable_shared_memory_manager.cc(194)] Less than 64MB of free space in temporary directory for shared memory files: 0
+[0616/105725.574766:ERROR:platform_shared_memory_region_posix.cc(250)] Creating shared memory in /tmpdir/job/2497502.undefined/.org.chromium.Chromium.zVMLq5 failed: No such file or directory (2)
+[0616/105725.574806:ERROR:platform_shared_memory_region_posix.cc(253)] Unable to access(W_OK|X_OK) /tmpdir/job/2497502.undefined: No such file or directory (2)
+Received signal 6
+#0 0x55879922fd79 base::debug::CollectStackTrace()
+#1 0x5587991ad633 base::debug::StackTrace::StackTrace()
+#2 0x55879922f95b base::debug::(anonymous namespace)::StackDumpSignalHandler()
+#3 0x2b390aa63050 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x3c04f)
+#4 0x2b390aab1e2c (/usr/lib/x86_64-linux-gnu/libc.so.6+0x8ae2b)
+#5 0x2b390aa62fb2 gsignal
+#6 0x2b390aa4d472 abort
+#7 0x5587991db30a base::internal::OnNoMemoryInternal()
+#8 0x5587991db329 base::(anonymous namespace)::OnNoMemory()
+#9 0x5587991db319 base::TerminateBecauseOutOfMemory()
+#10 0x5587991c50ab base::FieldTrialList::InstantiateFieldTrialAllocatorIfNeeded()
+#11 0x5587991c5239 base::FieldTrialList::CopyFieldTrialStateToFlags()
+#12 0x558797d20f82 content::GpuProcessHost::LaunchGpuProcess()
+#13 0x558797d1f910 content::GpuProcessHost::Init()
+#14 0x558797d1f6c2 content::GpuProcessHost::Get()
+#15 0x55879813cb6e base::internal::Invoker<>::RunOnce()
+#16 0x5587991f3306 base::TaskAnnotator::RunTask()
+#17 0x558799204cf6 base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::DoWorkImpl()
+#18 0x5587992049ea base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::DoWork()
+#19 0x558799251899 base::MessagePumpLibevent::Run()
+#20 0x55879920559b base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::Run()
+#21 0x5587991de9bd base::RunLoop::Run()
+#22 0x558797bc6f18 content::BrowserProcessSubThread::IOThreadRun()
+#23 0x55879921d874 base::Thread::ThreadMain()
+#24 0x55879923fcaa base::(anonymous namespace)::ThreadFunc()
+#25 0x2b390aab0134 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x89133)
+#26 0x2b390ab2fa40 __clone
+  r8: 0000000000000000  r9: 00003b4e954db15f r10: 0000000000000008 r11: 0000000000000246
+ r12: 0000000000000006 r13: 0000558795b53eb0 r14: 00003b4e9549ccc0 r15: 00003b4e9555cfc0
+  di: 00000000000002a2  si: 00000000000002a8  bp: 00002b390b76f6c0  bx: 00000000000002a8
+  dx: 0000000000000006  ax: 0000000000000000  cx: ffffffffffffffff  sp: 00002b390b76e070
+  ip: 00002b390aab1e2c efl: 0000000000000246 cgf: 0000000000000033 erf: 0000000000000000
+ trp: 0000000000000000 msk: 0000000000000000 cr2: 0000000000000000
+[end of stack trace]
+Calling _exit(1). Core file will not be generated.
+
+[2025-06-16 10:57:25,875] multiqc.plots.plotly.plot                          [ERROR  ]  Unable to export plot to SVG image: Failed to start Kaleido subprocess. Error stream:
+
+[0616/105725.739224:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0616/105725.759088:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0616/105725.762325:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0616/105725.763029:WARNING:discardable_shared_memory_manager.cc(194)] Less than 64MB of free space in temporary directory for shared memory files: 0
+[0616/105725.768338:ERROR:platform_shared_memory_region_posix.cc(250)] Creating shared memory in /tmpdir/job/2497502.undefined/.org.chromium.Chromium.6EnX4T failed: No such file or directory (2)
+[0616/105725.768378:ERROR:platform_shared_memory_region_posix.cc(253)] Unable to access(W_OK|X_OK) /tmpdir/job/2497502.undefined: No such file or directory (2)
+Received signal 6
+#0 0x561b949b6d79 base::debug::CollectStackTrace()
+#1 0x561b94934633 base::debug::StackTrace::StackTrace()
+#2 0x561b949b695b base::debug::(anonymous namespace)::StackDumpSignalHandler()
+#3 0x2b4d6b248050 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x3c04f)
+#4 0x2b4d6b296e2c (/usr/lib/x86_64-linux-gnu/libc.so.6+0x8ae2b)
+#5 0x2b4d6b247fb2 gsignal
+#6 0x2b4d6b232472 abort
+#7 0x561b9496230a base::internal::OnNoMemoryInternal()
+#8 0x561b94962329 base::(anonymous namespace)::OnNoMemory()
+#9 0x561b94962319 base::TerminateBecauseOutOfMemory()
+#10 0x561b9494c0ab base::FieldTrialList::InstantiateFieldTrialAllocatorIfNeeded()
+#11 0x561b9494c239 base::FieldTrialList::CopyFieldTrialStateToFlags()
+#12 0x561b934a7f82 content::GpuProcessHost::LaunchGpuProcess()
+#13 0x561b934a6910 content::GpuProcessHost::Init()
+#14 0x561b934a66c2 content::GpuProcessHost::Get()
+#15 0x561b938c3b6e base::internal::Invoker<>::RunOnce()
+#16 0x561b9497a306 base::TaskAnnotator::RunTask()
+#17 0x561b9498bcf6 base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::DoWorkImpl()
+#18 0x561b9498b9ea base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::DoWork()
+#19 0x561b949d8899 base::MessagePumpLibevent::Run()
+#20 0x561b9498c59b base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::Run()
+#21 0x561b949659bd base::RunLoop::Run()
+#22 0x561b9334df18 content::BrowserProcessSubThread::IOThreadRun()
+#23 0x561b949a4874 base::Thread::ThreadMain()
+#24 0x561b949c6caa base::(anonymous namespace)::ThreadFunc()
+#25 0x2b4d6b295134 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x89133)
+#26 0x2b4d6b314a40 __clone
+  r8: 0000000000000000  r9: 0000330005a4f15f r10: 0000000000000008 r11: 0000000000000246
+ r12: 0000000000000006 r13: 0000561b912daeb0 r14: 0000330005a10cc0 r15: 0000330005ad0fc0
+  di: 00000000000002b5  si: 00000000000002bb  bp: 00002b4d6bf546c0  bx: 00000000000002bb
+  dx: 0000000000000006  ax: 0000000000000000  cx: ffffffffffffffff  sp: 00002b4d6bf53070
+  ip: 00002b4d6b296e2c efl: 0000000000000246 cgf: 0000000000000033 erf: 0000000000000000
+ trp: 0000000000000000 msk: 0000000000000000 cr2: 0000000000000000
+[end of stack trace]
+Calling _exit(1). Core file will not be generated.
+
+[2025-06-16 10:57:26,067] multiqc.plots.plotly.plot                          [ERROR  ]  Unable to export plot to PNG image: Failed to start Kaleido subprocess. Error stream:
+
+[0616/105725.932124:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0616/105725.943810:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0616/105725.944595:WARNING:discardable_shared_memory_manager.cc(194)] Less than 64MB of free space in temporary directory for shared memory files: 0
+[0616/105725.958416:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0616/105725.961036:ERROR:platform_shared_memory_region_posix.cc(250)] Creating shared memory in /tmpdir/job/2497502.undefined/.org.chromium.Chromium.ArViwv failed: No such file or directory (2)
+[0616/105725.961085:ERROR:platform_shared_memory_region_posix.cc(253)] Unable to access(W_OK|X_OK) /tmpdir/job/2497502.undefined: No such file or directory (2)
+Received signal 6
+#0 0x55b93f1c1d79 base::debug::CollectStackTrace()
+#1 0x55b93f13f633 base::debug::StackTrace::StackTrace()
+#2 0x55b93f1c195b base::debug::(anonymous namespace)::StackDumpSignalHandler()
+#3 0x2aeef5138050 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x3c04f)
+#4 0x2aeef5186e2c (/usr/lib/x86_64-linux-gnu/libc.so.6+0x8ae2b)
+#5 0x2aeef5137fb2 gsignal
+#6 0x2aeef5122472 abort
+#7 0x55b93f16d30a base::internal::OnNoMemoryInternal()
+#8 0x55b93f16d329 base::(anonymous namespace)::OnNoMemory()
+#9 0x55b93f16d319 base::TerminateBecauseOutOfMemory()
+#10 0x55b93f1570ab base::FieldTrialList::InstantiateFieldTrialAllocatorIfNeeded()
+#11 0x55b93f157239 base::FieldTrialList::CopyFieldTrialStateToFlags()
+#12 0x55b93dcb2f82 content::GpuProcessHost::LaunchGpuProcess()
+#13 0x55b93dcb1910 content::GpuProcessHost::Init()
+#14 0x55b93dcb16c2 content::GpuProcessHost::Get()
+#15 0x55b93e0ceb6e base::internal::Invoker<>::RunOnce()
+#16 0x55b93f185306 base::TaskAnnotator::RunTask()
+#17 0x55b93f196cf6 base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::DoWorkImpl()
+#18 0x55b93f1969ea base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::DoWork()
+#19 0x55b93f1e3899 base::MessagePumpLibevent::Run()
+#20 0x55b93f19759b base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::Run()
+#21 0x55b93f1709bd base::RunLoop::Run()
+#22 0x55b93db58f18 content::BrowserProcessSubThread::IOThreadRun()
+#23 0x55b93f1af874 base::Thread::ThreadMain()
+#24 0x55b93f1d1caa base::(anonymous namespace)::ThreadFunc()
+#25 0x2aeef5185134 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x89133)
+#26 0x2aeef5204a40 __clone
+  r8: 0000000000000000  r9: 00003e0f842db45f r10: 0000000000000008 r11: 0000000000000246
+ r12: 0000000000000006 r13: 000055b93bae5eb0 r14: 00003e0f84213cc0 r15: 00003e0f842e4780
+  di: 00000000000002c8  si: 00000000000002ce  bp: 00002aeef5e446c0  bx: 00000000000002ce
+  dx: 0000000000000006  ax: 0000000000000000  cx: ffffffffffffffff  sp: 00002aeef5e43070
+  ip: 00002aeef5186e2c efl: 0000000000000246 cgf: 0000000000000033 erf: 0000000000000000
+ trp: 0000000000000000 msk: 0000000000000000 cr2: 0000000000000000
+[end of stack trace]
+Calling _exit(1). Core file will not be generated.
+
+[2025-06-16 10:57:26,334] multiqc.plots.plotly.plot                          [ERROR  ]  Unable to export plot to PDF image: Failed to start Kaleido subprocess. Error stream:
+
+[0616/105726.198267:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0616/105726.219042:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0616/105726.221338:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0616/105726.222039:WARNING:discardable_shared_memory_manager.cc(194)] Less than 64MB of free space in temporary directory for shared memory files: 0
+[0616/105726.227350:ERROR:platform_shared_memory_region_posix.cc(250)] Creating shared memory in /tmpdir/job/2497502.undefined/.org.chromium.Chromium.aHwqYY failed: No such file or directory (2)
+[0616/105726.227389:ERROR:platform_shared_memory_region_posix.cc(253)] Unable to access(W_OK|X_OK) /tmpdir/job/2497502.undefined: No such file or directory (2)
+Received signal 6
+#0 0x556da87d7d79 base::debug::CollectStackTrace()
+#1 0x556da8755633 base::debug::StackTrace::StackTrace()
+#2 0x556da87d795b base::debug::(anonymous namespace)::StackDumpSignalHandler()
+#3 0x2b2fb838d050 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x3c04f)
+#4 0x2b2fb83dbe2c (/usr/lib/x86_64-linux-gnu/libc.so.6+0x8ae2b)
+#5 0x2b2fb838cfb2 gsignal
+#6 0x2b2fb8377472 abort
+#7 0x556da878330a base::internal::OnNoMemoryInternal()
+#8 0x556da8783329 base::(anonymous namespace)::OnNoMemory()
+#9 0x556da8783319 base::TerminateBecauseOutOfMemory()
+#10 0x556da876d0ab base::FieldTrialList::InstantiateFieldTrialAllocatorIfNeeded()
+#11 0x556da876d239 base::FieldTrialList::CopyFieldTrialStateToFlags()
+#12 0x556da72c8f82 content::GpuProcessHost::LaunchGpuProcess()
+#13 0x556da72c7910 content::GpuProcessHost::Init()
+#14 0x556da72c76c2 content::GpuProcessHost::Get()
+#15 0x556da76e4b6e base::internal::Invoker<>::RunOnce()
+#16 0x556da879b306 base::TaskAnnotator::RunTask()
+#17 0x556da87accf6 base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::DoWorkImpl()
+#18 0x556da87ac9ea base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::DoWork()
+#19 0x556da87f9899 base::MessagePumpLibevent::Run()
+#20 0x556da87ad59b base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::Run()
+#21 0x556da87869bd base::RunLoop::Run()
+#22 0x556da716ef18 content::BrowserProcessSubThread::IOThreadRun()
+#23 0x556da87c5874 base::Thread::ThreadMain()
+#24 0x556da87e7caa base::(anonymous namespace)::ThreadFunc()
+#25 0x2b2fb83da134 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x89133)
+#26 0x2b2fb8459a40 __clone
+  r8: 0000000000000000  r9: 00003922b797915f r10: 0000000000000008 r11: 0000000000000246
+ r12: 0000000000000006 r13: 0000556da50fbeb0 r14: 00003922b793acc0 r15: 00003922b79fafc0
+  di: 00000000000002dc  si: 00000000000002e2  bp: 00002b2fb90996c0  bx: 00000000000002e2
+  dx: 0000000000000006  ax: 0000000000000000  cx: ffffffffffffffff  sp: 00002b2fb9098070
+  ip: 00002b2fb83dbe2c efl: 0000000000000246 cgf: 0000000000000033 erf: 0000000000000000
+ trp: 0000000000000000 msk: 0000000000000000 cr2: 0000000000000000
+[end of stack trace]
+Calling _exit(1). Core file will not be generated.
+
+[2025-06-16 10:57:26,525] multiqc.plots.plotly.plot                          [ERROR  ]  Unable to export plot to SVG image: Failed to start Kaleido subprocess. Error stream:
+
+[0616/105726.390159:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0616/105726.401857:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0616/105726.402633:WARNING:discardable_shared_memory_manager.cc(194)] Less than 64MB of free space in temporary directory for shared memory files: 0
+[0616/105726.418643:ERROR:platform_shared_memory_region_posix.cc(250)] Creating shared memory in /tmpdir/job/2497502.undefined/.org.chromium.Chromium.pj318d failed: No such file or directory (2)
+[0616/105726.418685:ERROR:platform_shared_memory_region_posix.cc(253)] Unable to access(W_OK|X_OK) /tmpdir/job/2497502.undefined: No such file or directory (2)
+Received signal 6
+#0 0x559fe9814d79 base::debug::CollectStackTrace()
+#1 0x559fe9792633 base::debug::StackTrace::StackTrace()
+#2 0x559fe981495b base::debug::(anonymous namespace)::StackDumpSignalHandler()[0616/105726.437001:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+
+#3 0x2b931c959050 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x3c04f)
+#4 0x2b931c9a7e2c (/usr/lib/x86_64-linux-gnu/libc.so.6+0x8ae2b)
+#5 0x2b931c958fb2 gsignal
+#6 0x2b931c943472 abort
+#7 0x559fe97c030a base::internal::OnNoMemoryInternal()
+#8 0x559fe97c0329 base::(anonymous namespace)::OnNoMemory()
+#9 0x559fe97c0319 base::TerminateBecauseOutOfMemory()
+#10 0x559fe97aa0ab base::FieldTrialList::InstantiateFieldTrialAllocatorIfNeeded()
+#11 0x559fe97aa239 base::FieldTrialList::CopyFieldTrialStateToFlags()
+#12 0x559fe8305f82 content::GpuProcessHost::LaunchGpuProcess()
+#13 0x559fe8304910 content::GpuProcessHost::Init()
+#14 0x559fe83046c2 content::GpuProcessHost::Get()
+#15 0x559fe8721b6e base::internal::Invoker<>::RunOnce()
+#16 0x559fe97d8306 base::TaskAnnotator::RunTask()
+#17 0x559fe97e9cf6 base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::DoWorkImpl()
+#18 0x559fe97e99ea base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::DoWork()
+#19 0x559fe9836899 base::MessagePumpLibevent::Run()
+#20 0x559fe97ea59b base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::Run()
+#21 0x559fe97c39bd base::RunLoop::Run()
+#22 0x559fe81abf18 content::BrowserProcessSubThread::IOThreadRun()
+#23 0x559fe9802874 base::Thread::ThreadMain()
+#24 0x559fe9824caa base::(anonymous namespace)::ThreadFunc()
+#25 0x2b931c9a6134 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x89133)
+#26 0x2b931ca25a40 __clone
+  r8: 0000000000000000  r9: 00000cec31ce745f r10: 0000000000000008 r11: 0000000000000246
+ r12: 0000000000000006 r13: 0000559fe6138eb0 r14: 00000cec31c1fcc0 r15: 00000cec31cf0780
+  di: 00000000000002ef  si: 00000000000002f5  bp: 00002b931d6656c0  bx: 00000000000002f5
+  dx: 0000000000000006  ax: 0000000000000000  cx: ffffffffffffffff  sp: 00002b931d664070
+  ip: 00002b931c9a7e2c efl: 0000000000000246 cgf: 0000000000000033 erf: 0000000000000000
+ trp: 0000000000000000 msk: 0000000000000000 cr2: 0000000000000000
+[end of stack trace]
+Calling _exit(1). Core file will not be generated.
+
+[2025-06-16 10:57:26,743] multiqc.plots.plotly.plot                          [ERROR  ]  Unable to export plot to PNG image: Failed to start Kaleido subprocess. Error stream:
+
+[0616/105726.580664:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0616/105726.605980:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0616/105726.606747:WARNING:discardable_shared_memory_manager.cc(194)] Less than 64MB of free space in temporary directory for shared memory files: 0
+[0616/105726.613062:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0616/105726.613741:ERROR:platform_shared_memory_region_posix.cc(250)] Creating shared memory in /tmpdir/job/2497502.undefined/.org.chromium.Chromium.doa75d failed: No such file or directory (2)
+[0616/105726.613785:ERROR:platform_shared_memory_region_posix.cc(253)] Unable to access(W_OK|X_OK) /tmpdir/job/2497502.undefined: No such file or directory (2)
+Received signal 6
+#0 0x5634027d9d79 base::debug::CollectStackTrace()
+#1 0x563402757633 base::debug::StackTrace::StackTrace()
+#2 0x5634027d995b base::debug::(anonymous namespace)::StackDumpSignalHandler()
+#3 0x2ac4bbdcf050 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x3c04f)
+#4 0x2ac4bbe1de2c (/usr/lib/x86_64-linux-gnu/libc.so.6+0x8ae2b)
+#5 0x2ac4bbdcefb2 gsignal
+#6 0x2ac4bbdb9472 abort
+#7 0x56340278530a base::internal::OnNoMemoryInternal()
+#8 0x563402785329 base::(anonymous namespace)::OnNoMemory()
+#9 0x563402785319 base::TerminateBecauseOutOfMemory()
+#10 0x56340276f0ab base::FieldTrialList::InstantiateFieldTrialAllocatorIfNeeded()
+#11 0x56340276f239 base::FieldTrialList::CopyFieldTrialStateToFlags()
+#12 0x5634012caf82 content::GpuProcessHost::LaunchGpuProcess()
+#13 0x5634012c9910 content::GpuProcessHost::Init()
+#14 0x5634012c96c2 content::GpuProcessHost::Get()
+#15 0x5634016e6b6e base::internal::Invoker<>::RunOnce()
+#16 0x56340279d306 base::TaskAnnotator::RunTask()
+#17 0x5634027aecf6 base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::DoWorkImpl()
+#18 0x5634027ae9ea base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::DoWork()
+#19 0x5634027fb899 base::MessagePumpLibevent::Run()
+#20 0x5634027af59b base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::Run()
+#21 0x5634027889bd base::RunLoop::Run()
+#22 0x563401170f18 content::BrowserProcessSubThread::IOThreadRun()
+#23 0x5634027c7874 base::Thread::ThreadMain()
+#24 0x5634027e9caa base::(anonymous namespace)::ThreadFunc()
+#25 0x2ac4bbe1c134 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x89133)
+#26 0x2ac4bbe9ba40 __clone
+  r8: 0000000000000000  r9: 0000248530955f9f r10: 0000000000000008 r11: 0000000000000246
+ r12: 0000000000000006 r13: 00005633ff0fdeb0 r14: 0000248530895cc0 r15: 0000248530951b80
+  di: 0000000000000309  si: 0000000000000314  bp: 00002ac4bcadb6c0  bx: 0000000000000314
+  dx: 0000000000000006  ax: 0000000000000000  cx: ffffffffffffffff  sp: 00002ac4bcada070
+  ip: 00002ac4bbe1de2c efl: 0000000000000246 cgf: 0000000000000033 erf: 0000000000000000
+ trp: 0000000000000000 msk: 0000000000000000 cr2: 0000000000000000
+[end of stack trace]
+Calling _exit(1). Core file will not be generated.
+
