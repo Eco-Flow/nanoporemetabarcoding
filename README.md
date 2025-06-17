@@ -67,7 +67,7 @@ Before running on your data, you can test if the pipeline is suited to your setu
 
 ```bash
 nextflow run main.nf \
-   -profile <docker/singularity/conda/.../institute> \
+   -profile test,<docker/singularity/conda/.../institute> \
    --outdir <OUTDIR>
 ```
 
