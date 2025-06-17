@@ -3,12 +3,31 @@
     IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { FASTQC                 } from '../modules/nf-core/fastqc/main'
-include { MULTIQC                } from '../modules/nf-core/multiqc/main'
-include { paramsSummaryMap       } from 'plugin/nf-schema'
-include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_nanoporemetabarcoding_pipeline'
+include { FASTQC                          } from '../modules/nf-core/fastqc/main'
+include { MULTIQC                         } from '../modules/nf-core/multiqc/main'
+include { PORECHOP_PORECHOP               } from '../modules/nf-core/porechop/porechop/main'
+include { NANOPLOT                        } from '../modules/nf-core/nanoplot/main'
+include { NANOFILT                        } from '../modules/nf-core/nanofilt/main'
+include { SEQKIT_SEQ as SEQKIT_REVCOMP_A  } from '../modules/nf-core/seqkit/seq/main'
+include { SEQKIT_SEQ as SEQKIT_REVCOMP_B  } from '../modules/nf-core/seqkit/seq/main'
+include { CUTADAPT as CUTADAPT_F          } from '../modules/nf-core/cutadapt/main'
+include { CUTADAPT as CUTADAPT_F_RC       } from '../modules/nf-core/cutadapt/main'
+include { CUTADAPT as CUTADAPT_R          } from '../modules/nf-core/cutadapt/main'
+include { AMPLICON_SORTER                 } from '../modules/local/amplicon_sorter'
+include { SEQKIT_GREP as SEQKIT_AMPLICONS } from '../modules/nf-core/seqkit/grep/main'
+include { SEQKIT_GREP as SEQKIT_CONSENSUS } from '../modules/nf-core/seqkit/grep/main'
+include { GUNZIP                          } from '../modules/nf-core/gunzip/main'
+include { GUNZIP as GUNZIP_SEQKIT_GREP_A  } from '../modules/nf-core/gunzip/main'
+include { GUNZIP as GUNZIP_SEQKIT_GREP_C  } from '../modules/nf-core/gunzip/main'
+include { MEDAKA                          } from '../modules/nf-core/medaka/main'
+include { CAT_CAT                         } from '../modules/nf-core/cat/cat/main'
+//include { DIAMOND_BLASTX                  } from '../modules/nf-core/diamond/blastx/main'
+include { BLAST_MAKEBLASTDB               } from '../modules/nf-core/blast/makeblastdb/main'
+include { BLAST_BLASTN                    } from '../modules/nf-core/blast/blastn/main'
+include { paramsSummaryMap                } from 'plugin/nf-schema'
+include { paramsSummaryMultiqc            } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { softwareVersionsToYAML          } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { methodsDescriptionText          } from '../subworkflows/local/utils_nfcore_nanoporemetabarcoding_pipeline'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -24,14 +43,257 @@ workflow NANOPOREMETABARCODING {
 
     ch_versions = Channel.empty()
     ch_multiqc_files = Channel.empty()
+
+    ch_input = ch_samplesheet
+             | map {
+                meta, fastq ->
+                [[id:meta.id, single_end:true], fastq] // Needs to be declared as single end to run PYCHOPPER
+             }
+
+    //
+    // MODULE: Run Nanoplot
+    //
+
+    // Check modules.config for arguments to pass to Nanofilt
+
+    NANOFILT (
+        ch_input,
+        []
+    )
+
+    //
+    // MODULE: Run CUTADAPT
+    //
+
+    // Run cutadapt to demultiplex and trim reads based on forward barcodes (tag + primer)
+    // set in the nextflow.config file
+
+    CUTADAPT_F (
+        ch_input
+    )
+
+    // Flatten the output channel (FASTQs) from cutadapt demultiplex into indidual channels (FASTQ)
+    // (check for the function flattenAndMap in the functions section)
+    ch_input_f = flattenAndMap(CUTADAPT_F.out.reads)
+
+    // Get unkwon reads to reverse complement them later and trim again based on forward barcodes
+    // We filter out reads that are unknown as they are probably reverse complemented with regard
+    // to the forward barcodes. This is done so that we can trim them again based on the forward barcodes
+    ch_unknown = ch_input_f
+               | filter { meta, fastq ->
+                        meta.id.contains('unknown')
+               }
+
+    //
+    // MODULE: Run SEQKIT reverse complement
+    //
+
+    // Reverse complement reads and run cutadapt again on unknown
+    // rc reads and trim again based on forward barcodes
+    SEQKIT_REVCOMP_A (
+        ch_unknown
+    )
+
+    // Trim based on forward barcodes again
+    CUTADAPT_F_RC (
+        SEQKIT_REVCOMP_A.out.fastx
+    )
+
+    // Remmove 'unknown_' prefix from metadata and flatten the output channel.
+    // This is done so that reads can be concatenated based on the metadata
+    // This reads are not unknown anymore
+    ch_unknown = flattenAndMap(CUTADAPT_F_RC.out.reads)
+               | map { meta, fastq ->
+                   def cleaned_meta = meta.id.replaceFirst(/unknown_/, '') // Remove the 'unknown_' prefix to be able to merge
+                   [[id: cleaned_meta, single_end: meta.single_end], fastq] // Return updated metadata and fastq
+               }
+
+    // Group known and unknown (not uknown anymore) reads together based on metadata
+    ch_input_f = ch_input_f
+               | mix(ch_unknown)
+               | groupTuple()
+
+    // Concatenate grouped reads together based on metadata.
+    CAT_CAT (
+        ch_input_f
+    )
+
+    //
+    // MODULE: Run SEQKIT reverse complement
+    //
+
+    // Barcodes are attached to both ends of the reads, so we need to reverse complement the reads
+    // to trim and demultiplex based the other end
+
+    SEQKIT_REVCOMP_B (
+        CAT_CAT.out.file_out
+    )
+
+    // Run cutadapt on the reverse complemented reads to trim reverse barcodes
+    CUTADAPT_R (
+       SEQKIT_REVCOMP_B.out.fastx
+    )
+
+    // Filter out FASTQs with less than 10 reads
+    ch_input_filtered = CUTADAPT_R.out.reads
+                      | flattenAndMap
+                      | filter { meta, fastq ->
+                           def count = fastq.countFastq()
+                           count > params.filt_fastq && !meta.id.contains('unknown') // Filter out FASTQs with less than x reads and with unknown primer combinations
+                      }
+
+    // Prepare raw, cleaned and demultiplexed reads for Nanoplot
+
+    ch_raw       = ch_input
+                 | map {
+                    meta, fastq ->
+                    [[id:"raw_${meta.id}"], fastq]
+                 }
+
+    ch_filt     = NANOFILT.out.filtreads
+                 | map {
+                    meta, fastq ->
+                    [[id:"filt_${meta.id}"], fastq]
+                 }
+
+    //
+    // MODULE: Run Nanoplot
+    //
+
+    NANOPLOT (
+        ch_raw.mix(ch_filt).mix(ch_input_filtered)
+    )
+    ch_multiqc_files = ch_multiqc_files.mix(NANOPLOT.out.txt.collectFile() { meta, stats -> ["${meta.id}.txt", stats.text] }).collect() // Original name out.txt channel is stats.txt, so multiqc keeps overwritting
+
     //
     // MODULE: Run FastQC
     //
-    FASTQC (
-        ch_samplesheet
+    //FASTQC (
+    //    ch_input
+    //)
+    //ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]})
+    //ch_versions = ch_versions.mix(FASTQC.out.versions.first())
+
+    //
+    // MODULE: Run Gunzip. Might be better to use gunzip from amplicon sorter
+    //
+
+    GUNZIP (
+        ch_input_filtered
     )
-    ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]})
-    ch_versions = ch_versions.mix(FASTQC.out.versions.first())
+
+    //
+    // MODULE: Run Amplicon Sorter
+    //
+
+    AMPLICON_SORTER (
+        GUNZIP.out.gunzip
+    )
+
+    //Get group information from amplicon sorter output FASTA files
+    ch_group = AMPLICON_SORTER.out.fastas
+             | transpose()
+             | map { meta, fasta ->
+                // Get the filename without extension
+                 def basename = fasta.baseName
+                 // Extract the last part after the final underscore (assuming format from amplicon sorter: name_X_Y)
+                 def parts = basename.split('_')
+                 def group = "${parts[-2]}_${parts[-1]}" // Get group name from the last two parts of the fasta name without extension
+
+                 def new_meta = meta + [group: group]
+                 [new_meta, fasta]
+             }
+
+    //
+    // MODULE: Run Seqkit Grep
+    //
+
+    // Split FASTA files into individual consensus sequence and amplicon sequences
+    // for minimap/medaka. Retain group information in the meta so that each consesus
+    // sequence is processed together with its respective grouped amplicon sequences
+    pattern_amplicons = Channel.of("^\\d+\$") // Amplicon sequences are named with a number
+                      | collectFile(name: 'pattern.txt')
+    pattern_consensus = Channel.of("^consensus\$") // Consensus sequences are named 'consensus'
+                      | collectFile(name: 'pattern.txt')
+
+    // Split into amplicons (each fasta is a group of amplicons without the consensus)
+    SEQKIT_AMPLICONS (
+        ch_group,
+        pattern_amplicons.first()
+    )
+
+    GUNZIP_SEQKIT_GREP_A (
+        SEQKIT_AMPLICONS.out.filter
+    )
+
+    // Split into consensus (each fasta is a consensus without the grouped amplicons)
+    SEQKIT_CONSENSUS (
+        ch_group,
+        pattern_consensus.first()
+    )
+
+    GUNZIP_SEQKIT_GREP_C (
+        SEQKIT_CONSENSUS.out.filter
+    )
+
+    // Join consensus and amplicon sequences based on metadata and separate them in
+    // a multichannel (keeps grouped amplicons and their respective consensus sequence in sync)
+    ch_minimap = GUNZIP_SEQKIT_GREP_A.out.gunzip // Grouped amplicons
+               | join(GUNZIP_SEQKIT_GREP_C.out.gunzip) // Consensus
+               | multiMap { meta, amps, cons -> // meta: metadata, amps: amplicon sequences, cons: consensus sequences
+                            amps : [ meta, amps] // Return a tuple with metadata and amplicon sequences
+                            cons : [ meta, cons ] // Return a tuple with metadata and consensus sequences
+                }
+
+    // For running medaka without running minimap2. Medaka already aligns basecalls (amplicons here)
+    // to the consensus sequences, so perhaps we can skip minimap2 step, at least for now
+    // Make sure this is working as expected
+    ch_medaka = GUNZIP_SEQKIT_GREP_A.out.gunzip
+              | join(GUNZIP_SEQKIT_GREP_C.out.gunzip)
+
+    //
+    // MODULE: Run Minimap2
+    //
+
+
+
+    //
+    // MODULE: Run Medaka
+    //
+
+    MEDAKA (
+        ch_medaka
+    )
+
+    //
+    // MODULE: Run makeblastdb
+    //
+
+    // Prepare ch_databse channel to build a custom database for blast
+    ch_database = Channel.fromPath(params.custom_db)
+                | map { db ->
+                        [[id:'database'], db]
+                }
+
+
+    BLAST_MAKEBLASTDB (
+        ch_database
+    )
+
+    // Mix in case an already built blast database is already give. People should only input a
+    // path to make the database or give the built database. This shouldn't be possible,
+    // will write code later to prevent it
+    ch_blast = BLAST_MAKEBLASTDB.out.db //.mix(params.blast_db)
+
+    //
+    // MODULE: Run BLAST
+    //
+
+
+    BLAST_BLASTN (
+        MEDAKA.out.assembly,
+        ch_blast.first()
+    )
 
     //
     // Collate and save software versions
@@ -85,10 +347,37 @@ workflow NANOPOREMETABARCODING {
         []
     )
 
-    emit:multiqc_report = MULTIQC.out.report.toList() // channel: /path/to/multiqc_report.html
+    emit:
+    multiqc_report = MULTIQC.out.report.toList() // channel: /path/to/multiqc_report.html
     versions       = ch_versions                 // channel: [ path(versions.yml) ]
 
 }
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    FUNCTIONS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+// When demultiplexing, cutadapt emits a channel with FASTQs, but the next modules
+// input single values. Use flattenAndMap so that each FASTQ is emitted seprately
+// Function to flatten output channel (FASTQs) from cutadapt demultiplex into indidual channels (FASTQ)
+
+def flattenAndMap(ch_fastqs) {
+    ch_fastq = ch_fastqs
+             | map { meta, fastqs ->
+                   fastqs
+             }
+             | flatten
+             | map { fastq ->
+                   def name = fastq.name.toString().replaceAll(/\.trim\.fastq\.gz$/, '') // Remove extension
+                   tuple( [id:name, single_end:true], fastq ) // Return tuple
+             }
+    return ( ch_fastq )
+}
+
+// Export the function
+return this
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

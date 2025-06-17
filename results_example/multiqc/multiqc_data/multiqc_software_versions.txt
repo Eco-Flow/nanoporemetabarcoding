@@ -1,0 +1,2 @@
+Sample	nf-core/nanoporemetabarcoding	Nextflow
+Workflow	v1.0.0dev	25.04.3

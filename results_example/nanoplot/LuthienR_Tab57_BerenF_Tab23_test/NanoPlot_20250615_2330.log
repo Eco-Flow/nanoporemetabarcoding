@@ -1,0 +1,277 @@
+2025-06-15 23:30:48,227 NanoPlot 1.44.1 started with arguments Namespace(threads=2, verbose=False, store=False, raw=False, huge=False, outdir='.', no_static=False, prefix='', tsv_stats=False, only_report=False, info_in_report=False, maxlength=None, minlength=None, drop_outliers=False, downsample=None, loglength=False, percentqual=False, alength=False, minqual=None, runtime_until=None, readtype='1D', barcoded=False, no_supplementary=False, color='#4CB391', colormap='Greens', format=['png'], plots=['kde', 'dot'], legacy=None, listcolors=False, listcolormaps=False, no_N50=False, N50=False, title=None, font_scale=1, dpi=100, hide_stats=False, fastq=['LuthienR_Tab57_BerenF_Tab23_test.trim.fastq.gz'], fasta=None, fastq_rich=None, fastq_minimal=None, summary=None, bam=None, ubam=None, cram=None, pickle=None, feather=None, path='./')
+2025-06-15 23:30:48,228 Python version is: 3.9.21 | packaged by conda-forge | (main, Dec  5 2024, 13:51:40)  [GCC 13.3.0]
+2025-06-15 23:30:48,243 Nanoget: Starting to collect statistics from plain fastq file.
+2025-06-15 23:30:48,244 Nanoget: Decompressing gzipped fastq LuthienR_Tab57_BerenF_Tab23_test.trim.fastq.gz
+2025-06-15 23:30:48,280 Reduced DataFrame memory usage from 0.00213623046875Mb to 0.00213623046875Mb
+2025-06-15 23:30:48,288 Nanoget: Gathered all metrics of 132 reads
+2025-06-15 23:30:48,658 Calculated statistics
+2025-06-15 23:30:48,659 Using sequenced read lengths for plotting.
+2025-06-15 23:30:48,661 NanoPlot:  Valid color #4CB391.
+2025-06-15 23:30:48,661 NanoPlot:  Valid colormap Greens.
+2025-06-15 23:30:48,662 NanoPlot:  Creating length plots for Read length.
+2025-06-15 23:30:48,662 NanoPlot:  Using 132 reads maximum of 321bp.
+2025-06-15 23:30:49,903 No static plots are saved due to some kaleido problem:
+2025-06-15 23:30:49,904 Failed to start Kaleido subprocess. Error stream:
+
+[0615/233049.604790:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0615/233049.623231:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0615/233049.623230:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0615/233049.624031:WARNING:discardable_shared_memory_manager.cc(194)] Less than 64MB of free space in temporary directory for shared memory files: 0
+[0615/233049.747415:ERROR:address_tracker_linux.cc(214)] Could not bind NETLINK socket: Address already in use (98)
+[0615/233049.766789:ERROR:platform_shared_memory_region_posix.cc(250)] Creating shared memory in /tmpdir/job/2491338.undefined/.org.chromium.Chromium.d2B4BA failed: No such file or directory (2)
+[0615/233049.766818:ERROR:platform_shared_memory_region_posix.cc(253)] Unable to access(W_OK|X_OK) /tmpdir/job/2491338.undefined: No such file or directory (2)
+Received signal 6
+#0 0x559c3687fd79 base::debug::CollectStackTrace()
+#1 0x559c367fd633 base::debug::StackTrace::StackTrace()
+#2 0x559c3687f95b base::debug::(anonymous namespace)::StackDumpSignalHandler()
+#3 0x2b8eb1648320 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x4531f)
+#4 0x2b8eb16a1b1c pthread_kill
+#5 0x2b8eb164826e gsignal
+#6 0x2b8eb162b8ff abort
+#7 0x559c3682b30a base::internal::OnNoMemoryInternal()
+#8 0x559c3682b329 base::(anonymous namespace)::OnNoMemory()
+#9 0x559c3682b319 base::TerminateBecauseOutOfMemory()
+#10 0x559c368150ab base::FieldTrialList::InstantiateFieldTrialAllocatorIfNeeded()
+#11 0x559c36815239 base::FieldTrialList::CopyFieldTrialStateToFlags()
+#12 0x559c35370f82 content::GpuProcessHost::LaunchGpuProcess()
+#13 0x559c3536f910 content::GpuProcessHost::Init()
+#14 0x559c3536f6c2 content::GpuProcessHost::Get()
+#15 0x559c3578cb6e base::internal::Invoker<>::RunOnce()
+#16 0x559c36843306 base::TaskAnnotator::RunTask()
+#17 0x559c36854cf6 base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::DoWorkImpl()
+#18 0x559c368549ea base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::DoWork()
+#19 0x559c368a1899 base::MessagePumpLibevent::Run()
+#20 0x559c3685559b base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::Run()
+#21 0x559c3682e9bd base::RunLoop::Run()
+#22 0x559c35216f18 content::BrowserProcessSubThread::IOThreadRun()
+#23 0x559c3686d874 base::Thread::ThreadMain()
+#24 0x559c3688fcaa base::(anonymous namespace)::ThreadFunc()
+#25 0x2b8eb169fa94 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x9ca93)
+#26 0x2b8eb172ca34 __clone
+  r8: 00000000000000a0  r9: 000025d722eb615f r10: 0000000000000008 r11: 0000000000000246
+ r12: 0000000000000006 r13: 0000559c331a3eb0 r14: 0000000000000016 r15: 000025d722efcf40
+  di: 0000000000000137  si: 00000000000001bb  bp: 00002b8eb2094080  bx: 00000000000001bb
+  dx: 0000000000000006  ax: 0000000000000000  cx: ffffffffffffffff  sp: 00002b8eb2094040
+  ip: 00002b8eb16a1b1c efl: 0000000000000246 cgf: 0000000000000033 erf: 0000000000000000
+ trp: 0000000000000000 msk: 0000000000000000 cr2: 0000000000000000
+[end of stack trace]
+Calling _exit(1). Core file will not be generated.
+
+2025-06-15 23:30:50,097 No static plots are saved due to some kaleido problem:
+2025-06-15 23:30:50,097 Failed to start Kaleido subprocess. Error stream:
+
+[0615/233049.955744:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0615/233049.967465:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0615/233049.968209:WARNING:discardable_shared_memory_manager.cc(194)] Less than 64MB of free space in temporary directory for shared memory files: 0
+[0615/233049.981923:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0615/233049.990376:ERROR:platform_shared_memory_region_posix.cc(250)] Creating shared memory in /tmpdir/job/2491338.undefined/.org.chromium.Chromium.2F6XfA failed: No such file or directory (2)
+[0615/233049.990410:ERROR:platform_shared_memory_region_posix.cc(253)] Unable to access(W_OK|X_OK) /tmpdir/job/2491338.undefined: No such file or directory (2)
+Received signal 6
+#0 0x55dc996cad79 base::debug::CollectStackTrace()
+#1 0x55dc99648633 base::debug::StackTrace::StackTrace()
+#2 0x55dc996ca95b base::debug::(anonymous namespace)::StackDumpSignalHandler()
+#3 0x2b4890c28320 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x4531f)
+#4 0x2b4890c81b1c pthread_kill
+#5 0x2b4890c2826e gsignal
+#6 0x2b4890c0b8ff abort
+#7 0x55dc9967630a base::internal::OnNoMemoryInternal()
+#8 0x55dc99676329 base::(anonymous namespace)::OnNoMemory()
+#9 0x55dc99676319 base::TerminateBecauseOutOfMemory()
+#10 0x55dc996600ab base::FieldTrialList::InstantiateFieldTrialAllocatorIfNeeded()
+#11 0x55dc99660239 base::FieldTrialList::CopyFieldTrialStateToFlags()
+#12 0x55dc981bbf82 content::GpuProcessHost::LaunchGpuProcess()
+#13 0x55dc981ba910 content::GpuProcessHost::Init()
+#14 0x55dc981ba6c2 content::GpuProcessHost::Get()
+#15 0x55dc985d7b6e base::internal::Invoker<>::RunOnce()
+#16 0x55dc9968e306 base::TaskAnnotator::RunTask()
+#17 0x55dc9969fcf6 base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::DoWorkImpl()
+#18 0x55dc9969f9ea base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::DoWork()
+#19 0x55dc996ec899 base::MessagePumpLibevent::Run()
+#20 0x55dc996a059b base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::Run()
+#21 0x55dc996799bd base::RunLoop::Run()
+#22 0x55dc98061f18 content::BrowserProcessSubThread::IOThreadRun()
+#23 0x55dc996b8874 base::Thread::ThreadMain()
+#24 0x55dc996dacaa base::(anonymous namespace)::ThreadFunc()
+#25 0x2b4890c7fa94 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x9ca93)
+#26 0x2b4890d0ca34 __clone
+  r8: 00000000000000a0  r9: 00000546036b7edf r10: 0000000000000008 r11: 0000000000000246
+ r12: 0000000000000006 r13: 000055dc95feeeb0 r14: 0000000000000016 r15: 00000546036b6bc0
+  di: 00000000000001cd  si: 00000000000001d3  bp: 00002b4891674080  bx: 00000000000001d3
+  dx: 0000000000000006  ax: 0000000000000000  cx: ffffffffffffffff  sp: 00002b4891674040
+  ip: 00002b4890c81b1c efl: 0000000000000246 cgf: 0000000000000033 erf: 0000000000000000
+ trp: 0000000000000000 msk: 0000000000000000 cr2: 0000000000000000
+[end of stack trace]
+Calling _exit(1). Core file will not be generated.
+
+2025-06-15 23:30:50,292 No static plots are saved due to some kaleido problem:
+2025-06-15 23:30:50,293 Failed to start Kaleido subprocess. Error stream:
+
+[0615/233050.143430:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0615/233050.155719:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0615/233050.167023:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0615/233050.167760:WARNING:discardable_shared_memory_manager.cc(194)] Less than 64MB of free space in temporary directory for shared memory files: 0
+[0615/233050.176104:ERROR:platform_shared_memory_region_posix.cc(250)] Creating shared memory in /tmpdir/job/2491338.undefined/.org.chromium.Chromium.AoQJiz failed: No such file or directory (2)
+[0615/233050.176136:ERROR:platform_shared_memory_region_posix.cc(253)] Unable to access(W_OK|X_OK) /tmpdir/job/2491338.undefined: No such file or directory (2)
+Received signal 6
+#0 0x562ee958cd79 base::debug::CollectStackTrace()
+#1 0x562ee950a633 base::debug::StackTrace::StackTrace()
+#2 0x562ee958c95b base::debug::(anonymous namespace)::StackDumpSignalHandler()
+#3 0x2ac0ce53f320 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x4531f)
+#4 0x2ac0ce598b1c pthread_kill
+#5 0x2ac0ce53f26e gsignal
+#6 0x2ac0ce5228ff abort
+#7 0x562ee953830a base::internal::OnNoMemoryInternal()
+#8 0x562ee9538329 base::(anonymous namespace)::OnNoMemory()
+#9 0x562ee9538319 base::TerminateBecauseOutOfMemory()
+#10 0x562ee95220ab base::FieldTrialList::InstantiateFieldTrialAllocatorIfNeeded()
+#11 0x562ee9522239 base::FieldTrialList::CopyFieldTrialStateToFlags()
+#12 0x562ee807df82 content::GpuProcessHost::LaunchGpuProcess()
+#13 0x562ee807c910 content::GpuProcessHost::Init()
+#14 0x562ee807c6c2 content::GpuProcessHost::Get()
+#15 0x562ee8499b6e base::internal::Invoker<>::RunOnce()
+#16 0x562ee9550306 base::TaskAnnotator::RunTask()
+#17 0x562ee9561cf6 base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::DoWorkImpl()
+#18 0x562ee95619ea base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::DoWork()
+#19 0x562ee95ae899 base::MessagePumpLibevent::Run()
+#20 0x562ee956259b base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::Run()
+#21 0x562ee953b9bd base::RunLoop::Run()
+#22 0x562ee7f23f18 content::BrowserProcessSubThread::IOThreadRun()
+
+2025-06-15 23:30:50,646 No static plots are saved due to some kaleido problem:
+2025-06-15 23:30:50,646 Failed to start Kaleido subprocess. Error stream:
+
+[0615/233050.476633:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0615/233050.497876:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0615/233050.500686:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0615/233050.501362:WARNING:discardable_shared_memory_manager.cc(194)] Less than 64MB of free space in temporary directory for shared memory files: 0
+[0615/233050.506381:ERROR:platform_shared_memory_region_posix.cc(250)] Creating shared memory in /tmpdir/job/2491338.undefined/.org.chromium.Chromium.EkU1oo failed: No such file or directory (2)
+[0615/233050.506409:ERROR:platform_shared_memory_region_posix.cc(253)] Unable to access(W_OK|X_OK) /tmpdir/job/2491338.undefined: No such file or directory (2)
+Received signal 6
+#0 0x5618d2e36d79 base::debug::CollectStackTrace()
+#1 0x5618d2db4633 base::debug::StackTrace::StackTrace()
+#2 0x5618d2e3695b base::debug::(anonymous namespace)::StackDumpSignalHandler()
+#3 0x2b98a1e00320 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x4531f)
+#4 0x2b98a1e59b1c pthread_kill
+#5 0x2b98a1e0026e gsignal
+#6 0x2b98a1de38ff abort
+#7 0x5618d2de230a base::internal::OnNoMemoryInternal()
+#8 0x5618d2de2329 base::(anonymous namespace)::OnNoMemory()
+#9 0x5618d2de2319 base::TerminateBecauseOutOfMemory()
+#10 0x5618d2dcc0ab base::FieldTrialList::InstantiateFieldTrialAllocatorIfNeeded()
+#11 0x5618d2dcc239 base::FieldTrialList::CopyFieldTrialStateToFlags()
+#12 0x5618d1927f82 content::GpuProcessHost::LaunchGpuProcess()
+#13 0x5618d1926910 content::GpuProcessHost::Init()
+#14 0x5618d19266c2 content::GpuProcessHost::Get()
+#15 0x5618d1d43b6e base::internal::Invoker<>::RunOnce()
+#16 0x5618d2dfa306 base::TaskAnnotator::RunTask()
+#17 0x5618d2e0bcf6 base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::DoWorkImpl()
+#18 0x5618d2e0b9ea base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::DoWork()
+#19 0x5618d2e58899 base::MessagePumpLibevent::Run()
+#20 0x5618d2e0c59b base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::Run()
+#21 0x5618d2de59bd base::RunLoop::Run()
+#22 0x5618d17cdf18 content::BrowserProcessSubThread::IOThreadRun()
+#23 0x5618d2e24874 base::Thread::ThreadMain()
+#24 0x5618d2e46caa base::(anonymous namespace)::ThreadFunc()
+
+2025-06-15 23:30:50,647 NanoPlot: Creating yield by minimal length plot for Read length.
+2025-06-15 23:30:52,280 No static plots are saved due to some kaleido problem:
+2025-06-15 23:30:52,280 Failed to start Kaleido subprocess. Error stream:
+
+[0615/233052.145543:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0615/233052.156889:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0615/233052.157608:WARNING:discardable_shared_memory_manager.cc(194)] Less than 64MB of free space in temporary directory for shared memory files: 0
+[0615/233052.172908:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0615/233052.173707:ERROR:platform_shared_memory_region_posix.cc(250)] Creating shared memory in /tmpdir/job/2491338.undefined/.org.chromium.Chromium.xIISGi failed: No such file or directory (2)
+[0615/233052.173736:ERROR:platform_shared_memory_region_posix.cc(253)] Unable to access(W_OK|X_OK) /tmpdir/job/2491338.undefined: No such file or directory (2)
+Received signal 6
+#0 0x55a989741d79 base::debug::CollectStackTrace()
+#1 0x55a9896bf633 base::debug::StackTrace::StackTrace()
+#2 0x55a98974195b base::debug::(anonymous namespace)::StackDumpSignalHandler()
+#3 0x2b9232dd8320 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x4531f)
+#4 0x2b9232e31b1c pthread_kill
+#5 0x2b9232dd826e gsignal
+#6 0x2b9232dbb8ff abort
+#7 0x55a9896ed30a base::internal::OnNoMemoryInternal()
+#8 0x55a9896ed329 base::(anonymous namespace)::OnNoMemory()
+#9 0x55a9896ed319 base::TerminateBecauseOutOfMemory()
+#10 0x55a9896d70ab base::FieldTrialList::InstantiateFieldTrialAllocatorIfNeeded()
+#11 0x55a9896d7239 base::FieldTrialList::CopyFieldTrialStateToFlags()
+#12 0x55a988232f82 content::GpuProcessHost::LaunchGpuProcess()
+#13 0x55a988231910 content::GpuProcessHost::Init()
+#14 0x55a9882316c2 content::GpuProcessHost::Get()
+#15 0x55a98864eb6e base::internal::Invoker<>::RunOnce()
+#16 0x55a989705306 base::TaskAnnotator::RunTask()
+#17 0x55a989716cf6 base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::DoWorkImpl()
+#18 0x55a9897169ea base::sequence_manager::internal::ThreadControllerWithMessagePumpImpl::DoWork()
+#19 0x55a989763899 base::MessagePumpLibevent::Run()
+
+2025-06-15 23:30:52,281 Created length plots
+2025-06-15 23:30:52,282 NanoPlot: Creating Read lengths vs Average read quality plots using 132 reads.
+2025-06-15 23:30:52,656 No static plots are saved due to some kaleido problem:
+2025-06-15 23:30:52,656 Failed to start Kaleido subprocess. Error stream:
+
+[0615/233052.519234:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0615/233052.531267:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0615/233052.532042:WARNING:discardable_shared_memory_manager.cc(194)] Less than 64MB of free space in temporary directory for shared memory files: 0
+[0615/233052.547782:ERROR:platform_shared_memory_region_posix.cc(250)] Creating shared memory in /tmpdir/job/2491338.undefined/.org.chromium.Chromium.6fvAwq failed: No such file or directory (2)
+[0615/233052.547817:ERROR:platform_shared_memory_region_posix.cc(253)] Unable to access(W_OK|X_OK) /tmpdir/job/2491338.undefined: No such file or directory (2)
+Received signal 6
+#0 0x5586bdca8d79 base::debug::CollectStackTrace()
+#1 0x5586bdc26633 [0615/233052.558750:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+base::debug::StackTrace::StackTrace()
+#2 0x5586bdca895b base::debug::(anonymous namespace)::StackDumpSignalHandler()
+#3 0x2b6d5726c320 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x4531f)
+#4 0x2b6d572c5b1c pthread_kill
+#5 0x2b6d5726c26e gsignal
+#6 0x2b6d5724f8ff abort
+#7 0x5586bdc5430a base::internal::OnNoMemoryInternal()
+#8 0x5586bdc54329 base::(anonymous namespace)::OnNoMemory()
+#9 0x5586bdc54319 base::TerminateBecauseOutOfMemory()
+#10 0x5586bdc3e0ab base::FieldTrialList::InstantiateFieldTrialAllocatorIfNeeded()
+#11 0x5586bdc3e239 base::FieldTrialList::CopyFieldTrialStateToFlags()
+#12 0x5586bc799f82 content::GpuProcessHost::LaunchGpuProcess()
+#13 0x5586bc798910 content::GpuProcessHost::Init()
+#14 0x5586bc7986c2 content::GpuProcessHost::Get()
+#15 0x5586bcbb5b6e base::internal::Invoker<>::RunOnce()
+
+2025-06-15 23:30:53,050 No static plots are saved due to some kaleido problem:
+2025-06-15 23:30:53,051 Failed to start Kaleido subprocess. Error stream:
+
+[0615/233052.732726:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0615/233052.754660:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0615/233052.755368:WARNING:discardable_shared_memory_manager.cc(194)] Less than 64MB of free space in temporary directory for shared memory files: 0
+[0615/233052.760624:WARNING:resource_bundle.cc(431)] locale_file_path.empty() for locale 
+[0615/233052.764744:ERROR:platform_shared_memory_region_posix.cc(250)] Creating shared memory in /tmpdir/job/2491338.undefined/.org.chromium.Chromium.HP6R2E failed: No such file or directory (2)
+[0615/233052.764773:ERROR:platform_shared_memory_region_posix.cc(253)] Unable to access(W_OK|X_OK) /tmpdir/job/2491338.undefined: No such file or directory (2)
+Received signal 6
+#0 0x55f8dea74d79 base::debug::CollectStackTrace()
+#1 0x55f8de9f2633 base::debug::StackTrace::StackTrace()
+#2 0x55f8dea7495b base::debug::(anonymous namespace)::StackDumpSignalHandler()
+#3 0x2b6af530a320 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x4531f)
+#4 0x2b6af5363b1c pthread_kill
+#5 0x2b6af530a26e gsignal
+#6 0x2b6af52ed8ff abort
+#7 0x55f8dea2030a base::internal::OnNoMemoryInternal()
+#8 0x55f8dea20329 base::(anonymous namespace)::OnNoMemory()
+#9 0x55f8dea20319 base::TerminateBecauseOutOfMemory()
+#10 0x55f8dea0a0ab base::FieldTrialList::InstantiateFieldTrialAllocatorIfNeeded()
+#11 0x55f8dea0a239 base::FieldTrialList::CopyFieldTrialStateToFlags()
+#12 0x55f8dd7527a6 content::RenderProcessHostImpl::PropagateBrowserCommandLineToRenderer()
+#13 0x55f8dd74abc6 content::RenderProcessHostImpl::AppendRendererCommandLine()
+#14 0x55f8dd748d7f content::RenderProcessHostImpl::Init()
+#15 0x55f8dd739155 content::RenderFrameHostManager::ReinitializeRenderFrame()
+#16 0x55f8dd738914 content::RenderFrameHostManager::GetFrameHostForNavigation()
+#17 0x55f8dd7382a9 content::RenderFrameHostManager::DidCreateNavigationRequest()
+#18 0x55f8dd67b6b8 content::FrameTreeNode::CreatedNavigationRequest()
+#19 0x55f8dd702f4b content::Navigator::Navigate()
+#20 0x55f8dd6da1f7 content::NavigationControllerImpl::NavigateWithoutEntry()
+#21 0x55f8dd6d9cdf content::NavigationControllerImpl::LoadURLWithParams()
+#22 0x55f8dfed2e12 headless::HeadlessWebContentsImpl::Create()
+#23 0x55f8ded567b7 headless::HeadlessBrowserContextImpl::CreateWebContents()
+#24 0x55f8dc7c9a66 OnHeadlessBrowserStarted()
+#25 0x55f8ded58033 headless::HeadlessBrowserImpl::RunOnStartCallback()
+#26 0x55f8ded59212 headless::HeadlessBrowserMainParts::PreMainMessageLoopRun()
+
+2025-06-15 23:30:53,054 Created LengthvsQual plot
+2025-06-15 23:30:53,055 Writing html report.
+2025-06-15 23:30:53,263 Finished!

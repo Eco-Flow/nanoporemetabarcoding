@@ -19,7 +19,13 @@
 
 ## Introduction
 
-**nf-core/nanoporemetabarcoding** is a bioinformatics pipeline that ...
+**nf-core/nanoporemetabarcoding** is a bioinformatics pipeline for processing nanopore metabarcoding data.
+
+Overview:
+
+![pipeline_diagram](docs/images/pipeline_overview.png)
+
+Steps:
 
 <!-- TODO nf-core:
    Complete this sentence with a 2-3 sentence summary of what types of data the pipeline ingests, a brief overview of the
@@ -29,35 +35,66 @@
 
 <!-- TODO nf-core: Include a figure that guides the user through the major workflow steps. Many nf-core
      workflows use the "tube map" design for that. See https://nf-co.re/docs/contributing/design_guidelines#examples for examples.   -->
-<!-- TODO nf-core: Fill in short bullet-pointed list of the default steps in the pipeline -->1. Read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))2. Present QC for raw reads ([`MultiQC`](http://multiqc.info/))
+<!-- TODO nf-core: Fill in short bullet-pointed list of the default steps in the pipeline -->
+
+1. Filtering and trimming ([`NanoFilt`](https://github.com/wdecoster/nanofilt))
+2. Read QC ([`NanoPlot`](https://github.com/wdecoster/NanoPlot))
+    - Ran on both raw and filtered and trimmed reads
+3. Tags+primer based demultiplexing and trimming ([`Cutadapt`](https://github.com/marcelm/cutadapt)). Divided in two steps:
+    1. First, demultiplexing based on the forward tags+primers
+    2. Then, demultiplexing is based on the combination of forward and reverse tags+primers
+4. Group amplicons reads into "species" (consensus sequences) ([`amplicon_sorter`](https://github.com/avierstr/amplicon_sorter))
+5. Consensus sequence correction ([`Medaka`](https://github.com/nanoporetech/medaka))
+  - Correction using the consensus sequence from aplicon_sorter as reference and the grouped amplicon reads as the based called data
+6. Create custom BLAST database ([`makeblastdb`](https://www.ncbi.nlm.nih.gov/books/NBK279690/))
+7. Consensus sequence annotation based on database ([`blastn`](https://www.ncbi.nlm.nih.gov/books/NBK279690/))
+
+<!-- 1. Read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))2. Present QC for raw reads ([`MultiQC`](http://multiqc.info/)) -->
+
 
 ## Usage
 
 > [!NOTE]
 > If you are new to Nextflow and nf-core, please refer to [this page](https://nf-co.re/docs/usage/installation) on how to set-up Nextflow. Make sure to [test your setup](https://nf-co.re/docs/usage/introduction#how-to-run-a-pipeline) with `-profile test` before running the workflow on actual data.
 
+To use this pipeline, first clone this repo:
+
+```bash
+git clone https://github.com/Eco-Flow/nanoporemetabarcoding.git
+```
+
+Before running on your data, you can test if the pipeline is suited to your setup by running:
+
+```bash
+nextflow run main.nf \
+   -profile test,<docker/singularity/conda/.../institute> \
+   --outdir <OUTDIR>
+```
+
+The running time should be around 8 minutes on a machine with 12 cpus/threads.
+
 <!-- TODO nf-core: Describe the minimum required steps to execute the pipeline, e.g. how to prepare samplesheets.
      Explain what rows and columns represent. For instance (please edit as appropriate):
+-->
 
-First, prepare a samplesheet with your input data that looks as follows:
+For running the pipleine on your data, prepare a samplesheet with your input that looks as follows:
 
 `samplesheet.csv`:
 
 ```csv
-sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
+sample,fastq
+sample_name,path/to/sample.fastq.gz
 ```
 
-Each row represents a fastq file (single-end) or a pair of fastq files (paired end).
+The first column represents the sample name or sample id, and the second the location to the corresponding FASTQ file.
 
--->
 
 Now, you can run the pipeline using:
 
 <!-- TODO nf-core: update the following command to include all required parameters for a minimal example -->
 
 ```bash
-nextflow run nf-core/nanoporemetabarcoding \
+nextflow run main.nf \
    -profile <docker/singularity/.../institute> \
    --input samplesheet.csv \
    --outdir <OUTDIR>
@@ -68,11 +105,70 @@ nextflow run nf-core/nanoporemetabarcoding \
 
 For more details and further functionality, please refer to the [usage documentation](https://nf-co.re/nanoporemetabarcoding/usage) and the [parameter documentation](https://nf-co.re/nanoporemetabarcoding/parameters).
 
+## Params
+
+Check the config file `nextflow.config` in the params block and fill parameters with the proper values:
+
+**Demultiplex options:**
+
+```
+    // Cutadapt options
+    tags_f                      = '/home/ucbtfrd/pipelines/nanoporemetabarcoding/test_data/primers_f.fasta'
+    tags_r                      = '/home/ucbtfrd/pipelines/nanoporemetabarcoding/test_data/primers_r.fasta'
+    error_rate                  = 2 // Error rate for adapter removal
+
+    // After demultiplexing, filter FASTQs with less than x reads
+    filt_fastq                  = 100
+```
+
+**Blast options:**
+
+```
+    // Path to already built database
+    blast_db                   = null
+    // Path to database to be built
+    custom_db                  = '/path/to/custom/databse.fasta'
+    // Output format of blast results
+    outfmt                     = 6
+    // evalue cutoff
+    evalue                     = 0.001
+    // Maximum number of hits per query
+    max_target_seqs            = 5
+    // Maximum number of HSPs per subject (subjects in the database)
+    max_hsps                   = null
+    // Minimum query coverage per HSP
+    qcov_hsp_perc              = 90
+```
+
+You should supply either the path to the alraedy built database or provide a custom fasta with sequences to built a custom one. If both are supplied the pipeline will fail.
+
+**Nanofilt options:**
+```
+    // Nanofilt options
+    nano_quality                = null
+    nano_read_length            = 250
+```
+
+Alternatively, you can provide/modify pipeline options calling them as command line arguments. For example:
+
+```bash
+nextflow run main.nf \
+   -profile <docker/singularity/.../institute> \
+   --input samplesheet.csv \
+   --outdir <OUTDIR>
+   --nano_quality 10
+   --evalue 1e-10
+   --tags_f path/to/forward/tags+primers.fasta
+   --tags_r path/to/reverse/tags+primers.fasta
+```
+
 ## Pipeline output
 
-To see the results of an example test run with a full size dataset refer to the [results](https://nf-co.re/nanoporemetabarcoding/results) tab on the nf-core website pipeline page.
+<!-- To see the results of an example test run with a full size dataset refer to the [results](https://nf-co.re/nanoporemetabarcoding/results) tab on the nf-core website pipeline page.
 For more details about the output files and reports, please refer to the
-[output documentation](https://nf-co.re/nanoporemetabarcoding/output).
+[output documentation](https://nf-co.re/nanoporemetabarcoding/output). -->
+
+<!-- For an example of some of the relevant results check the `./results` folder in this repo. -->
 
 ## Credits
 
