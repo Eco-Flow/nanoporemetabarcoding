@@ -59,7 +59,7 @@ Steps:
 
 To use this pipeline, first clone this repo:
 
-```
+```bash
 git clone https://github.com/Eco-Flow/nanoporemetabarcoding.git
 ```
 
