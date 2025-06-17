@@ -57,11 +57,27 @@ Steps:
 > [!NOTE]
 > If you are new to Nextflow and nf-core, please refer to [this page](https://nf-co.re/docs/usage/installation) on how to set-up Nextflow. Make sure to [test your setup](https://nf-co.re/docs/usage/introduction#how-to-run-a-pipeline) with `-profile test` before running the workflow on actual data.
 
+To use this pipeline, first clone this repo:
+
+```
+git clone https://github.com/Eco-Flow/nanoporemetabarcoding.git
+```
+
+Before running on your data, you can test if the pipeline is suited to your setup by running:
+
+```bash
+nextflow run main.nf \
+   -profile <docker/singularity/conda/.../institute> \
+   --outdir <OUTDIR>
+```
+
+The running time should be around 8 minutes on a machine with 12 cpus/threads.
+
 <!-- TODO nf-core: Describe the minimum required steps to execute the pipeline, e.g. how to prepare samplesheets.
      Explain what rows and columns represent. For instance (please edit as appropriate):
 -->
 
-First, prepare a samplesheet with your input data that looks as follows:
+For running the pipleine on your data, prepare a samplesheet with your input that looks as follows:
 
 `samplesheet.csv`:
 
@@ -78,7 +94,7 @@ Now, you can run the pipeline using:
 <!-- TODO nf-core: update the following command to include all required parameters for a minimal example -->
 
 ```bash
-nextflow run nf-core/nanoporemetabarcoding \
+nextflow run main.nf \
    -profile <docker/singularity/.../institute> \
    --input samplesheet.csv \
    --outdir <OUTDIR>
@@ -106,10 +122,11 @@ Check the config file `nextflow.config` in the params block and fill parameters 
 ```
 
 **Blast options:**
+
 ```
-    // Path to built blast database
+    // Path to already built database
     blast_db                   = null
-    // Path to custom databse to be built
+    // Path to database to be built
     custom_db                  = '/path/to/custom/databse.fasta'
     // Output format of blast results
     outfmt                     = 6
@@ -123,6 +140,8 @@ Check the config file `nextflow.config` in the params block and fill parameters 
     qcov_hsp_perc              = 90
 ```
 
+You should supply either the path to the alraedy built database or provide a custom fasta with sequences to built a custom one. If both are supplied the pipeline will fail.
+
 **Nanofilt options:**
 ```
     // Nanofilt options
@@ -133,12 +152,12 @@ Check the config file `nextflow.config` in the params block and fill parameters 
 Alternatively, you can provide/modify pipeline options calling them as command line arguments. For example:
 
 ```bash
-nextflow run nf-core/nanoporemetabarcoding \
+nextflow run main.nf \
    -profile <docker/singularity/.../institute> \
    --input samplesheet.csv \
    --outdir <OUTDIR>
    --nano_quality 10
-   --evalue e-10
+   --evalue 1e-10
    --tags_f path/to/forward/tags+primers.fasta
    --tags_r path/to/reverse/tags+primers.fasta
 ```
