@@ -232,8 +232,20 @@ workflow NANOPOREMETABARCODING {
         pattern_consensus.first()
     )
 
+    // Rename the consensus sequences to their group and meta id
+    ch_consensus = SEQKIT_CONSENSUS.out.filter
+                 | map { meta, fasta ->
+                     def group = meta.group // Get group from metadata
+                     def id = meta.id // Get id from metadata
+                     def new_name = "${id}_${group}" // Create new metadata with id and group
+                     def renamed_fasta = fasta.text.replaceFirst(/^>consensus/, ">${new_name}") // Rename fasta with new metadata
+                     [meta, renamed_fasta] // Return new metadata and fasta
+                 }
+
+    ch_consensus.view()
+
     GUNZIP_SEQKIT_GREP_C (
-        SEQKIT_CONSENSUS.out.filter
+        ch_consensus
     )
 
     // Join consensus and amplicon sequences based on metadata and separate them in
@@ -294,6 +306,8 @@ workflow NANOPOREMETABARCODING {
         MEDAKA.out.assembly,
         ch_blast.first()
     )
+
+    BLAST_BLASTN.out.txt.view()
 
     //
     // Collate and save software versions
