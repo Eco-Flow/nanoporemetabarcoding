@@ -21,9 +21,12 @@ include { GUNZIP as GUNZIP_SEQKIT_GREP_A  } from '../modules/nf-core/gunzip/main
 include { GUNZIP as GUNZIP_SEQKIT_GREP_C  } from '../modules/nf-core/gunzip/main'
 include { MEDAKA                          } from '../modules/nf-core/medaka/main'
 include { CAT_CAT                         } from '../modules/nf-core/cat/cat/main'
+include { CAT_CAT as CAT_CAT_MEDAKA       } from '../modules/nf-core/cat/cat/main'
 //include { DIAMOND_BLASTX                  } from '../modules/nf-core/diamond/blastx/main'
 include { BLAST_MAKEBLASTDB               } from '../modules/nf-core/blast/makeblastdb/main'
 include { BLAST_BLASTN                    } from '../modules/nf-core/blast/blastn/main'
+include { SEQKIT_REPLACE                  } from '../modules/nf-core/seqkit/replace/main'
+include { BEST_HIT                        } from '../modules/local/blast_best_hit'
 include { paramsSummaryMap                } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc            } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML          } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -74,7 +77,7 @@ workflow NANOPOREMETABARCODING {
 
     // Flatten the output channel (FASTQs) from cutadapt demultiplex into indidual channels (FASTQ)
     // (check for the function flattenAndMap in the functions section)
-    ch_input_f = flattenAndMap(CUTADAPT_F.out.reads)
+    ch_input_f = flattenAndMap(CUTADAPT_F.out.reads, true)
 
     // Get unkwon reads to reverse complement them later and trim again based on forward barcodes
     // We filter out reads that are unknown as they are probably reverse complemented with regard
@@ -105,7 +108,7 @@ workflow NANOPOREMETABARCODING {
     ch_unknown = flattenAndMap(CUTADAPT_F_RC.out.reads)
                | map { meta, fastq ->
                    def cleaned_meta = meta.id.replaceFirst(/unknown_/, '') // Remove the 'unknown_' prefix to be able to merge
-                   [[id: cleaned_meta, single_end: meta.single_end], fastq] // Return updated metadata and fastq
+                   [meta + [id: cleaned_meta], fastq] // Return updated metadata and fastq
                }
 
     // Group known and unknown (not uknown anymore) reads together based on metadata
@@ -192,7 +195,7 @@ workflow NANOPOREMETABARCODING {
 
     //Get group information from amplicon sorter output FASTA files
     ch_group = AMPLICON_SORTER.out.fastas
-             | transpose()
+             | transpose() // Should look this up
              | map { meta, fasta ->
                 // Get the filename without extension
                  def basename = fasta.baseName
@@ -233,19 +236,12 @@ workflow NANOPOREMETABARCODING {
     )
 
     // Rename the consensus sequences to their group and meta id
-    ch_consensus = SEQKIT_CONSENSUS.out.filter
-                 | map { meta, fasta ->
-                     def group = meta.group // Get group from metadata
-                     def id = meta.id // Get id from metadata
-                     def new_name = "${id}_${group}" // Create new metadata with id and group
-                     def renamed_fasta = fasta.text.replaceFirst(/^>consensus/, ">${new_name}") // Rename fasta with new metadata
-                     [meta, renamed_fasta] // Return new metadata and fasta
-                 }
-
-    ch_consensus.view()
+    SEQKIT_REPLACE(
+        SEQKIT_CONSENSUS.out.filter
+    )
 
     GUNZIP_SEQKIT_GREP_C (
-        ch_consensus
+        SEQKIT_REPLACE.out.fastx
     )
 
     // Join consensus and amplicon sequences based on metadata and separate them in
@@ -277,6 +273,22 @@ workflow NANOPOREMETABARCODING {
         ch_medaka
     )
 
+    // Concatenate corrected consensus sequences so they can be blasted all together
+    // This is very important buecause if they are blasted induvidually the dabaase has
+    // to be loaded into memory every time
+    ch_corrected = MEDAKA.out.assembly
+                 | map {
+                    meta, fasta ->
+                    [[id:meta.old_id], fasta] // old_id to concatenate them
+                 }
+                 | groupTuple(by: 0)
+
+    CAT_CAT_MEDAKA (
+        ch_corrected
+    )
+
+    ch_corrected_concat = CAT_CAT_MEDAKA.out.file_out
+
     //
     // MODULE: Run makeblastdb
     //
@@ -301,13 +313,24 @@ workflow NANOPOREMETABARCODING {
     // MODULE: Run BLAST
     //
 
+//    MEDAKA.out.assembly.view()
 
     BLAST_BLASTN (
-        MEDAKA.out.assembly,
+        ch_corrected_concat,
         ch_blast.first()
     )
 
-    BLAST_BLASTN.out.txt.view()
+    //
+    // MODULE: Run blast best hit
+    //
+
+    // To annotate the consensus (or ASVs) sequences, we need to use a criteria
+    // to choose the best blast hit. In this case the best blast hit is first according
+    // to the bitscore and second to the evalue
+
+    BEST_HIT (
+        BLAST_BLASTN.out.txt
+    )
 
     //
     // Collate and save software versions
@@ -377,17 +400,22 @@ workflow NANOPOREMETABARCODING {
 // input single values. Use flattenAndMap so that each FASTQ is emitted seprately
 // Function to flatten output channel (FASTQs) from cutadapt demultiplex into indidual channels (FASTQ)
 
-def flattenAndMap(ch_fastqs) {
+def flattenAndMap(ch_fastqs, preserve_old_id = false) { // preserve_old_id becuase this change only needs to be done on the first cutadapt process
     ch_fastq = ch_fastqs
-             | map { meta, fastqs ->
-                   fastqs
+             | flatMap { meta, fastqs ->
+                   // Use flatMap instead of map + flatten
+                   fastqs.collect { fastq ->
+                       def name = fastq.name.toString().replaceAll(/\.trim\.fastq\.gz$/, '')
+                       def new_meta = meta + [id: name]
+                       // Only add old_id if requested
+                       if (preserve_old_id) {
+                           new_meta = new_meta + [old_id: meta.id]
+                       }
+                       tuple(new_meta, fastq)
+                   }
              }
-             | flatten
-             | map { fastq ->
-                   def name = fastq.name.toString().replaceAll(/\.trim\.fastq\.gz$/, '') // Remove extension
-                   tuple( [id:name, single_end:true], fastq ) // Return tuple
-             }
-    return ( ch_fastq )
+
+    return ch_fastq
 }
 
 // Export the function
