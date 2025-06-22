@@ -27,6 +27,7 @@ include { BLAST_MAKEBLASTDB               } from '../modules/nf-core/blast/makeb
 include { BLAST_BLASTN                    } from '../modules/nf-core/blast/blastn/main'
 include { SEQKIT_REPLACE                  } from '../modules/nf-core/seqkit/replace/main'
 include { BEST_HIT                        } from '../modules/local/blast_best_hit'
+include { ASSIGN_TAXONOMY                 } from '../modules/local/assign_taxonomy'
 include { paramsSummaryMap                } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc            } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML          } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -154,10 +155,10 @@ workflow NANOPOREMETABARCODING {
                  }
 
     ch_filt     = NANOFILT.out.filtreads
-                 | map {
+                | map {
                     meta, fastq ->
                     [[id:"filt_${meta.id}"], fastq]
-                 }
+                }
 
     //
     // MODULE: Run Nanoplot
@@ -251,7 +252,7 @@ workflow NANOPOREMETABARCODING {
                | multiMap { meta, amps, cons -> // meta: metadata, amps: amplicon sequences, cons: consensus sequences
                             amps : [ meta, amps] // Return a tuple with metadata and amplicon sequences
                             cons : [ meta, cons ] // Return a tuple with metadata and consensus sequences
-                }
+               }
 
     // For running medaka without running minimap2. Medaka already aligns basecalls (amplicons here)
     // to the consensus sequences, so perhaps we can skip minimap2 step, at least for now
@@ -313,23 +314,29 @@ workflow NANOPOREMETABARCODING {
     // MODULE: Run BLAST
     //
 
-//    MEDAKA.out.assembly.view()
-
     BLAST_BLASTN (
         ch_corrected_concat,
-        ch_blast.first()
+        ch_blast.first() // .first() so that channel can be used several times
     )
 
     //
     // MODULE: Run blast best hit
     //
 
-    // To annotate the consensus (or ASVs) sequences, we need to use a criteria
-    // to choose the best blast hit. In this case the best blast hit is first according
-    // to the bitscore and second to the evalue
+    // To annotate the consensus (or ASVs) sequences, we need to estabish a criteria
+    // to select the best blast hit. In this case the best blast hit is established first
+    // by bitscore and second by evalue
 
     BEST_HIT (
         BLAST_BLASTN.out.txt
+    )
+
+    //
+    // MODULE: Run assign taxonomy
+    //
+
+    ASSIGN_TAXONOMY(
+        BEST_HIT.out.best_hit
     )
 
     //
