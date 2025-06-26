@@ -11,6 +11,7 @@ process ASSIGN_TAXONOMY {
 
     input:
     tuple val(meta), path(blast_hits)
+    path(sql_db)
 
     //output:
     //tuple val(meta), path("${meta.id}_best_hit.txt")   , emit: best_hit
@@ -24,7 +25,8 @@ process ASSIGN_TAXONOMY {
     def prefix = task.ext.prefix ?: "${meta.id}"
 
     """
-    Rscript ${projectDir}/bin/assign_taxonomy.R $blast_hits
+    Rscript ${projectDir}/bin/assign_taxonomy.R $blast_hits \\
+    --sql_db $sql_db
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

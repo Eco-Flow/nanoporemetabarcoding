@@ -334,9 +334,11 @@ workflow NANOPOREMETABARCODING {
     //
     // MODULE: Run assign taxonomy
     //
+    ch_sql_db = Channel.fromPath(params.sql_db)
 
     ASSIGN_TAXONOMY(
-        BEST_HIT.out.best_hit
+        BEST_HIT.out.best_hit,
+        ch_sql_db.first()
     )
 
     //

@@ -1,6 +1,9 @@
 
 library(argparse)
 library(dplyr)
+library(tidyr)
+library(stringr)
+library(taxonomizr)
 
 
 # Parse command-line arguments
@@ -29,4 +32,52 @@ blast_filtered <- Blastout %>%
          bitscore = V12) %>%
   dplyr::select(qseqid, sseqid, pident, length, mismatch, gapopen, qstart, qend, sstart, send, evalue, bitscore)
 
-print(blast_filtered)
+# Create SQLite database - can be stored centrally to avoid replication across projects - this seems to variably work, so the below steps avoid it
+#prepareDatabase('accessionTaxa.sql')
+
+print(data.frame(blast_filtered)$sseqid)
+
+print(accessionToTaxa(data.frame(blast_filtered)$sseqid,args$sql_db))
+
+sseqids <- data.frame(blast_filtered) %>%
+  dplyr::select(qseqid, pident, sseqid) %>%
+  mutate(seqid2 = paste0(sseqid, ".1")) %>%
+  mutate(taxaId = accessionToTaxa(sseqid, args$sql_db)) %>%
+  mutate(Taxonomic.ranks = getTaxonomy(taxaId, args$sql_db)) %>%
+  rename("ASV" = "qseqid")
+
+taxonomic.df <- as.data.frame(sseqids$Taxonomic.ranks, stringsAsFactors = FALSE)
+sseqids <- cbind(sseqids, taxonomic.df)
+sseqids$Taxonomic.ranks <- NULL
+
+write.csv(sseqids, "ASV_taxa.csv")
+
+print(sseqids)
+
+ASV.ids <- sseqids %>%
+  mutate(Taxon = if_else(order == "Araneae",
+                         if_else(pident > 90, genus,
+                                         if_else(pident > 80, family,
+                                                 if_else(pident > 70, order,
+                                                         phylum))),
+         if_else(pident > 80, family,
+                 if_else(pident > 70, order,
+                         phylum)))) %>%
+  dplyr::select(ASV, Taxon) %>%
+  mutate(ASV = str_remove(ASV, "_"))
+
+print("debug")
+
+print(ASV.ids)
+
+Plate.metabar <- merge(ASV.ids, asv_tab2, by = "ASV") %>%
+  dplyr::select(-ASV) %>%
+  pivot_longer(cols = -Taxon, names_to = "Sample", values_to = "Reads") %>%
+  group_by(Taxon, Sample) %>%
+  summarise(Reads = sum(Reads, na.rm = TRUE)) %>%
+  pivot_wider(names_from = "Sample", values_from = "Reads")
+
+write.csv(Plate.metabar, "aasign_tax_output.csv")
+
+
+
