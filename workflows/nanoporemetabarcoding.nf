@@ -79,6 +79,7 @@ workflow NANOPOREMETABARCODING {
     // Flatten the output channel (FASTQs) from cutadapt demultiplex into indidual channels (FASTQ)
     // (check for the function flattenAndMap in the functions section)
     ch_input_f = flattenAndMap(CUTADAPT_F.out.reads, true)
+    //ch_input_f.view()
 
     // Get unkwon reads to reverse complement them later and trim again based on forward barcodes
     // We filter out reads that are unknown as they are probably reverse complemented with regard
@@ -111,12 +112,14 @@ workflow NANOPOREMETABARCODING {
                    def cleaned_meta = meta.id.replaceFirst(/unknown_/, '') // Remove the 'unknown_' prefix to be able to merge
                    [meta + [id: cleaned_meta], fastq] // Return updated metadata and fastq
                }
+    ch_unknown.view()
 
     // Group known and unknown (not uknown anymore) reads together based on metadata
     ch_input_f = ch_input_f
                | mix(ch_unknown)
                | groupTuple()
 
+    ch_input_f.view()
     // Concatenate grouped reads together based on metadata.
     CAT_CAT (
         ch_input_f
@@ -146,6 +149,7 @@ workflow NANOPOREMETABARCODING {
                            count > params.filt_fastq && !meta.id.contains('unknown') // Filter out FASTQs with less than x reads and with unknown primer combinations
                       }
 
+    // ch_input_filtered.view()
     // Prepare raw, cleaned and demultiplexed reads for Nanoplot
 
     ch_raw       = ch_input
@@ -164,10 +168,10 @@ workflow NANOPOREMETABARCODING {
     // MODULE: Run Nanoplot
     //
 
-    NANOPLOT (
-        ch_raw.mix(ch_filt).mix(ch_input_filtered)
-    )
-    ch_multiqc_files = ch_multiqc_files.mix(NANOPLOT.out.txt.collectFile() { meta, stats -> ["${meta.id}.txt", stats.text] }).collect() // Original name out.txt channel is stats.txt, so multiqc keeps overwritting
+    //NANOPLOT (
+    //    ch_raw.mix(ch_filt).mix(ch_input_filtered)
+    //)
+    //ch_multiqc_files = ch_multiqc_files.mix(NANOPLOT.out.txt.collectFile() { meta, stats -> ["${meta.id}.txt", stats.text] }).collect() // Original name out.txt channel is stats.txt, so multiqc keeps overwritting
 
     //
     // MODULE: Run FastQC

@@ -11,6 +11,11 @@ parser <- ArgumentParser(description = 'Assign taxonomy to blast hits')
 parser$add_argument('blast_hits', type = 'character', help = 'Path to blast hits in outfmt 6')
 parser$add_argument('--db_type', type = 'character', help = 'Taxonomy database type: taxonomizr or custom tsv')
 parser$add_argument('--sql_db', type = 'character', help = 'Path to SQL ncbi taxonomy database')
+parser$add_argument('--spident', type = 'numeric', help = 'Identity threshold (in %) for taxonomy assignment at species level', default = 99)
+parser$add_argument('--gpident', type = 'numeric', help = 'Identity threshold (in %) for taxonomy assignment at genus level', default = 90)
+parser$add_argument('--fpident', type = 'numeric', help = 'Identity threshold (in %) for taxonomy assignment at family level', default = 80)
+parser$add_argument('--opident', type = 'numeric', help = 'Identity threshold (in %) for taxonomy assignment at oder level', default = 70)
+
 
 args <- parser$parse_args()
 
@@ -50,34 +55,40 @@ taxonomic.df <- as.data.frame(sseqids$Taxonomic.ranks, stringsAsFactors = FALSE)
 sseqids <- cbind(sseqids, taxonomic.df)
 sseqids$Taxonomic.ranks <- NULL
 
-write.csv(sseqids, "ASV_taxa.csv")
+write.csv(sseqids, "ASV_taxa.csv", row.names = FALSE)
 
 print(sseqids)
 
 ASV.ids <- sseqids %>%
-  mutate(Taxon = if_else(order == "Araneae",
-                         if_else(pident > 90, genus,
-                                         if_else(pident > 80, family,
-                                                 if_else(pident > 70, order,
+  mutate(assigned_taxon = if_else(order == "Araneae",
+                                if_else(pident > args$gpident, genus,
+                                         if_else(pident > args$fpident, family,
+                                                 if_else(pident > args$opident, order,
                                                          phylum))),
-         if_else(pident > 80, family,
-                 if_else(pident > 70, order,
-                         phylum)))) %>%
-  dplyr::select(ASV, Taxon) %>%
-  mutate(ASV = str_remove(ASV, "_"))
+        if_else(pident > args$spident, species, # Species and genus level assignment where not in Jordan's original code. Is there a reason for this?
+            if_else(pident > args$gpident, genus,
+                if_else(pident > args$fpident, family,
+                     if_else(pident > args$opident, order,
+                         phylum)))))) %>%
+  #dplyr::select(taxaId, ASV, Taxon) %>%
+  dplyr::select(!c(sseqid,seqid2)) %>%
+  mutate(ASV = str_remove(ASV, "_")) %>%
+  mutate(sample_name = str_remove(ASV, "_\\d+_\\d+$"))
 
 print("debug")
 
 print(ASV.ids)
 
-Plate.metabar <- merge(ASV.ids, asv_tab2, by = "ASV") %>%
-  dplyr::select(-ASV) %>%
-  pivot_longer(cols = -Taxon, names_to = "Sample", values_to = "Reads") %>%
-  group_by(Taxon, Sample) %>%
-  summarise(Reads = sum(Reads, na.rm = TRUE)) %>%
-  pivot_wider(names_from = "Sample", values_from = "Reads")
+write.csv(ASV.ids, "ASV_filtered.csv", row.names = FALSE)
 
-write.csv(Plate.metabar, "aasign_tax_output.csv")
+#Plate.metabar <- merge(ASV.ids, asv_tab2, by = "ASV") %>%
+#  dplyr::select(-ASV) %>%
+#  pivot_longer(cols = -Taxon, names_to = "Sample", values_to = "Reads") %>%
+#  group_by(Taxon, Sample) %>%
+#  summarise(Reads = sum(Reads, na.rm = TRUE)) %>%
+#  pivot_wider(names_from = "Sample", values_from = "Reads")
+
+#write.csv(Plate.metabar, "asign_tax_output.csv")
 
 
 

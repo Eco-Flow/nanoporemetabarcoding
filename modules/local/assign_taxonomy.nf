@@ -13,24 +13,26 @@ process ASSIGN_TAXONOMY {
     tuple val(meta), path(blast_hits)
     path(sql_db)
 
-    //output:
-    //tuple val(meta), path("${meta.id}_best_hit.txt")   , emit: best_hit
-    //path "versions.yml"                                , emit: versions
+    output:
+    tuple val(meta), path("*.csv")   , emit: tax_csv
+    path "versions.yml"              , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
-    //def args = task.ext.args ?: ''
+    def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
 
     """
-    Rscript ${projectDir}/bin/assign_taxonomy.R $blast_hits \\
-    --sql_db $sql_db
+    Rscript ${projectDir}/bin/assign_taxonomy.R \\
+    $blast_hits \\
+    --sql_db $sql_db \\
+    $args
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        sort: \$(sort --version)
+        R: \$(R --version | head -n1 | cut -d" " -f3)
     END_VERSIONS
     """
 }
