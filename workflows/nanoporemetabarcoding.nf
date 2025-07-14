@@ -48,11 +48,19 @@ workflow NANOPOREMETABARCODING {
     ch_versions = Channel.empty()
     ch_multiqc_files = Channel.empty()
 
+    // Prepare the samplesheet channel
+
     ch_input = ch_samplesheet
              | map {
                 meta, fastq ->
                 [[id:meta.id, single_end:true], fastq] // Needs to be declared as single end to run PYCHOPPER
              }
+
+    // Prepare metadata channel
+    ch_metadata = params.metadata ? Channel.fromPath(params.metadata, checkIfExists: true)
+                | splitCsv(header: true)
+                | map { row -> [row.primer_comb, row.sample] }
+                : null // Channel.empty() if no metadata is provided
 
     //
     // MODULE: Run Nanoplot
@@ -112,14 +120,14 @@ workflow NANOPOREMETABARCODING {
                    def cleaned_meta = meta.id.replaceFirst(/unknown_/, '') // Remove the 'unknown_' prefix to be able to merge
                    [meta + [id: cleaned_meta], fastq] // Return updated metadata and fastq
                }
-    ch_unknown.view()
+    //ch_unknown.view()
 
     // Group known and unknown (not uknown anymore) reads together based on metadata
     ch_input_f = ch_input_f
                | mix(ch_unknown)
                | groupTuple()
 
-    ch_input_f.view()
+    //ch_input_f.view()
     // Concatenate grouped reads together based on metadata.
     CAT_CAT (
         ch_input_f
@@ -194,8 +202,23 @@ workflow NANOPOREMETABARCODING {
     // MODULE: Run Amplicon Sorter
     //
 
+    //GUNZIP.out.gunzip.view()
+
+    // For running medaka without running minimap2. Medaka already aligns basecalls (amplicons here)
+    // to the consensus sequences, so perhaps we can skip minimap2 step, at least for now
+    // Make sure this is working as expected
+    ch_amplicon_sort = ch_metadata ? GUNZIP.out.gunzip
+                     | map { meta, fastq -> [meta.id, meta, fastq] } // Extract meta.id replace with sample name according to metadata
+                     | join(ch_metadata) // Join on adapter combination
+                     | map { primer_comb, meta, fastq, sample ->
+                                def new_meta = meta.clone()
+                                new_meta.id = sample
+                                [new_meta, fastq]
+                     }
+                     : GUNZIP.out.gunzip // If no amplicon sort is provided, use the gunzip output (primer combinations id)
+
     AMPLICON_SORTER (
-        GUNZIP.out.gunzip
+        ch_amplicon_sort
     )
 
     //Get group information from amplicon sorter output FASTA files
@@ -263,6 +286,8 @@ workflow NANOPOREMETABARCODING {
     // Make sure this is working as expected
     ch_medaka = GUNZIP_SEQKIT_GREP_A.out.gunzip
               | join(GUNZIP_SEQKIT_GREP_C.out.gunzip)
+
+    ch_medaka.view()
 
     //
     // MODULE: Run Minimap2

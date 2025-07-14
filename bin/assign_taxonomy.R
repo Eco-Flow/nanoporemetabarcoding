@@ -72,7 +72,7 @@ ASV.ids <- sseqids %>%
                          phylum)))))) %>%
   #dplyr::select(taxaId, ASV, Taxon) %>%
   dplyr::select(!c(sseqid,seqid2)) %>%
-  mutate(ASV = str_remove(ASV, "_")) %>%
+  #mutate(ASV = str_remove(ASV, "_")) %>%
   mutate(sample_name = str_remove(ASV, "_\\d+_\\d+$"))
 
 print("debug")
