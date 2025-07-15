@@ -46,7 +46,7 @@ print(accessionToTaxa(data.frame(blast_filtered)$sseqid,args$sql_db))
 
 sseqids <- data.frame(blast_filtered) %>%
   dplyr::select(qseqid, pident, sseqid) %>%
-  mutate(seqid2 = paste0(sseqid, ".1")) %>%
+  mutate(seqid2 = paste0(sseqid, ".1")) %>% # Prob should remove the seqid2 column
   mutate(taxaId = accessionToTaxa(sseqid, args$sql_db)) %>%
   mutate(Taxonomic.ranks = getTaxonomy(taxaId, args$sql_db)) %>%
   rename("ASV" = "qseqid")
@@ -73,7 +73,8 @@ ASV.ids <- sseqids %>%
   #dplyr::select(taxaId, ASV, Taxon) %>%
   dplyr::select(!c(sseqid,seqid2)) %>%
   #mutate(ASV = str_remove(ASV, "_")) %>%
-  mutate(sample_name = str_remove(ASV, "_\\d+_\\d+$"))
+  mutate(sample_name = str_remove(ASV, "_\\d+_\\d+$")) %>%
+  relocate(sample_name, .before = 1)
 
 print("debug")
 
