@@ -51,7 +51,7 @@ Steps:
    - Annotation is based on the best blast hit per consensus. And best blast hit is based on:
      1. First on the bit score
      2. Second on the e-value
-8. Assign taxonomy to blast hits using taxonomizr [`taxonomizr`](https://github.com/sherrillmix/taxonomizr). It only works with NCBI accessions (GenBank and RefSeq)
+8. Assign taxonomy to blast hits using taxonomizr ([`taxonomizr`](https://github.com/sherrillmix/taxonomizr)). It only works with NCBI accessions (GenBank and RefSeq)
 
 <!-- 1. Read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))2. Present QC for raw reads ([`MultiQC`](http://multiqc.info/)) -->
 
@@ -115,41 +115,91 @@ Check the config file `nextflow.config` in the params block and fill parameters 
 
 **Input options:**
 
+Optionally supply a metadata file in csv format with the primer-tag combination (first column) and the correspoding sample (second column):
+
 ```
     // Metadata with primer combinations
     metadata                   = path/to/metadata.csv
 ```
 
-You can optionally supply a metadata file with the primer-tag combination (first column) and the correspoding sample (second column). Check `./test_data/metadata.csv` for an example. If `null` (value by default), the pipeline will use the primer-tag combination as ID.
+Check `./test_data/metadata.csv` for an example. If `null` (value by default), the pipeline will use the primer-tag combination as ID.
 
 **Demultiplex options:**
+
+List of forward primer-tag combinations in fasta format:
 
 ```
     // Cutadapt options
     tags_f                      = 'path/to/forward/primer-tag.fasta' // List of forward primer-tag combinations in fasta format
-    tags_r                      = 'path/to/reverse/primer-tag.fasta' // List of forward primer-tag combinations in fasta format
-    error_rate                  = 2 // Error rate for adapter removal
-
-    // After demultiplexing, filter FASTQs with less than x reads
-    filt_fastq                  = 100
 ```
 
 Check `./test_data/primers_f.fasta` and `./test_data/primers_r.fasta` for examples of `tags_f` and `tags_r` files, respectively.
 
-**Blast options:**
+List of reverse primer-tag combinations in fasta format:
 
 ```
-    // Blast options
+    tags_r                      = 'path/to/reverse/primer-tag.fasta' // List of forward primer-tag combinations in fasta format
+```
+
+Error rate for adapter removal. It can be a value between 0 and 1, if a maximum error rate wants to be applied to all adapters, or it can be > 1, in which case it will be converted to a maximum error rate depending on the adapter length. Check [cutadatpt documentation](https://cutadapt.readthedocs.io/en/stable/guide.html) for more information:
+
+```
+    error_rate                  = 2 // Error rate for adapter removal
+```
+
+Filter FASTQs with low number of reads:
+
+```
+    filt_fastq                  = 100
+```
+
+**Blast options:**
+
+Path to an already built blast database:
+
+```
     blast_db                   = 'path/to/blast.db' // Path to already built database
-    custom_db                  = 'path/to/custom/database.fasta' // Path to database to be built
-    outfmt                     = 6 // Output format of blast results
-    evalue                     = 0.001 // evalue cutoff
-    max_target_seqs            = 5 // Maximum number of hits per query
-    max_hsps                   = null // Maximum number of HSPs per subject (subjects in the database)
-    qcov_hsp_perc              = 90 // Minimum query coverage per HSP
+```
+
+Build local blast database based on a collections of sequences:
+
+```
+    custom_db                  = 'path/to/local/database.fasta' // Path to database to be built
 ```
 
 You should supply either the path to the alraedy built database or provide a custom fasta with sequences to built a custom one. If both are supplied the pipeline will fail.
+
+Output format of blast results. This should probably be hard coded. Do not change:
+
+```
+    outfmt                     = 6 // Output format of blast results
+```
+
+The E value describes the number of one can “expect” to see by chance when searching a database of a particular size. The lower the value, the more significant a match is:
+
+```
+    evalue                     = 0.001 // evalue cutoff
+```
+
+Maximum number of hits per query (in this case, per consensus sequences):
+
+```
+    max_target_seqs            = 5 // Maximum number of hits per query
+```
+
+Maximum number of High-scoring Segment Pair per subject (subjects in the database):
+
+```
+    max_hsps                   = null // Maximum number of HSPs per subject (subjects in the database)
+```
+
+Minimum query (consensus) coverage per High-scoring Segment Pair:
+
+```
+    qcov_hsp_perc              = 90 // Minimum query coverage per HSP
+```
+
+For more information, check the appendix section of the [blast documentation](https://www.ncbi.nlm.nih.gov/books/NBK279690/).
 
 **Nanofilt options:**
 
@@ -160,12 +210,19 @@ You should supply either the path to the alraedy built database or provide a cus
 ```
 **Assign taxonomy options:**
 
+Assign taxonomy according to an identity treshold:
+
 ```
     // Assign taxonomy options
     spident                     = null // Identity threshold (in %) for taxonomy assignment at species level. > 100 if not wanting to assign species
     gpident                     = null // Identity threshold (in %) for taxonomy assignment at genus level
     fpident                     = null // Identity threshold (in %) for taxonomy assignment at family level
     opident                     = null // Identity threshold (in %) for taxonomy assignment at order level
+```
+
+Path to taxonomizr SQL database:
+
+```
     sql_db                      = 'path/to/taxonomizr/database.sqlite' // Path to the taxonomizr SQLite database
 ```
 
@@ -180,6 +237,7 @@ nextflow run main.nf \
    --evalue 1e-10
    --tags_f path/to/forward/tags+primers.fasta
    --tags_r path/to/reverse/tags+primers.fasta
+   ...
 ```
 
 ## Pipeline output
