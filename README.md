@@ -133,13 +133,13 @@ List of forward primer-tag combinations in fasta format:
     tags_f                      = 'path/to/forward/primer-tag.fasta' // List of forward primer-tag combinations in fasta format
 ```
 
-Check `./test_data/primers_f.fasta` and `./test_data/primers_r.fasta` for examples of `tags_f` and `tags_r` files, respectively.
-
 List of reverse primer-tag combinations in fasta format:
 
 ```
     tags_r                      = 'path/to/reverse/primer-tag.fasta' // List of forward primer-tag combinations in fasta format
 ```
+
+Check `./test_data/primers_f.fasta` and `./test_data/primers_r.fasta` for examples of `tags_f` and `tags_r` files, respectively.
 
 Error rate for adapter removal. It can be a value between 0 and 1, if a maximum error rate wants to be applied to all adapters, or it can be > 1, in which case it will be converted to a maximum error rate depending on the adapter length. Check [cutadatpt documentation](https://cutadapt.readthedocs.io/en/stable/guide.html) for more information:
 
