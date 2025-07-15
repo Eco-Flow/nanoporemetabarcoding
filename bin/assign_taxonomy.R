@@ -60,7 +60,7 @@ write.csv(sseqids, "ASV_taxa.csv", row.names = FALSE)
 print(sseqids)
 
 ASV.ids <- sseqids %>%
-  mutate(assigned_taxon = if_else(order == "Araneae",
+  mutate(assigned_taxon = if_else(!is.na(order) & order == "Araneae",
                                 if_else(pident > args$gpident, genus,
                                          if_else(pident > args$fpident, family,
                                                  if_else(pident > args$opident, order,

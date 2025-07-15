@@ -48,6 +48,10 @@ Steps:
   - Correction using the consensus sequence from aplicon_sorter as reference and the grouped amplicon reads as the based called data
 6. Create custom BLAST database ([`makeblastdb`](https://www.ncbi.nlm.nih.gov/books/NBK279690/))
 7. Consensus sequence annotation based on database ([`blastn`](https://www.ncbi.nlm.nih.gov/books/NBK279690/))
+  - Annotation is based on the best blast hit per consensus. And best blast hit is based on:
+    1. First on the bit score
+    2. Second on the e-value
+8. Assign taxonomy to blast hits using taxonomizr [`taxonomizr`](https://github.com/sherrillmix/taxonomizr). It only works with NCBI accessions (GenBank and RefSeq)
 
 <!-- 1. Read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))2. Present QC for raw reads ([`MultiQC`](http://multiqc.info/)) -->
 
@@ -109,44 +113,60 @@ For more details and further functionality, please refer to the [usage documenta
 
 Check the config file `nextflow.config` in the params block and fill parameters with the proper values:
 
+**Input options:**
+
+```
+    // Metadata with primer combinations
+    metadata                   = path/to/metadata.csv
+```
+
+You can optionally supply a metadata file with the primer-tag combination (first column) and the correspoding sample (second column). Check `./test_data/metadata.csv` for an example. If `null` (value by default), the pipeline will use the primer-tag combination as ID.
+
 **Demultiplex options:**
 
 ```
     // Cutadapt options
-    tags_f                      = '/home/ucbtfrd/pipelines/nanoporemetabarcoding/test_data/primers_f.fasta'
-    tags_r                      = '/home/ucbtfrd/pipelines/nanoporemetabarcoding/test_data/primers_r.fasta'
+    tags_f                      = 'path/to/forward/primer-tag.fasta' // List of forward primer-tag combinations in fasta format
+    tags_r                      = 'path/to/reverse/primer-tag.fasta' // List of forward primer-tag combinations in fasta format
     error_rate                  = 2 // Error rate for adapter removal
 
     // After demultiplexing, filter FASTQs with less than x reads
     filt_fastq                  = 100
 ```
 
+Check `./test_data/primers_f.fasta` and `./test_data/primers_r.fasta` for examples of `tags_f` and `tags_r` files, respectively.
+
 **Blast options:**
 
 ```
-    // Path to already built database
-    blast_db                   = null
-    // Path to database to be built
-    custom_db                  = '/path/to/custom/databse.fasta'
-    // Output format of blast results
-    outfmt                     = 6
-    // evalue cutoff
-    evalue                     = 0.001
-    // Maximum number of hits per query
-    max_target_seqs            = 5
-    // Maximum number of HSPs per subject (subjects in the database)
-    max_hsps                   = null
-    // Minimum query coverage per HSP
-    qcov_hsp_perc              = 90
+    // Blast options
+    blast_db                   = 'path/to/blast.db' // Path to already built database
+    custom_db                  = 'path/to/custom/database.fasta' // Path to database to be built
+    outfmt                     = 6 // Output format of blast results
+    evalue                     = 0.001 // evalue cutoff
+    max_target_seqs            = 5 // Maximum number of hits per query
+    max_hsps                   = null // Maximum number of HSPs per subject (subjects in the database)
+    qcov_hsp_perc              = 90 // Minimum query coverage per HSP
 ```
 
 You should supply either the path to the alraedy built database or provide a custom fasta with sequences to built a custom one. If both are supplied the pipeline will fail.
 
 **Nanofilt options:**
+
 ```
     // Nanofilt options
     nano_quality                = null
     nano_read_length            = 250
+```
+**Assign taxonomy options:**
+
+```
+    // Assign taxonomy options
+    spident                     = null // Identity threshold (in %) for taxonomy assignment at species level. > 100 if not wanting to assign species
+    gpident                     = null // Identity threshold (in %) for taxonomy assignment at genus level
+    fpident                     = null // Identity threshold (in %) for taxonomy assignment at family level
+    opident                     = null // Identity threshold (in %) for taxonomy assignment at order level
+    sql_db                      = 'path/to/taxonomizr/database.sqlite' // Path to the taxonomizr SQLite database
 ```
 
 Alternatively, you can provide/modify pipeline options calling them as command line arguments. For example:

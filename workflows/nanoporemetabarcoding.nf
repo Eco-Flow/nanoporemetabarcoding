@@ -60,7 +60,7 @@ workflow NANOPOREMETABARCODING {
     ch_metadata = params.metadata ? Channel.fromPath(params.metadata, checkIfExists: true)
                 | splitCsv(header: true)
                 | map { row -> [row.primer_comb, row.sample] }
-                : null // Channel.empty() if no metadata is provided
+                : null // null if no metadata is provided
 
     //
     // MODULE: Run Nanoplot
@@ -176,10 +176,10 @@ workflow NANOPOREMETABARCODING {
     // MODULE: Run Nanoplot
     //
 
-    //NANOPLOT (
-    //    ch_raw.mix(ch_filt).mix(ch_input_filtered)
-    //)
-    //ch_multiqc_files = ch_multiqc_files.mix(NANOPLOT.out.txt.collectFile() { meta, stats -> ["${meta.id}.txt", stats.text] }).collect() // Original name out.txt channel is stats.txt, so multiqc keeps overwritting
+    NANOPLOT (
+        ch_raw.mix(ch_filt).mix(ch_input_filtered)
+    )
+    ch_multiqc_files = ch_multiqc_files.mix(NANOPLOT.out.txt.collectFile() { meta, stats -> ["${meta.id}.txt", stats.text] }).collect() // Original name out.txt channel is stats.txt, so multiqc keeps overwritting
 
     //
     // MODULE: Run FastQC
@@ -215,7 +215,7 @@ workflow NANOPOREMETABARCODING {
                                 new_meta.id = sample
                                 [new_meta, fastq]
                      }
-                     : GUNZIP.out.gunzip // If no amplicon sort is provided, use the gunzip output (primer combinations id)
+                     : GUNZIP.out.gunzip // If no metadata file is provided, use the gunzip output (primer-tag combinations as id)
 
     AMPLICON_SORTER (
         ch_amplicon_sort
@@ -274,20 +274,18 @@ workflow NANOPOREMETABARCODING {
 
     // Join consensus and amplicon sequences based on metadata and separate them in
     // a multichannel (keeps grouped amplicons and their respective consensus sequence in sync)
-    ch_minimap = GUNZIP_SEQKIT_GREP_A.out.gunzip // Grouped amplicons
-               | join(GUNZIP_SEQKIT_GREP_C.out.gunzip) // Consensus
-               | multiMap { meta, amps, cons -> // meta: metadata, amps: amplicon sequences, cons: consensus sequences
-                            amps : [ meta, amps] // Return a tuple with metadata and amplicon sequences
-                            cons : [ meta, cons ] // Return a tuple with metadata and consensus sequences
-               }
+    //ch_minimap = GUNZIP_SEQKIT_GREP_A.out.gunzip // Grouped amplicons
+    //           | join(GUNZIP_SEQKIT_GREP_C.out.gunzip) // Consensus
+    //           | multiMap { meta, amps, cons -> // meta: metadata, amps: amplicon sequences, cons: consensus sequences
+    //                        amps : [ meta, amps] // Return a tuple with metadata and amplicon sequences
+    //                        cons : [ meta, cons ] // Return a tuple with metadata and consensus sequences
+    //           }
 
     // For running medaka without running minimap2. Medaka already aligns basecalls (amplicons here)
     // to the consensus sequences, so perhaps we can skip minimap2 step, at least for now
     // Make sure this is working as expected
     ch_medaka = GUNZIP_SEQKIT_GREP_A.out.gunzip
               | join(GUNZIP_SEQKIT_GREP_C.out.gunzip)
-
-    ch_medaka.view()
 
     //
     // MODULE: Run Minimap2
