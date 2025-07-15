@@ -45,12 +45,12 @@ Steps:
     2. Then, demultiplexing is based on the combination of forward and reverse tags+primers
 4. Group amplicons reads into "species" (consensus sequences) ([`amplicon_sorter`](https://github.com/avierstr/amplicon_sorter))
 5. Consensus sequence correction ([`Medaka`](https://github.com/nanoporetech/medaka))
-  - Correction using the consensus sequence from aplicon_sorter as reference and the grouped amplicon reads as the based called data
+   - Correction using the consensus sequence from aplicon_sorter as reference and the grouped amplicon reads as the based called data
 6. Create custom BLAST database ([`makeblastdb`](https://www.ncbi.nlm.nih.gov/books/NBK279690/))
 7. Consensus sequence annotation based on database ([`blastn`](https://www.ncbi.nlm.nih.gov/books/NBK279690/))
-  - Annotation is based on the best blast hit per consensus. And best blast hit is based on:
-    1. First on the bit score
-    2. Second on the e-value
+   - Annotation is based on the best blast hit per consensus. And best blast hit is based on:
+     1. First on the bit score
+     2. Second on the e-value
 8. Assign taxonomy to blast hits using taxonomizr [`taxonomizr`](https://github.com/sherrillmix/taxonomizr). It only works with NCBI accessions (GenBank and RefSeq)
 
 <!-- 1. Read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))2. Present QC for raw reads ([`MultiQC`](http://multiqc.info/)) -->
