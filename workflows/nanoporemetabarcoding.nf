@@ -322,10 +322,10 @@ workflow NANOPOREMETABARCODING {
     //
 
     // Prepare ch_databse channel to build a custom database for blast
-    ch_database = Channel.fromPath(params.custom_db)
+    ch_database = (params.custom_db && !params.blast_db) ? Channel.fromPath(params.custom_db)
                 | map { db ->
                         [[id:'database'], db]
-                }
+                } : Channel.empty() // If no custom database is provided, use an empty channel
 
 
     BLAST_MAKEBLASTDB (
@@ -335,7 +335,13 @@ workflow NANOPOREMETABARCODING {
     // Mix in case an already built blast database is already give. People should only input a
     // path to make the database or give the built database. This shouldn't be possible,
     // will write code later to prevent it
-    ch_blast = BLAST_MAKEBLASTDB.out.db //.mix(params.blast_db)
+    ch_prebuilt_db = params.blast_db ? Channel.fromPath(params.blast_db)
+                   | map { db ->
+                            [[id:'prebuilt_database'], db]
+                   } : Channel.empty() // If no prebuild database is provided, use an empty channel
+
+
+    ch_blast = BLAST_MAKEBLASTDB.out.db.mix(ch_prebuilt_db)
 
     //
     // MODULE: Run BLAST
