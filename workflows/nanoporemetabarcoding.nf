@@ -176,8 +176,11 @@ workflow NANOPOREMETABARCODING {
     // MODULE: Run Nanoplot
     //
 
+    // If skip_nanoplot is set to true, skip this module
+    ch_nanoplot = params.skip_nanoplot ? Channel.empty() : ch_raw.mix(ch_filt).mix(ch_input_filtered)
+
     NANOPLOT (
-        ch_raw.mix(ch_filt).mix(ch_input_filtered)
+        ch_nanoplot
     )
     ch_multiqc_files = ch_multiqc_files.mix(NANOPLOT.out.txt.collectFile() { meta, stats -> ["${meta.id}.txt", stats.text] }).collect() // Original name out.txt channel is stats.txt, so multiqc keeps overwritting
 
