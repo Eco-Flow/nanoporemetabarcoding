@@ -40,12 +40,10 @@ blast_filtered <- Blastout %>%
 # Create SQLite database - can be stored centrally to avoid replication across projects - this seems to variably work, so the below steps avoid it
 #prepareDatabase('accessionTaxa.sql')
 
-print(data.frame(blast_filtered)$sseqid)
-
 print(accessionToTaxa(data.frame(blast_filtered)$sseqid,args$sql_db))
 
 sseqids <- data.frame(blast_filtered) %>%
-  dplyr::select(qseqid, pident, sseqid) %>%
+  #dplyr::select(qseqid, pident, sseqid) %>%
   mutate(seqid2 = paste0(sseqid, ".1")) %>% # Prob should remove the seqid2 column
   mutate(taxaId = accessionToTaxa(sseqid, args$sql_db)) %>%
   mutate(Taxonomic.ranks = getTaxonomy(taxaId, args$sql_db)) %>%
