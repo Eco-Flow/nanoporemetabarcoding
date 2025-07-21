@@ -21,9 +21,13 @@ include { GUNZIP as GUNZIP_SEQKIT_GREP_A  } from '../modules/nf-core/gunzip/main
 include { GUNZIP as GUNZIP_SEQKIT_GREP_C  } from '../modules/nf-core/gunzip/main'
 include { MEDAKA                          } from '../modules/nf-core/medaka/main'
 include { CAT_CAT                         } from '../modules/nf-core/cat/cat/main'
+include { CAT_CAT as CAT_CAT_MEDAKA       } from '../modules/nf-core/cat/cat/main'
 //include { DIAMOND_BLASTX                  } from '../modules/nf-core/diamond/blastx/main'
 include { BLAST_MAKEBLASTDB               } from '../modules/nf-core/blast/makeblastdb/main'
 include { BLAST_BLASTN                    } from '../modules/nf-core/blast/blastn/main'
+include { SEQKIT_REPLACE                  } from '../modules/nf-core/seqkit/replace/main'
+include { BEST_HIT                        } from '../modules/local/blast_best_hit'
+include { ASSIGN_TAXONOMY                 } from '../modules/local/assign_taxonomy'
 include { paramsSummaryMap                } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc            } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML          } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -44,11 +48,19 @@ workflow NANOPOREMETABARCODING {
     ch_versions = Channel.empty()
     ch_multiqc_files = Channel.empty()
 
+    // Prepare the samplesheet channel
+
     ch_input = ch_samplesheet
              | map {
                 meta, fastq ->
                 [[id:meta.id, single_end:true], fastq] // Needs to be declared as single end to run PYCHOPPER
              }
+
+    // Prepare metadata channel
+    ch_metadata = params.metadata ? Channel.fromPath(params.metadata, checkIfExists: true)
+                | splitCsv(header: true)
+                | map { row -> [row.primer_comb, row.sample] }
+                : null // null if no metadata is provided
 
     //
     // MODULE: Run Nanoplot
@@ -74,7 +86,8 @@ workflow NANOPOREMETABARCODING {
 
     // Flatten the output channel (FASTQs) from cutadapt demultiplex into indidual channels (FASTQ)
     // (check for the function flattenAndMap in the functions section)
-    ch_input_f = flattenAndMap(CUTADAPT_F.out.reads)
+    ch_input_f = flattenAndMap(CUTADAPT_F.out.reads, true)
+    //ch_input_f.view()
 
     // Get unkwon reads to reverse complement them later and trim again based on forward barcodes
     // We filter out reads that are unknown as they are probably reverse complemented with regard
@@ -105,14 +118,16 @@ workflow NANOPOREMETABARCODING {
     ch_unknown = flattenAndMap(CUTADAPT_F_RC.out.reads)
                | map { meta, fastq ->
                    def cleaned_meta = meta.id.replaceFirst(/unknown_/, '') // Remove the 'unknown_' prefix to be able to merge
-                   [[id: cleaned_meta, single_end: meta.single_end], fastq] // Return updated metadata and fastq
+                   [meta + [id: cleaned_meta], fastq] // Return updated metadata and fastq
                }
+    //ch_unknown.view()
 
     // Group known and unknown (not uknown anymore) reads together based on metadata
     ch_input_f = ch_input_f
                | mix(ch_unknown)
                | groupTuple()
 
+    //ch_input_f.view()
     // Concatenate grouped reads together based on metadata.
     CAT_CAT (
         ch_input_f
@@ -142,6 +157,7 @@ workflow NANOPOREMETABARCODING {
                            count > params.filt_fastq && !meta.id.contains('unknown') // Filter out FASTQs with less than x reads and with unknown primer combinations
                       }
 
+    // ch_input_filtered.view()
     // Prepare raw, cleaned and demultiplexed reads for Nanoplot
 
     ch_raw       = ch_input
@@ -151,17 +167,20 @@ workflow NANOPOREMETABARCODING {
                  }
 
     ch_filt     = NANOFILT.out.filtreads
-                 | map {
+                | map {
                     meta, fastq ->
                     [[id:"filt_${meta.id}"], fastq]
-                 }
+                }
 
     //
     // MODULE: Run Nanoplot
     //
 
+    // If skip_nanoplot is set to true, skip this module
+    ch_nanoplot = params.skip_nanoplot ? Channel.empty() : ch_raw.mix(ch_filt).mix(ch_input_filtered)
+
     NANOPLOT (
-        ch_raw.mix(ch_filt).mix(ch_input_filtered)
+        ch_nanoplot
     )
     ch_multiqc_files = ch_multiqc_files.mix(NANOPLOT.out.txt.collectFile() { meta, stats -> ["${meta.id}.txt", stats.text] }).collect() // Original name out.txt channel is stats.txt, so multiqc keeps overwritting
 
@@ -186,13 +205,28 @@ workflow NANOPOREMETABARCODING {
     // MODULE: Run Amplicon Sorter
     //
 
+    //GUNZIP.out.gunzip.view()
+
+    // For running medaka without running minimap2. Medaka already aligns basecalls (amplicons here)
+    // to the consensus sequences, so perhaps we can skip minimap2 step, at least for now
+    // Make sure this is working as expected
+    ch_amplicon_sort = ch_metadata ? GUNZIP.out.gunzip
+                     | map { meta, fastq -> [meta.id, meta, fastq] } // Extract meta.id replace with sample name according to metadata
+                     | join(ch_metadata) // Join on adapter combination
+                     | map { primer_comb, meta, fastq, sample ->
+                                def new_meta = meta.clone()
+                                new_meta.id = sample
+                                [new_meta, fastq]
+                     }
+                     : GUNZIP.out.gunzip // If no metadata file is provided, use the gunzip output (primer-tag combinations as id)
+
     AMPLICON_SORTER (
-        GUNZIP.out.gunzip
+        ch_amplicon_sort
     )
 
     //Get group information from amplicon sorter output FASTA files
     ch_group = AMPLICON_SORTER.out.fastas
-             | transpose()
+             | transpose() // Should look this up
              | map { meta, fasta ->
                 // Get the filename without extension
                  def basename = fasta.baseName
@@ -232,18 +266,23 @@ workflow NANOPOREMETABARCODING {
         pattern_consensus.first()
     )
 
-    GUNZIP_SEQKIT_GREP_C (
+    // Rename the consensus sequences to their group and meta id
+    SEQKIT_REPLACE(
         SEQKIT_CONSENSUS.out.filter
+    )
+
+    GUNZIP_SEQKIT_GREP_C (
+        SEQKIT_REPLACE.out.fastx
     )
 
     // Join consensus and amplicon sequences based on metadata and separate them in
     // a multichannel (keeps grouped amplicons and their respective consensus sequence in sync)
-    ch_minimap = GUNZIP_SEQKIT_GREP_A.out.gunzip // Grouped amplicons
-               | join(GUNZIP_SEQKIT_GREP_C.out.gunzip) // Consensus
-               | multiMap { meta, amps, cons -> // meta: metadata, amps: amplicon sequences, cons: consensus sequences
-                            amps : [ meta, amps] // Return a tuple with metadata and amplicon sequences
-                            cons : [ meta, cons ] // Return a tuple with metadata and consensus sequences
-                }
+    //ch_minimap = GUNZIP_SEQKIT_GREP_A.out.gunzip // Grouped amplicons
+    //           | join(GUNZIP_SEQKIT_GREP_C.out.gunzip) // Consensus
+    //           | multiMap { meta, amps, cons -> // meta: metadata, amps: amplicon sequences, cons: consensus sequences
+    //                        amps : [ meta, amps] // Return a tuple with metadata and amplicon sequences
+    //                        cons : [ meta, cons ] // Return a tuple with metadata and consensus sequences
+    //           }
 
     // For running medaka without running minimap2. Medaka already aligns basecalls (amplicons here)
     // to the consensus sequences, so perhaps we can skip minimap2 step, at least for now
@@ -265,15 +304,31 @@ workflow NANOPOREMETABARCODING {
         ch_medaka
     )
 
+    // Concatenate corrected consensus sequences so they can be blasted all together
+    // This is very important buecause if they are blasted induvidually the dabaase has
+    // to be loaded into memory every time
+    ch_corrected = MEDAKA.out.assembly
+                 | map {
+                    meta, fasta ->
+                    [[id:meta.old_id], fasta] // old_id to concatenate them
+                 }
+                 | groupTuple(by: 0)
+
+    CAT_CAT_MEDAKA (
+        ch_corrected
+    )
+
+    ch_corrected_concat = CAT_CAT_MEDAKA.out.file_out
+
     //
     // MODULE: Run makeblastdb
     //
 
     // Prepare ch_databse channel to build a custom database for blast
-    ch_database = Channel.fromPath(params.custom_db)
+    ch_database = (params.custom_db && !params.blast_db) ? Channel.fromPath(params.custom_db)
                 | map { db ->
                         [[id:'database'], db]
-                }
+                } : Channel.empty() // If no custom database is provided, use an empty channel
 
 
     BLAST_MAKEBLASTDB (
@@ -283,16 +338,43 @@ workflow NANOPOREMETABARCODING {
     // Mix in case an already built blast database is already give. People should only input a
     // path to make the database or give the built database. This shouldn't be possible,
     // will write code later to prevent it
-    ch_blast = BLAST_MAKEBLASTDB.out.db //.mix(params.blast_db)
+    ch_prebuilt_db = params.blast_db ? Channel.fromPath(params.blast_db)
+                   | map { db ->
+                            [[id:'prebuilt_database'], db]
+                   } : Channel.empty() // If no prebuild database is provided, use an empty channel
+
+
+    ch_blast = BLAST_MAKEBLASTDB.out.db.mix(ch_prebuilt_db)
 
     //
     // MODULE: Run BLAST
     //
 
-
     BLAST_BLASTN (
-        MEDAKA.out.assembly,
-        ch_blast.first()
+        ch_corrected_concat,
+        ch_blast.first() // .first() so that channel can be used several times
+    )
+
+    //
+    // MODULE: Run blast best hit
+    //
+
+    // To annotate the consensus (or ASVs) sequences, we need to estabish a criteria
+    // to select the best blast hit. In this case the best blast hit is established first
+    // by bitscore and second by evalue
+
+    BEST_HIT (
+        BLAST_BLASTN.out.txt
+    )
+
+    //
+    // MODULE: Run assign taxonomy
+    //
+    ch_sql_db = Channel.fromPath(params.sql_db)
+
+    ASSIGN_TAXONOMY(
+        BEST_HIT.out.best_hit,
+        ch_sql_db.first()
     )
 
     //
@@ -363,17 +445,22 @@ workflow NANOPOREMETABARCODING {
 // input single values. Use flattenAndMap so that each FASTQ is emitted seprately
 // Function to flatten output channel (FASTQs) from cutadapt demultiplex into indidual channels (FASTQ)
 
-def flattenAndMap(ch_fastqs) {
+def flattenAndMap(ch_fastqs, preserve_old_id = false) { // preserve_old_id becuase this change only needs to be done on the first cutadapt process
     ch_fastq = ch_fastqs
-             | map { meta, fastqs ->
-                   fastqs
+             | flatMap { meta, fastqs ->
+                   // Use flatMap instead of map + flatten
+                   fastqs.collect { fastq ->
+                       def name = fastq.name.toString().replaceAll(/\.trim\.fastq\.gz$/, '')
+                       def new_meta = meta + [id: name]
+                       // Only add old_id if requested
+                       if (preserve_old_id) {
+                           new_meta = new_meta + [old_id: meta.id]
+                       }
+                       tuple(new_meta, fastq)
+                   }
              }
-             | flatten
-             | map { fastq ->
-                   def name = fastq.name.toString().replaceAll(/\.trim\.fastq\.gz$/, '') // Remove extension
-                   tuple( [id:name, single_end:true], fastq ) // Return tuple
-             }
-    return ( ch_fastq )
+
+    return ch_fastq
 }
 
 // Export the function

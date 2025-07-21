@@ -41,13 +41,17 @@ Steps:
 2. Read QC ([`NanoPlot`](https://github.com/wdecoster/NanoPlot))
     - Ran on both raw and filtered and trimmed reads
 3. Tags+primer based demultiplexing and trimming ([`Cutadapt`](https://github.com/marcelm/cutadapt)). Divided in two steps:
-    1. First, demultiplexing based on the forward tags+primers
-    2. Then, demultiplexing is based on the combination of forward and reverse tags+primers
+    1. First, demultiplexing based on the forward tags-primers
+    2. Then, demultiplexing based on matching reverse tags-primers (combination of forward and reverse tags-primers)
 4. Group amplicons reads into "species" (consensus sequences) ([`amplicon_sorter`](https://github.com/avierstr/amplicon_sorter))
 5. Consensus sequence correction ([`Medaka`](https://github.com/nanoporetech/medaka))
-  - Correction using the consensus sequence from aplicon_sorter as reference and the grouped amplicon reads as the based called data
+   - Correction using the consensus sequence from aplicon_sorter as reference and the grouped amplicon reads as the basecalled data
 6. Create custom BLAST database ([`makeblastdb`](https://www.ncbi.nlm.nih.gov/books/NBK279690/))
 7. Consensus sequence annotation based on database ([`blastn`](https://www.ncbi.nlm.nih.gov/books/NBK279690/))
+   - Annotation is based on the best blast hit per consensus. And best blast hit is based on:
+     1. First on the bit score
+     2. Second on the e-value
+8. Assign taxonomy to blast hits using taxonomizr ([`taxonomizr`](https://github.com/sherrillmix/taxonomizr)). It only works with NCBI accessions (GenBank and RefSeq)
 
 <!-- 1. Read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))2. Present QC for raw reads ([`MultiQC`](http://multiqc.info/)) -->
 
@@ -57,13 +61,13 @@ Steps:
 > [!NOTE]
 > If you are new to Nextflow and nf-core, please refer to [this page](https://nf-co.re/docs/usage/installation) on how to set-up Nextflow. Make sure to [test your setup](https://nf-co.re/docs/usage/introduction#how-to-run-a-pipeline) with `-profile test` before running the workflow on actual data.
 
-To use this pipeline, first clone this repo:
+To use nanoporemetabarcoding, first clone this repo:
 
 ```bash
 git clone https://github.com/Eco-Flow/nanoporemetabarcoding.git
 ```
 
-Before running on your data, you can test if the pipeline is suited to your setup by running:
+Before running nanoporemetabarcoding on your data, you can test if the pipeline is suited to your setup by running:
 
 ```bash
 nextflow run main.nf \
@@ -77,9 +81,7 @@ The running time should be around 8 minutes on a machine with 12 cpus/threads.
      Explain what rows and columns represent. For instance (please edit as appropriate):
 -->
 
-For running the pipleine on your data, prepare a samplesheet with your input that looks as follows:
-
-`samplesheet.csv`:
+For running the pipleine on your data, prepare a samplesheet with your input FASTQs that looks as follows:
 
 ```csv
 sample,fastq
@@ -103,53 +105,122 @@ nextflow run main.nf \
 > [!WARNING]
 > Please provide pipeline parameters via the CLI or Nextflow `-params-file` option. Custom config files including those provided by the `-c` Nextflow option can be used to provide any configuration _**except for parameters**_; see [docs](https://nf-co.re/docs/usage/getting_started/configuration#custom-configuration-files).
 
-For more details and further functionality, please refer to the [usage documentation](https://nf-co.re/nanoporemetabarcoding/usage) and the [parameter documentation](https://nf-co.re/nanoporemetabarcoding/parameters).
+<!-- For more details and further functionality, please refer to the [usage documentation](https://nf-co.re/nanoporemetabarcoding/usage) and the [parameter documentation](https://nf-co.re/nanoporemetabarcoding/parameters). -->
 
-## Params
+## Parameters
 
-Check the config file `nextflow.config` in the params block and fill parameters with the proper values:
+Check the config file `nextflow.config` in the params block and fill in the parameters with the proper values:
+
+**Input options:**
+
+You can optionally provide a metadata file in CSV format with the primer-tag combination in the first column and the corresponding sample name in the second column:
+
+```
+    // Metadata with primer combinations
+    metadata                   = path/to/metadata.csv
+```
+
+See `./test_data/metadata.csv` for an example. If set to `null` (value by default), the pipeline will use the primer-tag combination as the sample ID.
 
 **Demultiplex options:**
 
+1. List of forward primer-tag combinations in FASTA format:
+
 ```
     // Cutadapt options
-    tags_f                      = '/home/ucbtfrd/pipelines/nanoporemetabarcoding/test_data/primers_f.fasta'
-    tags_r                      = '/home/ucbtfrd/pipelines/nanoporemetabarcoding/test_data/primers_r.fasta'
-    error_rate                  = 2 // Error rate for adapter removal
+    tags_f                      = 'path/to/forward/primer-tag.fasta' // List of forward primer-tag combinations in fasta format
+```
 
-    // After demultiplexing, filter FASTQs with less than x reads
+2. List of reverse primer-tag combinations in FASTA format:
+
+```
+    tags_r                      = 'path/to/reverse/primer-tag.fasta' // List of forward primer-tag combinations in fasta format
+```
+
+3. Set the error rate for adapter removal. This can be a value between 0 and 1 (1 not included) if a maximum error rate wants to be applied to all adapters, or it can be equal or greater than 1, in which case it will be converted to a maximum error rate depending on the adapter length. Check [cutadatpt documentation](https://cutadapt.readthedocs.io/en/stable/guide.html) for more information:
+
+```
+    error_rate                  = 2 // Error rate for adapter removal
+```
+
+4. Filter FASTQs with a mumber of reads equal or lower than:
+
+```
     filt_fastq                  = 100
 ```
 
+Check `./test_data/primers_f.fasta` and `./test_data/primers_r.fasta` for examples of `tags_f` and `tags_r` files, respectively.
+
 **Blast options:**
 
+1. Path to an already built blast database:
+
 ```
-    // Path to already built database
-    blast_db                   = null
-    // Path to database to be built
-    custom_db                  = '/path/to/custom/databse.fasta'
-    // Output format of blast results
-    outfmt                     = 6
-    // evalue cutoff
-    evalue                     = 0.001
-    // Maximum number of hits per query
-    max_target_seqs            = 5
-    // Maximum number of HSPs per subject (subjects in the database)
-    max_hsps                   = null
-    // Minimum query coverage per HSP
-    qcov_hsp_perc              = 90
+    blast_db                   = 'path/to/blast.db' // Path to already built database
 ```
 
-You should supply either the path to the alraedy built database or provide a custom fasta with sequences to built a custom one. If both are supplied the pipeline will fail.
+2. Or build a local BLAST database from a collection of sequences:
+
+```
+    custom_db                  = 'path/to/local/database.fasta' // Path to database to be built
+```
+
+3. The E value describes the number of one can “expect” to see by chance when searching a database of a particular size. The lower the value, the more significant a match is:
+
+```
+    evalue                     = 0.001 // evalue cutoff
+```
+
+4. Maximum number of hits per query (consensus sequence):
+
+```
+    max_target_seqs            = 5 // Maximum number of hits per query
+```
+
+5. Maximum number of high-scoring segment pairs (HSPs) per subject (sequence in the database):
+
+```
+    max_hsps                   = null // Maximum number of HSPs per subject (subjects in the database)
+```
+
+6. Minimum query (consensus sequence) coverage per HSP:
+
+```
+    qcov_hsp_perc              = 90 // Minimum query coverage per HSP
+```
+
+For more details, check the appendix section of the [blast documentation](https://www.ncbi.nlm.nih.gov/books/NBK279690/).
+
+<!-- You should supply **either** the path to an already built database or a custom FASTA collection with sequences to built a custom one. If both are supplied the pipeline will fail. -->
 
 **Nanofilt options:**
+
 ```
     // Nanofilt options
-    nano_quality                = null
-    nano_read_length            = 250
+    nano_quality                = null // Minimun read quality (phred score)
+    nano_read_length            = 250 // Minimum reads length
+```
+**Assign taxonomy options:**
+
+1. Assign taxonomy at different levels based on an identity threshold:
+
+```
+    // Assign taxonomy options
+    spident                     = null // Identity threshold (in %) for taxonomy assignment at species level. > 100 if not wanting to assign species
+    gpident                     = null // Identity threshold (in %) for taxonomy assignment at genus level
+    fpident                     = null // Identity threshold (in %) for taxonomy assignment at family level
+    opident                     = null // Identity threshold (in %) for taxonomy assignment at order level
 ```
 
-Alternatively, you can provide/modify pipeline options calling them as command line arguments. For example:
+2. Path to `taxonomizr` SQL database:
+
+```
+    sql_db                      = 'path/to/taxonomizr/database.sqlite' // Path to the taxonomizr SQLite database
+```
+
+**Command line arguments:**
+
+Alternatively, instead of modifying the `nextflow.config` file, you can provide/modify pipeline options by specifying them as command line arguments. For example:
 
 ```bash
 nextflow run main.nf \
@@ -160,6 +231,7 @@ nextflow run main.nf \
    --evalue 1e-10
    --tags_f path/to/forward/tags+primers.fasta
    --tags_r path/to/reverse/tags+primers.fasta
+   ...
 ```
 
 ## Pipeline output
