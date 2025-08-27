@@ -39,10 +39,10 @@ Steps:
 
 1. Filtering and trimming ([`NanoFilt`](https://github.com/wdecoster/nanofilt))
 2. Read QC ([`NanoPlot`](https://github.com/wdecoster/NanoPlot))
-    - Ran on both raw and filtered and trimmed reads
+   - Ran on both raw and filtered and trimmed reads
 3. Tags+primer based demultiplexing and trimming ([`Cutadapt`](https://github.com/marcelm/cutadapt)). Divided in two steps:
-    1. First, demultiplexing based on the forward tags-primers
-    2. Then, demultiplexing based on matching reverse tags-primers (combination of forward and reverse tags-primers)
+   1. First, demultiplexing based on the forward tags-primers
+   2. Then, demultiplexing based on matching reverse tags-primers (combination of forward and reverse tags-primers)
 4. Group amplicons reads into "species" (consensus sequences) ([`amplicon_sorter`](https://github.com/avierstr/amplicon_sorter))
 5. Consensus sequence correction ([`Medaka`](https://github.com/nanoporetech/medaka))
    - Correction using the consensus sequence from aplicon_sorter as reference and the grouped amplicon reads as the basecalled data
@@ -54,7 +54,6 @@ Steps:
 8. Assign taxonomy to blast hits using taxonomizr ([`taxonomizr`](https://github.com/sherrillmix/taxonomizr)). It only works with NCBI accessions (GenBank and RefSeq)
 
 <!-- 1. Read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))2. Present QC for raw reads ([`MultiQC`](http://multiqc.info/)) -->
-
 
 ## Usage
 
@@ -89,7 +88,6 @@ sample_name,path/to/sample.fastq.gz
 ```
 
 The first column represents the sample name or sample id, and the second the location to the corresponding FASTQ file.
-
 
 Now, you can run the pipeline using:
 
@@ -135,6 +133,16 @@ See `./test_data/metadata.csv` for an example. If set to `null` (value by defaul
 
 ```
     tags_r                      = 'path/to/reverse/primer-tag.fasta' // List of forward primer-tag combinations in fasta format
+```
+
+**Nanofilt options:**
+
+Nanofilt is run before demultiplexing and tag+primer trimming:
+
+```
+    // Nanofilt options
+    nano_quality                = null // Minimun read quality (phred score)
+    nano_read_length            = 250 // Minimum reads length
 ```
 
 3. Set the error rate for adapter removal. This can be a value between 0 and 1 (1 not included) if a maximum error rate wants to be applied to all adapters, or it can be equal or greater than 1, in which case it will be converted to a maximum error rate depending on the adapter length. Check [cutadatpt documentation](https://cutadapt.readthedocs.io/en/stable/guide.html) for more information:
@@ -193,13 +201,6 @@ For more details, check the appendix section of the [blast documentation](https:
 
 <!-- You should supply **either** the path to an already built database or a custom FASTA collection with sequences to built a custom one. If both are supplied the pipeline will fail. -->
 
-**Nanofilt options:**
-
-```
-    // Nanofilt options
-    nano_quality                = null // Minimun read quality (phred score)
-    nano_read_length            = 250 // Minimum reads length
-```
 **Assign taxonomy options:**
 
 1. Assign taxonomy at different levels based on an identity threshold:
