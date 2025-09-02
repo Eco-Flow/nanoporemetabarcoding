@@ -81,7 +81,7 @@ workflow NANOPOREMETABARCODING {
     // set in the nextflow.config file
 
     CUTADAPT_F (
-        ch_input
+        NANOFILT.out.filtreads
     )
 
     // Flatten the output channel (FASTQs) from cutadapt demultiplex into indidual channels (FASTQ)
@@ -219,6 +219,8 @@ workflow NANOPOREMETABARCODING {
                                 [new_meta, fastq]
                      }
                      : GUNZIP.out.gunzip // If no metadata file is provided, use the gunzip output (primer-tag combinations as id)
+
+    ch_amplicon_sort.view()
 
     AMPLICON_SORTER (
         ch_amplicon_sort
