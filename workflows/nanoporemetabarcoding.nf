@@ -92,10 +92,11 @@ workflow NANOPOREMETABARCODING {
     // Get unkwon reads to reverse complement them later and trim again based on forward barcodes
     // We filter out reads that are unknown as they are probably reverse complemented with regard
     // to the forward barcodes. This is done so that we can trim them again based on the forward barcodes
-    ch_unknown = ch_input_f
-               | filter { meta, fastq ->
-                        meta.id.contains('unknown')
-               }
+    // No need for this anymore since cutadapt has an --rc option, so unknown reads are now missing reads
+    //ch_unknown = ch_input_f
+    //           | filter { meta, fastq ->
+    //                    meta.id.contains('unknown')
+    //           }
 
     //
     // MODULE: Run SEQKIT reverse complement
@@ -103,35 +104,35 @@ workflow NANOPOREMETABARCODING {
 
     // Reverse complement reads and run cutadapt again on unknown
     // rc reads and trim again based on forward barcodes
-    SEQKIT_REVCOMP_A (
-        ch_unknown
-    )
+    //SEQKIT_REVCOMP_A (
+    //    ch_unknown
+    //)
 
     // Trim based on forward barcodes again
-    CUTADAPT_F_RC (
-        SEQKIT_REVCOMP_A.out.fastx
-    )
+    //CUTADAPT_F_RC (
+    //    SEQKIT_REVCOMP_A.out.fastx
+    //)
 
     // Remmove 'unknown_' prefix from metadata and flatten the output channel.
     // This is done so that reads can be concatenated based on the metadata
     // This reads are not unknown anymore
-    ch_unknown = flattenAndMap(CUTADAPT_F_RC.out.reads)
-               | map { meta, fastq ->
-                   def cleaned_meta = meta.id.replaceFirst(/unknown_/, '') // Remove the 'unknown_' prefix to be able to merge
-                   [meta + [id: cleaned_meta], fastq] // Return updated metadata and fastq
-               }
+    //ch_unknown = flattenAndMap(CUTADAPT_F_RC.out.reads)
+    //           | map { meta, fastq ->
+    //               def cleaned_meta = meta.id.replaceFirst(/unknown_/, '') // Remove the 'unknown_' prefix to be able to merge
+    //               [meta + [id: cleaned_meta], fastq] // Return updated metadata and fastq
+    //           }
     //ch_unknown.view()
 
     // Group known and unknown (not uknown anymore) reads together based on metadata
-    ch_input_f = ch_input_f
-               | mix(ch_unknown)
-               | groupTuple()
+    //ch_input_f = ch_input_f
+    //           | mix(ch_unknown)
+    //           | groupTuple()
 
     //ch_input_f.view()
     // Concatenate grouped reads together based on metadata.
-    CAT_CAT (
-        ch_input_f
-    )
+    //CAT_CAT (
+    //    ch_input_f
+    //)
 
     //
     // MODULE: Run SEQKIT reverse complement
@@ -140,16 +141,17 @@ workflow NANOPOREMETABARCODING {
     // Barcodes are attached to both ends of the reads, so we need to reverse complement the reads
     // to trim and demultiplex based the other end
 
-    SEQKIT_REVCOMP_B (
-        CAT_CAT.out.file_out
-    )
+    //SEQKIT_REVCOMP_B (
+    //    CAT_CAT.out.file_out
+    //)
 
     // Run cutadapt on the reverse complemented reads to trim reverse barcodes
     CUTADAPT_R (
-       SEQKIT_REVCOMP_B.out.fastx
+       ch_input_f
     )
 
     // Filter out FASTQs with less than 10 reads
+    CUTADAPT_R.out.reads.view()
     ch_input_filtered = CUTADAPT_R.out.reads
                       | flattenAndMap
                       | filter { meta, fastq ->
@@ -157,7 +159,7 @@ workflow NANOPOREMETABARCODING {
                            count > params.filt_fastq && !meta.id.contains('unknown') // Filter out FASTQs with less than x reads and with unknown primer combinations
                       }
 
-    // ch_input_filtered.view()
+    ch_input_filtered.view()
     // Prepare raw, cleaned and demultiplexed reads for Nanoplot
 
     ch_raw       = ch_input
