@@ -59,8 +59,10 @@ workflow NANOPOREMETABARCODING {
     // Prepare metadata channel
     ch_metadata = params.metadata ? Channel.fromPath(params.metadata, checkIfExists: true)
                 | splitCsv(header: true)
-                | map { row -> [row.primer_comb, row.sample] }
+                | map { row -> [[id:row.primer_comb, single_end:true, old_id:row.fastq], row.sample] }
                 : null // null if no metadata is provided
+
+    ch_metadata.view()
 
     //
     // MODULE: Run Nanoplot
@@ -87,7 +89,6 @@ workflow NANOPOREMETABARCODING {
     // Flatten the output channel (FASTQs) from cutadapt demultiplex into indidual channels (FASTQ)
     // (check for the function flattenAndMap in the functions section)
     ch_input_f = flattenAndMap(CUTADAPT_F.out.reads, true)
-    //ch_input_f.view()
 
     // Get unkwon reads to reverse complement them later and trim again based on forward barcodes
     // We filter out reads that are unknown as they are probably reverse complemented with regard
@@ -151,7 +152,7 @@ workflow NANOPOREMETABARCODING {
     )
 
     // Filter out FASTQs with less than 10 reads
-    CUTADAPT_R.out.reads.view()
+    //CUTADAPT_R.out.reads.view()
     ch_input_filtered = CUTADAPT_R.out.reads
                       | flattenAndMap
                       | filter { meta, fastq ->
@@ -159,7 +160,6 @@ workflow NANOPOREMETABARCODING {
                            count > params.filt_fastq && !meta.id.contains('unknown') // Filter out FASTQs with less than x reads and with unknown primer combinations
                       }
 
-    ch_input_filtered.view()
     // Prepare raw, cleaned and demultiplexed reads for Nanoplot
 
     ch_raw       = ch_input
@@ -212,10 +212,12 @@ workflow NANOPOREMETABARCODING {
     // For running medaka without running minimap2. Medaka already aligns basecalls (amplicons here)
     // to the consensus sequences, so perhaps we can skip minimap2 step, at least for now
     // Make sure this is working as expected
+    //GUNZIP.out.gunzip.view()
     ch_amplicon_sort = ch_metadata ? GUNZIP.out.gunzip
-                     | map { meta, fastq -> [meta.id, meta, fastq] } // Extract meta.id replace with sample name according to metadata
+                     //| map { meta, fastq -> [meta.id, meta, fastq] } // Extract meta.id replace with sample name according to metadata
                      | join(ch_metadata) // Join on adapter combination
-                     | map { primer_comb, meta, fastq, sample ->
+                     | view
+                     | map { meta, fastq, sample ->
                                 def new_meta = meta.clone()
                                 new_meta.id = sample
                                 [new_meta, fastq]
