@@ -62,7 +62,7 @@ workflow NANOPOREMETABARCODING {
                 | map { row -> [[id:row.primer_comb, single_end:true, old_id:row.fastq], row.sample] }
                 : null // null if no metadata is provided
 
-    ch_metadata.view()
+    //ch_metadata.view()
 
     //
     // MODULE: Run Nanoplot
@@ -184,7 +184,22 @@ workflow NANOPOREMETABARCODING {
     NANOPLOT (
         ch_nanoplot
     )
-    ch_multiqc_files = ch_multiqc_files.mix(NANOPLOT.out.txt.collectFile() { meta, stats -> ["${meta.id}.txt", stats.text] }).collect() // Original name out.txt channel is stats.txt, so multiqc keeps overwritting
+    //ch_multiqc_files = ch_multiqc_files.mix(NANOPLOT.out.txt.collectFile() { meta, stats -> ["${meta.id}.txt", stats.text] }).collect() // Original name out.txt channel is stats.txt, so multiqc keeps overwritting
+    //ch_nanoplot.view()
+    ch_nanoplot_renamed = NANOPLOT.out.txt
+                        //| collectFile
+                        | map { meta, stats ->
+                                    def selectedFile = stats instanceof List ? stats[0] : stats // Not sure why, but sometimes there are two stats files. If that's the case, select the first one [0], which are the original stats
+                                    //["${meta.id}_stats.txt", selected_file.text]
+                                    def prefix = meta.old_id ? "${meta.old_id}_${meta.id}" :  "${meta.id}"
+                                    def renamedFile = selectedFile.copyTo("${workflow.workDir}/renamed_files/${prefix}_stats.txt") //Save renamed files inside the work directory
+                                    //def renamed_file = selected_file.copyTo("${meta.id}_stats.txt")
+                                    [meta, renamedFile] 
+                        }
+
+    //ch_nanoplot_renamed.view()
+    ch_multiqc_files    = ch_multiqc_files.mix(ch_nanoplot_renamed.map { meta, stats -> stats }).collect() // Original name out.txt channel is stats.txt, so multiqc keeps overwritting
+
 
     //
     // MODULE: Run FastQC
@@ -216,15 +231,12 @@ workflow NANOPOREMETABARCODING {
     ch_amplicon_sort = ch_metadata ? GUNZIP.out.gunzip
                      //| map { meta, fastq -> [meta.id, meta, fastq] } // Extract meta.id replace with sample name according to metadata
                      | join(ch_metadata) // Join on adapter combination
-                     | view
                      | map { meta, fastq, sample ->
                                 def new_meta = meta.clone()
                                 new_meta.id = sample
                                 [new_meta, fastq]
                      }
                      : GUNZIP.out.gunzip // If no metadata file is provided, use the gunzip output (primer-tag combinations as id)
-
-    ch_amplicon_sort.view()
 
     AMPLICON_SORTER (
         ch_amplicon_sort
@@ -310,6 +322,8 @@ workflow NANOPOREMETABARCODING {
         ch_medaka
     )
 
+    //MEDAKA.out.assembly.view()
+
     // Concatenate corrected consensus sequences so they can be blasted all together
     // This is very important buecause if they are blasted induvidually the dabaase has
     // to be loaded into memory every time
@@ -319,6 +333,8 @@ workflow NANOPOREMETABARCODING {
                     [[id:meta.old_id], fasta] // old_id to concatenate them
                  }
                  | groupTuple(by: 0)
+
+    ch_corrected.view()
 
     CAT_CAT_MEDAKA (
         ch_corrected
