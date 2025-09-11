@@ -32,6 +32,7 @@ include { paramsSummaryMap                } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc            } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML          } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText          } from '../subworkflows/local/utils_nfcore_nanoporemetabarcoding_pipeline'
+include { validateInputParameters         } from '../subworkflows/local/utils_nfcore_nanoporemetabarcoding_pipeline'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -59,11 +60,30 @@ workflow NANOPOREMETABARCODING {
     // Prepare metadata channel
     ch_metadata = params.metadata ? Channel.fromPath(params.metadata, checkIfExists: true)
                 | splitCsv(header: true)
-                | map { row -> [[id:row.primer_comb, single_end:true, old_id:row.fastq], row.sample] }
+                | map { row -> [row.fastq, row.primer_comb, row.sample] }
+                | validateInputParameters // Validate metadata so that there are no duplicated values, prob should also check whether fastqs in samplesheet and metadata match
+                | map { fastq, primer_comb, sample -> [[id:primer_comb, single_end:true, old_id:fastq], sample] }
                 : null // null if no metadata is provided
 
-    //ch_metadata.view()
+    // Validation below is working
+    ch_trial1 = ch_metadata.map { meta, sample -> meta.old_id }.distinct().collect().map { ids -> ['validation', ids] }
+    ch_trial2 = ch_input.map { meta, fastq -> meta.id }.collect().map { ids -> ['validation', ids] }
 
+    ch_trial1.join(ch_trial2)
+    | map { key, input_fastq, metadata_fastq ->
+                    def input_sorted = input_fastq.sort()
+                    def metadata_sorted = metadata_fastq.sort()
+                            if (metadata_sorted != input_sorted) {
+                                def missing_in_metadata = input_sorted - metadata_sorted
+                                def missing_in_input = metadata_sorted - input_sorted
+
+                                def error_msg = "ID mismatch between samplesheet and metadata:\n"
+                                if (missing_in_metadata) error_msg += "In samplesheet but not metadata: ${missing_in_metadata.join(', ')}\n"
+                                if (missing_in_input) error_msg += "In metadata but not samplesheet: ${missing_in_input.join(', ')}"
+                                error(error_msg)
+                            }
+        return "validation_passed"
+    }
     //
     // MODULE: Run Nanoplot
     //
@@ -122,14 +142,12 @@ workflow NANOPOREMETABARCODING {
     //               def cleaned_meta = meta.id.replaceFirst(/unknown_/, '') // Remove the 'unknown_' prefix to be able to merge
     //               [meta + [id: cleaned_meta], fastq] // Return updated metadata and fastq
     //           }
-    //ch_unknown.view()
 
     // Group known and unknown (not uknown anymore) reads together based on metadata
     //ch_input_f = ch_input_f
     //           | mix(ch_unknown)
     //           | groupTuple()
 
-    //ch_input_f.view()
     // Concatenate grouped reads together based on metadata.
     //CAT_CAT (
     //    ch_input_f
@@ -152,7 +170,6 @@ workflow NANOPOREMETABARCODING {
     )
 
     // Filter out FASTQs with less than 10 reads
-    //CUTADAPT_R.out.reads.view()
     ch_input_filtered = CUTADAPT_R.out.reads
                       | flattenAndMap
                       | filter { meta, fastq ->
@@ -185,7 +202,6 @@ workflow NANOPOREMETABARCODING {
         ch_nanoplot
     )
     //ch_multiqc_files = ch_multiqc_files.mix(NANOPLOT.out.txt.collectFile() { meta, stats -> ["${meta.id}.txt", stats.text] }).collect() // Original name out.txt channel is stats.txt, so multiqc keeps overwritting
-    //ch_nanoplot.view()
     ch_nanoplot_renamed = NANOPLOT.out.txt
                         //| collectFile
                         | map { meta, stats ->
@@ -194,10 +210,9 @@ workflow NANOPOREMETABARCODING {
                                     def prefix = meta.old_id ? "${meta.old_id}_${meta.id}" :  "${meta.id}"
                                     def renamedFile = selectedFile.copyTo("${workflow.workDir}/renamed_files/${prefix}_stats.txt") //Save renamed files inside the work directory
                                     //def renamed_file = selected_file.copyTo("${meta.id}_stats.txt")
-                                    [meta, renamedFile] 
+                                    [meta, renamedFile]
                         }
 
-    //ch_nanoplot_renamed.view()
     ch_multiqc_files    = ch_multiqc_files.mix(ch_nanoplot_renamed.map { meta, stats -> stats }).collect() // Original name out.txt channel is stats.txt, so multiqc keeps overwritting
 
 
@@ -222,12 +237,9 @@ workflow NANOPOREMETABARCODING {
     // MODULE: Run Amplicon Sorter
     //
 
-    //GUNZIP.out.gunzip.view()
-
     // For running medaka without running minimap2. Medaka already aligns basecalls (amplicons here)
     // to the consensus sequences, so perhaps we can skip minimap2 step, at least for now
     // Make sure this is working as expected
-    //GUNZIP.out.gunzip.view()
     ch_amplicon_sort = ch_metadata ? GUNZIP.out.gunzip
                      //| map { meta, fastq -> [meta.id, meta, fastq] } // Extract meta.id replace with sample name according to metadata
                      | join(ch_metadata) // Join on adapter combination
@@ -322,8 +334,6 @@ workflow NANOPOREMETABARCODING {
         ch_medaka
     )
 
-    //MEDAKA.out.assembly.view()
-
     // Concatenate corrected consensus sequences so they can be blasted all together
     // This is very important buecause if they are blasted induvidually the dabaase has
     // to be loaded into memory every time
@@ -333,8 +343,6 @@ workflow NANOPOREMETABARCODING {
                     [[id:meta.old_id], fasta] // old_id to concatenate them
                  }
                  | groupTuple(by: 0)
-
-    ch_corrected.view()
 
     CAT_CAT_MEDAKA (
         ch_corrected
