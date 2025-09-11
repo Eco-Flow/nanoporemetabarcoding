@@ -50,7 +50,6 @@ workflow NANOPOREMETABARCODING {
     ch_multiqc_files = Channel.empty()
 
     // Prepare the samplesheet channel
-
     ch_input = ch_samplesheet
              | map {
                 meta, fastq ->
@@ -66,24 +65,31 @@ workflow NANOPOREMETABARCODING {
                 : null // null if no metadata is provided
 
     // Validation below is working
-    ch_trial1 = ch_metadata.map { meta, sample -> meta.old_id }.distinct().collect().map { ids -> ['validation', ids] }
-    ch_trial2 = ch_input.map { meta, fastq -> meta.id }.collect().map { ids -> ['validation', ids] }
+    ch_metadata_fastqs = ch_metadata.map { meta, sample -> meta.old_id }.distinct().collect().map { ids -> ['validation', ids] }
+    ch_input_fastqs    = ch_input.map { meta, fastq -> meta.id }.collect().map { ids -> ['validation', ids] }
 
-    ch_trial1.join(ch_trial2)
-    | map { key, input_fastq, metadata_fastq ->
-                    def input_sorted = input_fastq.sort()
-                    def metadata_sorted = metadata_fastq.sort()
-                            if (metadata_sorted != input_sorted) {
-                                def missing_in_metadata = input_sorted - metadata_sorted
-                                def missing_in_input = metadata_sorted - input_sorted
-
-                                def error_msg = "ID mismatch between samplesheet and metadata:\n"
-                                if (missing_in_metadata) error_msg += "In samplesheet but not metadata: ${missing_in_metadata.join(', ')}\n"
-                                if (missing_in_input) error_msg += "In metadata but not samplesheet: ${missing_in_input.join(', ')}"
-                                error(error_msg)
-                            }
-        return "validation_passed"
+    // Validate only if parameter is given
+    if (params.metadata) {
+        validateSamplesheetMetadata(ch_input_fastqs, ch_metadata_fastqs)
     }
+
+    // Make sure fastqs in samplesheet and metadata match
+    //def validateSamplesheetMetadata ( input_channel,metadata_channel )
+    //ch_metadata_fastqs.join(ch_input_fastqs)
+    //| map { key, input_fastq, metadata_fastq ->
+    //                def input_sorted = input_fastq.sort()
+    //                def metadata_sorted = metadata_fastq.sort()
+    //                        if (metadata_sorted != input_sorted) {
+    //                            def missing_in_metadata = input_sorted - metadata_sorted
+    //                            def missing_in_input = metadata_sorted - input_sorted
+    //
+    //                            def error_msg = "ID mismatch between samplesheet and metadata:\n"
+    //                            if (missing_in_metadata) error_msg += "In samplesheet but not metadata: ${missing_in_metadata.join(', ')}\n"
+    //                            if (missing_in_input) error_msg += "In metadata but not samplesheet: ${missing_in_input.join(', ')}"
+    //                            error(error_msg)
+    //                        }
+    //        return "validation_passed"
+    //}
     //
     // MODULE: Run Nanoplot
     //
@@ -474,6 +480,26 @@ workflow NANOPOREMETABARCODING {
 // When demultiplexing, cutadapt emits a channel with FASTQs, but the next modules
 // input single values. Use flattenAndMap so that each FASTQ is emitted seprately
 // Function to flatten output channel (FASTQs) from cutadapt demultiplex into indidual channels (FASTQ)
+
+    // Make sure fastqs in samplesheet and metadata match
+    def validateSamplesheetMetadata (input_channel, metadata_channel) {
+        metadata_channel
+            |join(input_channel)
+            | map { key, input_fastq, metadata_fastq ->
+                        def input_sorted = input_fastq.sort()
+                        def metadata_sorted = metadata_fastq.sort()
+                                if (metadata_sorted != input_sorted) {
+                                    def missing_in_metadata = input_sorted - metadata_sorted
+                                    def missing_in_input = metadata_sorted - input_sorted
+
+                                    def error_msg = "ID mismatch between samplesheet and metadata:\n"
+                                    if (missing_in_metadata) error_msg += "In samplesheet but not metadata: ${missing_in_metadata.join(', ')}\n"
+                                    if (missing_in_input) error_msg += "In metadata but not samplesheet: ${missing_in_input.join(', ')}"
+                                    error(error_msg)
+                                }
+                        "validation_passed"
+            }
+    }
 
 def flattenAndMap(ch_fastqs, preserve_old_id = false) { // preserve_old_id becuase this change only needs to be done on the first cutadapt process
     ch_fastq = ch_fastqs
