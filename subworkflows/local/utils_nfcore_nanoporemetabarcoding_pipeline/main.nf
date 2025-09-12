@@ -133,6 +133,30 @@ workflow PIPELINE_COMPLETION {
 */
 
 //
+// Check and validate pipeline parameters
+//
+def validateInputParameters(metadata) {
+    def valid_metadata = metadata
+                       | groupTuple // Group first according to fastq (make sure there are no repeated values within groups)
+                       | map { fastq, primer_comb, sample ->
+                                    def duplicates_primer_comb = primer_comb.countBy { it }.findAll { key, count -> count > 1 }.keySet() // This will check for duplicated values
+                                    def duplicates_sample = sample.countBy { it }.findAll { key, count -> count > 1 }.keySet()
+                                    if (!duplicates_primer_comb.isEmpty()) {
+                                        error("<primer_comb> column in metadata contains repeated values for ${fastq}: ${duplicates_primer_comb.join(', ')}")
+                                    } else if (!duplicates_sample.isEmpty()) {
+                                         error("<sample> column in metadata contains repeated values for ${fastq}: ${duplicates_sample.join(', ')}")
+                                    } else {
+                                        [fastq, primer_comb, sample]
+                                    }
+                        }
+                        |transpose // Ungroups
+
+    return valid_metadata
+    //genomeExistsError()
+    // Add ways of validating input parameters, e.g. for groups in ncbigenomedownload
+}
+
+//
 // Validate channels from input samplesheet
 //
 def validateInputSamplesheet(input) {
