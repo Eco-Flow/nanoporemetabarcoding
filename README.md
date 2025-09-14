@@ -83,11 +83,11 @@ The running time should be around 8 minutes on a machine with 12 cpus/threads.
 For running the pipleine on your data, prepare a samplesheet with your input FASTQs that looks as follows:
 
 ```csv
-sample,fastq
+id,fastq
 sample_name,path/to/sample.fastq.gz
 ```
 
-The first column represents the sample name or sample id, and the second the location to the corresponding FASTQ file.
+The first column represents the FASTQ id (e.g. plate number), and the second the location to the FASTQ file.
 
 Now, you can run the pipeline using:
 
@@ -118,7 +118,7 @@ You can optionally provide a metadata file in CSV format with the primer-tag com
     metadata                   = path/to/metadata.csv
 ```
 
-See `./test_data/metadata.csv` for an example. If set to `null` (value by default), the pipeline will use the primer-tag combination as the sample ID.
+The id of the metadata should match the id of the samplesheet (see [usage](#usage)), and values for the `primer_comb` and `sample` fields should be unique within id groups. See `./test_data/metadata.csv` for an example. If set to `null` (value by default), the pipeline will use the primer-tag combination as the sample ID.
 
 **Demultiplex options:**
 
@@ -135,6 +135,14 @@ See `./test_data/metadata.csv` for an example. If set to `null` (value by defaul
     tags_r                      = 'path/to/reverse/primer-tag.fasta' // List of forward primer-tag combinations in fasta format
 ```
 
+3. Set the error rate for adapter removal. This can be a value between 0 and 1 (1 not included) if a maximum error rate wants to be applied to all adapters, or it can be equal or greater than 1, in which case it will be converted to a maximum error rate depending on the adapter length. Check [cutadatpt documentation](https://cutadapt.readthedocs.io/en/stable/guide.html) for more information:
+
+```
+    error_rate                  = 2 // Error rate for adapter removal
+```
+
+4. Primer-tag overlap. To calculate mismatches with the `--error-rate` option, cutadapt considers only the aligned region (overlap) between primer and read. The minimum length of this overlap is set by the `--overlap` option. For example, with an error rate of 0.2 (20%) and a 20 bp primer, if the required overlap is 10 bp and there are 3 mismatches in that region, the match is rejected because the mismatch rate is 3/10 = 30%, which is above the 20% threshold. But if the overlap is 20 bp and there are 3 mismatches, the match is accepted because the mismatch rate is 3/20 = 15%, which is below the 20% threshold. If your primers are very similar, it is often best to set `--overlap` to at least the length of the longest primer to avoid spurious matches.
+
 **Nanofilt options:**
 
 Nanofilt is run before demultiplexing and tag+primer trimming:
@@ -145,16 +153,10 @@ Nanofilt is run before demultiplexing and tag+primer trimming:
     nano_read_length            = 250 // Minimum reads length
 ```
 
-3. Set the error rate for adapter removal. This can be a value between 0 and 1 (1 not included) if a maximum error rate wants to be applied to all adapters, or it can be equal or greater than 1, in which case it will be converted to a maximum error rate depending on the adapter length. Check [cutadatpt documentation](https://cutadapt.readthedocs.io/en/stable/guide.html) for more information:
+4. Filter FASTQs with a mumber of reads equal or lower than (changing this value is not recommended):
 
 ```
-    error_rate                  = 2 // Error rate for adapter removal
-```
-
-4. Filter FASTQs with a mumber of reads equal or lower than:
-
-```
-    filt_fastq                  = 100
+    filt_fastq                  = 0
 ```
 
 Check `./test_data/primers_f.fasta` and `./test_data/primers_r.fasta` for examples of `tags_f` and `tags_r` files, respectively.
@@ -207,10 +209,10 @@ For more details, check the appendix section of the [blast documentation](https:
 
 ```
     // Assign taxonomy options
-    spident                     = null // Identity threshold (in %) for taxonomy assignment at species level. > 100 if not wanting to assign species
-    gpident                     = null // Identity threshold (in %) for taxonomy assignment at genus level
-    fpident                     = null // Identity threshold (in %) for taxonomy assignment at family level
-    opident                     = null // Identity threshold (in %) for taxonomy assignment at order level
+    spident                     = null // Identity threshold (in %) for taxonomy assignment at species level. If not set, the value by default will be 99. Set to > 100 if not wanting to assign species
+    gpident                     = null // Identity threshold (in %) for taxonomy assignment at genus level. If not set, the value by default will be 90
+    fpident                     = null // Identity threshold (in %) for taxonomy assignment at family level. If not set, the value by default will be 80
+    opident                     = null // Identity threshold (in %) for taxonomy assignment at order level. If not set, the value by default will be 70
 ```
 
 2. Path to `taxonomizr` SQL database:

@@ -59,7 +59,7 @@ workflow NANOPOREMETABARCODING {
     // Prepare metadata channel
     ch_metadata = params.metadata ? Channel.fromPath(params.metadata, checkIfExists: true)
                 | splitCsv(header: true)
-                | map { row -> [row.fastq, row.primer_comb, row.sample] }
+                | map { row -> [row.id, row.primer_comb, row.sample] }
                 | validateInputParameters // Validate metadata so that there are no duplicated values, prob should also check whether fastqs in samplesheet and metadata match
                 | map { fastq, primer_comb, sample -> [[id:primer_comb, single_end:true, old_id:fastq], sample] }
                 : null // null if no metadata is provided
@@ -183,6 +183,41 @@ workflow NANOPOREMETABARCODING {
                            count > params.filt_fastq && !meta.id.contains('unknown') // Filter out FASTQs with less than x reads and with unknown primer combinations
                       }
 
+    //
+    // MODULE: Run FastQC
+    //
+    //FASTQC (
+    //    ch_input
+    //)
+    //ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]})
+    //ch_versions = ch_versions.mix(FASTQC.out.versions.first())
+
+
+    // Prepare data for Nanoplot and amplicon_sorter
+
+    // For running medaka without running minimap2. Medaka already aligns basecalls (amplicons here)
+    // to the consensus sequences, so perhaps we can skip minimap2 step, at least for now
+    // Make sure this is working as expected
+
+    ch_metadata.view()
+    ch_amplicon_sort = ch_metadata ? ch_input_filtered
+                     //| map { meta, fastq -> [meta.id, meta, fastq] } // Extract meta.id replace with sample name according to metadata
+                     | join(ch_metadata) // Join on adapter combination
+                     | map { meta, fastq, sample ->
+                                def new_meta = meta.clone()
+                                new_meta.id = sample
+                                [new_meta, fastq]
+                     }
+                     : ch_input_filtered // If no metadata file is provided, use the gunzip output (primer-tag combinations as id)
+
+    //
+    // MODULE: Run Gunzip. Might be better to use gunzip from amplicon sorter
+    //
+
+    GUNZIP (
+        ch_amplicon_sort
+    )
+
     // Prepare raw, cleaned and demultiplexed reads for Nanoplot
 
     ch_raw       = ch_input
@@ -202,14 +237,14 @@ workflow NANOPOREMETABARCODING {
     //
 
     // If skip_nanoplot is set to true, skip this module
-    ch_nanoplot = params.skip_nanoplot ? Channel.empty() : ch_raw.mix(ch_filt).mix(ch_input_filtered)
+    ch_nanoplot = params.skip_nanoplot ? Channel.empty() : ch_raw.mix(ch_filt).mix(ch_amplicon_sort)
 
     NANOPLOT (
         ch_nanoplot
     )
-    //ch_multiqc_files = ch_multiqc_files.mix(NANOPLOT.out.txt.collectFile() { meta, stats -> ["${meta.id}.txt", stats.text] }).collect() // Original name out.txt channel is stats.txt, so multiqc keeps overwritting
+
+    // // Original name out.txt channel is stats.txt, so multiqc keeps overwritting. Each file needs to have an unique name
     ch_nanoplot_renamed = NANOPLOT.out.txt
-                        //| collectFile
                         | map { meta, stats ->
                                     def selectedFile = stats instanceof List ? stats[0] : stats // Not sure why, but sometimes there are two stats files. If that's the case, select the first one [0], which are the original stats
                                     //["${meta.id}_stats.txt", selected_file.text]
@@ -219,45 +254,14 @@ workflow NANOPOREMETABARCODING {
                                     [meta, renamedFile]
                         }
 
-    ch_multiqc_files    = ch_multiqc_files.mix(ch_nanoplot_renamed.map { meta, stats -> stats }).collect() // Original name out.txt channel is stats.txt, so multiqc keeps overwritting
-
-
-    //
-    // MODULE: Run FastQC
-    //
-    //FASTQC (
-    //    ch_input
-    //)
-    //ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]})
-    //ch_versions = ch_versions.mix(FASTQC.out.versions.first())
-
-    //
-    // MODULE: Run Gunzip. Might be better to use gunzip from amplicon sorter
-    //
-
-    GUNZIP (
-        ch_input_filtered
-    )
+    ch_multiqc_files    = ch_multiqc_files.mix(ch_nanoplot_renamed.map { meta, stats -> stats }).collect()
 
     //
     // MODULE: Run Amplicon Sorter
     //
 
-    // For running medaka without running minimap2. Medaka already aligns basecalls (amplicons here)
-    // to the consensus sequences, so perhaps we can skip minimap2 step, at least for now
-    // Make sure this is working as expected
-    ch_amplicon_sort = ch_metadata ? GUNZIP.out.gunzip
-                     //| map { meta, fastq -> [meta.id, meta, fastq] } // Extract meta.id replace with sample name according to metadata
-                     | join(ch_metadata) // Join on adapter combination
-                     | map { meta, fastq, sample ->
-                                def new_meta = meta.clone()
-                                new_meta.id = sample
-                                [new_meta, fastq]
-                     }
-                     : GUNZIP.out.gunzip // If no metadata file is provided, use the gunzip output (primer-tag combinations as id)
-
     AMPLICON_SORTER (
-        ch_amplicon_sort
+        GUNZIP.out.gunzip
     )
 
     //Get group information from amplicon sorter output FASTA files
