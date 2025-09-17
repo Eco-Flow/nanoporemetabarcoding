@@ -199,7 +199,6 @@ workflow NANOPOREMETABARCODING {
     // to the consensus sequences, so perhaps we can skip minimap2 step, at least for now
     // Make sure this is working as expected
 
-    ch_metadata.view()
     ch_amplicon_sort = ch_metadata ? ch_input_filtered
                      //| map { meta, fastq -> [meta.id, meta, fastq] } // Extract meta.id replace with sample name according to metadata
                      | join(ch_metadata) // Join on adapter combination
@@ -264,12 +263,23 @@ workflow NANOPOREMETABARCODING {
         GUNZIP.out.gunzip
     )
 
+    // Merge csv from with read counts per ASV. We are doing this to add the read counts to the final table for QC
+    ch_merged = AMPLICON_SORTER.out.results_csv
+              |collectFile(skip: 2) { meta, csv -> ["${meta.old_id}.merged.txt", csv] } // Merge accoding to old_id (same as the number of tables)
+              | map { merged_file ->
+                        // Extract the old_id from filename and reconstruct meta
+                        def old_id = merged_file.baseName.replaceAll('\\.merged$', '')
+                        def new_meta = [id: old_id] // Add other meta fields as needed
+                        [new_meta, merged_file]
+              }
+
     //Get group information from amplicon sorter output FASTA files
     ch_group = AMPLICON_SORTER.out.fastas
              | transpose() // Should look this up
              | map { meta, fasta ->
                 // Get the filename without extension
                  def basename = fasta.baseName
+                 println(basename)
                  // Extract the last part after the final underscore (assuming format from amplicon sorter: name_X_Y)
                  def parts = basename.split('_')
                  def group = "${parts[-2]}_${parts[-1]}" // Get group name from the last two parts of the fasta name without extension
