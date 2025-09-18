@@ -417,13 +417,25 @@ workflow NANOPOREMETABARCODING {
         BLAST_BLASTN.out.txt
     )
 
+    // Join blast hits channel with number of reads per ASV channel
+    ch_assign_taxonomy = BEST_HIT.out.best_hit
+                       | join(ch_merged, by: 0)
+                       | multiMap { meta, blast, csv ->
+                                blast: [meta, blast]
+                                csv: [meta,csv]
+                       }
+
+    ch_assign_taxonomy.blast.view()
+    ch_assign_taxonomy.csv.view()
+
     //
     // MODULE: Run assign taxonomy
     //
     ch_sql_db = Channel.fromPath(params.sql_db)
 
     ASSIGN_TAXONOMY(
-        BEST_HIT.out.best_hit,
+        ch_assign_taxonomy.blast,
+        ch_assign_taxonomy.csv,
         ch_sql_db.first()
     )
 
