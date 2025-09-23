@@ -276,10 +276,15 @@ workflow NANOPOREMETABARCODING {
     //Get group information from amplicon sorter output FASTA files
     ch_group = AMPLICON_SORTER.out.fastas
              | transpose() // Should look this up
+             | filter { meta, fasta -> // This is a temporary fix, shoould change this in the module
+                            def filename = fasta.name
+                            def excludePatterns = ['_unique.fasta', '_consensussequences.fasta', '_nogroup_unique.fasta']
+                            return !excludePatterns.any { pattern -> filename.endsWith(pattern) }
+             }
+             | view()
              | map { meta, fasta ->
                 // Get the filename without extension
                  def basename = fasta.baseName
-                 println(basename)
                  // Extract the last part after the final underscore (assuming format from amplicon sorter: name_X_Y)
                  def parts = basename.split('_')
                  def group = "${parts[-2]}_${parts[-1]}" // Get group name from the last two parts of the fasta name without extension
