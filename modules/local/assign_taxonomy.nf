@@ -11,6 +11,7 @@ process ASSIGN_TAXONOMY {
 
     input:
     tuple val(meta), path(blast_hits)
+    tuple val(meta), path(read_counts)
     path(sql_db)
 
     output:
@@ -27,6 +28,7 @@ process ASSIGN_TAXONOMY {
     """
     Rscript ${projectDir}/bin/assign_taxonomy.R \\
     $blast_hits \\
+    $read_counts \\
     --sql_db $sql_db \\
     $args
 

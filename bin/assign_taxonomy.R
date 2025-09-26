@@ -9,6 +9,7 @@ library(taxonomizr)
 # Parse command-line arguments
 parser <- ArgumentParser(description = 'Assign taxonomy to blast hits')
 parser$add_argument('blast_hits', type = 'character', help = 'Path to blast hits in outfmt 6')
+parser$add_argument('read_counts', type = 'character', help = 'Path to read counts per ASV')
 parser$add_argument('--db_type', type = 'character', help = 'Taxonomy database type: taxonomizr or custom tsv')
 parser$add_argument('--sql_db', type = 'character', help = 'Path to SQL ncbi taxonomy database')
 parser$add_argument('--spident', type = 'numeric', help = 'Identity threshold (in %) for taxonomy assignment at species level', default = 99)
@@ -20,6 +21,13 @@ parser$add_argument('--opident', type = 'numeric', help = 'Identity threshold (i
 args <- parser$parse_args()
 
 Blastout <- read.table(args$blast_hits)
+
+read_counts <- read.csv(args$read_counts)
+
+colnames(read_counts) <- c("ASV", "read_count")
+
+head(Blastout)
+head(read_counts)
 
 # Load hits table
 blast_filtered <- Blastout %>%
@@ -79,6 +87,13 @@ print("debug")
 print(ASV.ids)
 
 write.csv(ASV.ids, "ASV_filtered.csv", row.names = FALSE)
+
+
+# Merge reads counts bease on the ASV column
+ASV.ids.read_counts <- merge(ASV.ids, read_counts, by = "ASV") %>%
+                        relocate(read_count, .before = 3)
+
+write.csv(ASV.ids.read_counts, "ASV_filtered_read_count.csv", row.names = FALSE)
 
 #Plate.metabar <- merge(ASV.ids, asv_tab2, by = "ASV") %>%
 #  dplyr::select(-ASV) %>%
