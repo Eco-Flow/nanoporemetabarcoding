@@ -245,6 +245,78 @@ For more details about the output files and reports, please refer to the
 
 <!-- For an example of some of the relevant results check the `./results` folder in this repo. -->
 
+The files listed below will be created in the results directory (set by `--outdir`) after the pipeline has finished. All paths are relative to the top-level results directory.
+
+### Quality reports
+
+#### Nanoplot
+
+The pipeline outputs [`NanoPlot`](https://github.com/wdecoster/NanoPlot) QC reports for raw, filtered -after nanofilt-, and demultiplexed reads. Nanoplot reports are store inside the nanoplot folder, and come in different formats.
+
+
+<details markdown="1">
+<summary>Output files</summary>
+
+- `nanoplot/`
+  - `raw/<fastq_id>`: Folder that contains  the raw reads quality report.
+  - `filtered/<fastq_id>`: Folder contains the filtered -after nanofilt- reads quality report.
+  - `demultiplexed/<fastq_id>/<sample_id>`: Contains the duemultiplexed reads quality report.
+
+</details>
+
+#### Multiqc
+
+[MultiQC](http://multiqc.info) is a visualization tool that generates a single HTML report summarising all of the NanoPlot QC results for raw, filtered, demultiplexed reads. Most of the pipeline QC results are visualised in the report and further statistics are available in the report data directory.
+
+<details markdown="1">
+<summary>Output files</summary>
+
+- `multiqc/`
+  - `multiqc_report.html`: a standalone HTML file that can be viewed in your web browser.
+  - `multiqc_data/`: directory containing parsed statistics from the different tools used in the pipeline.
+  - `multiqc_plots/`: directory containing static images from the report in various formats.
+
+</details>
+
+### Taxonomy assignment
+
+The pipeline outputs ASV tables in `.csv` format, being `ASV_filtered_read_count.csv` the table that should be used for downstream analysis. The table contains these columns:
+
+`sample_name`: Name of the sample. It is made of `<fastq_id>sample_id<>`.
+`ASV`: ASV id.
+`pident`: Percent identity of the alignment.
+`length`: Alignment length.
+`mismatch`: Number of non-identical aligned positions (excluding gaps).
+`gapopen`: Number of gap openings in the alignment
+`qstart`: Start position of the alignment on the query sequence.
+`qend`: End position of the alignment on the query sequence.
+`sstart`: Start position of the alignment on the subject (database hit) sequence.
+`send`: End position of the alignment on the subject sequence.
+`evalue`: Expect value. The lower the more significant. Depends on the dabase size.
+`bitscore`: Bit score. The higher the better the alignment. Independent of the dabase size.
+`taxaId`: Assigned NCBI taxon id.
+`domain`: Assigned domain.
+`phylum`: Assigned phylum.
+`class`: Assigned class.
+`order`: Assigned order.
+`family`: Assigned family.
+`genus`: Assigned genus.
+`species`: Assigned species.
+`assigned_taxon`: Assigned taxonomic rank according to to the percentage identitity.
+`` : 
+
+<details markdown="1">
+<summary>Output files</summary>
+
+- `assign_taxa/`
+  - `<fastq_id>/ASV_taxa.csv`: ASV table.
+  - `<fastq_id>/ASV_filtered.csv`:  ASV table with the assigned taxonomic rank according to the percetage identity parameters (see [Parameters](#parameters) section).
+  - `<fastq_id>/ASV_filtered_read_count.csv`: Filtered ASV table with reads counts.
+
+
+
+</details>
+
 ## Credits
 
 nf-core/nanoporemetabarcoding was originally written by Fernando Duarte, Chris Wyatt.

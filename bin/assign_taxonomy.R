@@ -90,7 +90,7 @@ write.csv(ASV.ids, "ASV_filtered.csv", row.names = FALSE)
 
 
 # Merge reads counts bease on the ASV column
-ASV.ids.read_counts <- merge(ASV.ids, read_counts, by = "ASV") %>%
+ASV.ids.read_counts <- merge(ASV.ids, read_counts, by = "ASV", all.x = TRUE) %>%
                         relocate(read_count, .before = 3)
 
 write.csv(ASV.ids.read_counts, "ASV_filtered_read_count.csv", row.names = FALSE)
