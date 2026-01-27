@@ -227,7 +227,7 @@
             "pattern": "\\.fn?a(sta)?(\\.gz)?$"
         },
         "error_rate": {
-            "type": "integer",
+            "type": "number",
             "default": 2,
             "description": "Error rate for cutadapt"
         },
@@ -270,7 +270,7 @@
             "default": 90
         },
         "nano_quality": {
-            "type": "string"
+            "type": "integer"
         },
         "nano_read_length": {
             "type": "integer",

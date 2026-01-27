@@ -22,7 +22,7 @@ args <- parser$parse_args()
 
 Blastout <- read.table(args$blast_hits)
 
-read_counts <- read.csv(args$read_counts)
+read_counts <- read.csv(args$read_counts, header=FALSE)
 
 colnames(read_counts) <- c("ASV", "read_count")
 
@@ -88,6 +88,9 @@ print(ASV.ids)
 
 write.csv(ASV.ids, "ASV_filtered.csv", row.names = FALSE)
 
+print("Debug read count")
+
+print(read_counts)
 
 # Merge reads counts bease on the ASV column
 ASV.ids.read_counts <- merge(ASV.ids, read_counts, by = "ASV", all.x = TRUE) %>%
