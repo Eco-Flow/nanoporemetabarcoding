@@ -61,7 +61,7 @@ taxonomic.df <- as.data.frame(sseqids$Taxonomic.ranks, stringsAsFactors = FALSE)
 sseqids <- cbind(sseqids, taxonomic.df)
 sseqids$Taxonomic.ranks <- NULL
 
-write.csv(sseqids, "ASV_taxa.csv", row.names = FALSE)
+write.csv(sseqids, "ASV_table.csv", row.names = FALSE)
 
 print(sseqids)
 
@@ -86,7 +86,7 @@ print("debug")
 
 print(ASV.ids)
 
-write.csv(ASV.ids, "ASV_filtered.csv", row.names = FALSE)
+write.csv(ASV.ids, "ASV_table_assigned.csv", row.names = FALSE)
 
 print("Debug read count")
 
@@ -96,7 +96,7 @@ print(read_counts)
 ASV.ids.read_counts <- merge(ASV.ids, read_counts, by = "ASV", all.x = TRUE) %>%
                         relocate(read_count, .before = 3)
 
-write.csv(ASV.ids.read_counts, "ASV_filtered_read_count.csv", row.names = FALSE)
+write.csv(ASV.ids.read_counts, "ASV_table_final.csv", row.names = FALSE)
 
 #Plate.metabar <- merge(ASV.ids, asv_tab2, by = "ASV") %>%
 #  dplyr::select(-ASV) %>%
