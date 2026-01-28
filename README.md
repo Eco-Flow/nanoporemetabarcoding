@@ -309,9 +309,9 @@ The pipeline an ASV tables in `.csv` format. The `ASV_taxa_final.csv` table cont
 <summary>Output files</summary>
 
 - `assign_taxa/`
+  - `<fastq_id>/ASV_taxa_final.csv`: ASV table with reads counts.
 <!--  - `<fastq_id>/ASV_taxa.csv`: ASV table.
   - `<fastq_id>/ASV_filtered.csv`:  ASV table with the assigned taxonomic rank according to the percetage identity parameters (see [Parameters](#parameters) section). -->
-  - `<fastq_id>/ASV_taxa_final.csv`: ASV table with reads counts.
 
 
 
