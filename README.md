@@ -280,7 +280,7 @@ The pipeline outputs [`NanoPlot`](https://github.com/wdecoster/NanoPlot) QC repo
 
 ### Taxonomy assignment
 
-The pipeline outputs ASV tables in `.csv` format. The `ASV_taxa.csv` table contains the following columns:
+The pipeline an ASV tables in `.csv` format. The `ASV_taxa_final.csv` table contains the following columns:
 
 - `sample_name`: Name of the sample. It is made of `<fastq_id>sample_id<>`.
 - `ASV`: ASV id.
@@ -302,22 +302,16 @@ The pipeline outputs ASV tables in `.csv` format. The `ASV_taxa.csv` table conta
 - `family`: Assigned family.
 - `genus`: Assigned genus.
 - `species`: Assigned species.
-
-The table `ASV_filtered.csv` is essentially the same as the `ASV_taxa.csv` but contains an extra column:
-
 - `assigned_taxon`: Assigned taxonomic rank according to to the percentage identitity.
-
-And table `ASV_filtered_read_count.csv` is essentially the same as the `ASV_filtered.csv` but contains an extra column:
-
-- `read_count`: ASV read count. 
+- `read_count`: ASV read count.
 
 <details markdown="1">
 <summary>Output files</summary>
 
 - `assign_taxa/`
-  - `<fastq_id>/ASV_taxa.csv`: ASV table.
-  - `<fastq_id>/ASV_filtered.csv`:  ASV table with the assigned taxonomic rank according to the percetage identity parameters (see [Parameters](#parameters) section).
-  - `<fastq_id>/ASV_filtered_read_count.csv`: Filtered ASV table with reads counts.
+<!--  - `<fastq_id>/ASV_taxa.csv`: ASV table.
+  - `<fastq_id>/ASV_filtered.csv`:  ASV table with the assigned taxonomic rank according to the percetage identity parameters (see [Parameters](#parameters) section). -->
+  - `<fastq_id>/ASV_taxa_final.csv`: ASV table with reads counts.
 
 
 
