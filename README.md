@@ -84,10 +84,12 @@ For running the pipleine on your data, prepare a samplesheet with your input FAS
 
 ```csv
 id,fastq
-sample_name,path/to/sample.fastq.gz
+fastq_id_1,path/to/reads1.fastq.gz
+fastq_id_2,path/to/reads2.fastq.gz
+...
 ```
 
-The first column represents the FASTQ id (e.g. plate number), and the second the location to the FASTQ file.
+The first column represents the FASTQ id (e.g. plate number if the FASTQ represents a single plate), and the second the location to the FASTQ file.
 
 Now, you can run the pipeline using:
 
@@ -118,7 +120,19 @@ You can optionally provide a metadata file in CSV format with the primer-tag com
     metadata                   = path/to/metadata.csv
 ```
 
-The id of the metadata should match the id of the samplesheet (see [usage](#usage)), and values for the `primer_comb` and `sample` fields should be unique within id groups. See `./test_data/metadata.csv` for an example. If set to `null` (value by default), the pipeline will use the primer-tag combination as the sample ID.
+The strucutre of the CSV should be as follows:
+
+```
+id,primer_comb,sample
+fastq_id_1,<forward-primer-tag-id>_<forward-primer-tag-id>,sample1
+fastq_id_2,<forward-primer-tag-id>_<forward-primer-tag-id>,sample2
+...
+```
+
+> [!NOTE]
+> If <forward-primer-tag-id> and/or <forward-primer-tag-id> in the metadata samplesheet don't match the ids in the primer-tag FASTA files, demultiplexing won't work. Make sure they have the exact same name.
+
+The id of the metadata should match the id of the samplesheet (see [usage](#usage)), and values for the `primer_comb` and `sample` fields should be unique within id groups. See `./test_data/metadata.csv` for an example. If set to `null` (value by default), the pipeline will use the primer-tag combination as the sample ID in the final ASV table.
 
 **Demultiplex options:**
 
