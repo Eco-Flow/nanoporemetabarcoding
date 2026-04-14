@@ -265,7 +265,7 @@ The files listed below will be created in the results directory (set by `--outdi
 
 #### Nanoplot
 
-The pipeline outputs [`NanoPlot`](https://github.com/wdecoster/NanoPlot) QC reports for raw, filtered -after nanofilt-, and demultiplexed reads. Nanoplot reports are store inside the nanoplot folder, and come in different formats.
+[`NanoPlot`](https://github.com/wdecoster/NanoPlot) is a tool that outputs QC reports for raw, filtered -after nanofilt-, and demultiplexed reads. Nanoplot reports are store inside the nanoplot folder, and come in different formats.
 
 
 <details markdown="1">
@@ -294,7 +294,7 @@ The pipeline outputs [`NanoPlot`](https://github.com/wdecoster/NanoPlot) QC repo
 
 ### Taxonomy assignment
 
-The pipeline an ASV tables in `.csv` format. The `ASV_taxa_final.csv` table contains the following columns:
+The pipeline outputs ASV tables in `.csv` format. The `ASV_taxa_final.csv` table contains the following columns:
 
 - `sample_name`: Name of the sample. It is made of `<fastq_id>sample_id<>`.
 - `ASV`: ASV id.
