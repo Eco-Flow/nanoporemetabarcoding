@@ -355,6 +355,7 @@ workflow NANOPOREMETABARCODING {
     // MODULE: Run Medaka
     //
 
+ 
     MEDAKA (
         ch_medaka
     )
@@ -524,8 +525,8 @@ workflow NANOPOREMETABARCODING {
                                     def missing_in_input = metadata_sorted - input_sorted
 
                                     def error_msg = "ID mismatch between samplesheet and metadata:\n"
-                                    if (missing_in_metadata) error_msg += "In samplesheet but not metadata: ${missing_in_metadata.join(', ')}\n"
-                                    if (missing_in_input) error_msg += "In metadata but not samplesheet: ${missing_in_input.join(', ')}"
+                                    if (missing_in_metadata) error_msg += "In metadata but not samplesheet: ${missing_in_metadata.join(', ')}\n"
+                                    if (missing_in_input) error_msg += "In samplesheet but not metadata: ${missing_in_input.join(', ')}"
                                     error(error_msg)
                                 }
                         "validation_passed"
