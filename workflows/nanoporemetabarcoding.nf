@@ -73,23 +73,6 @@ workflow NANOPOREMETABARCODING {
         validateSamplesheetMetadata(ch_input_fastqs, ch_metadata_fastqs)
     }
 
-    // Make sure fastqs in samplesheet and metadata match
-    //def validateSamplesheetMetadata ( input_channel,metadata_channel )
-    //ch_metadata_fastqs.join(ch_input_fastqs)
-    //| map { key, input_fastq, metadata_fastq ->
-    //                def input_sorted = input_fastq.sort()
-    //                def metadata_sorted = metadata_fastq.sort()
-    //                        if (metadata_sorted != input_sorted) {
-    //                            def missing_in_metadata = input_sorted - metadata_sorted
-    //                            def missing_in_input = metadata_sorted - input_sorted
-    //
-    //                            def error_msg = "ID mismatch between samplesheet and metadata:\n"
-    //                            if (missing_in_metadata) error_msg += "In samplesheet but not metadata: ${missing_in_metadata.join(', ')}\n"
-    //                            if (missing_in_input) error_msg += "In metadata but not samplesheet: ${missing_in_input.join(', ')}"
-    //                            error(error_msg)
-    //                        }
-    //        return "validation_passed"
-    //}
     //
     // MODULE: Run Nanoplot
     //
@@ -116,60 +99,6 @@ workflow NANOPOREMETABARCODING {
     // (check for the function flattenAndMap in the functions section)
     ch_input_f = flattenAndMap(CUTADAPT_F.out.reads, true)
 
-    // Get unkwon reads to reverse complement them later and trim again based on forward barcodes
-    // We filter out reads that are unknown as they are probably reverse complemented with regard
-    // to the forward barcodes. This is done so that we can trim them again based on the forward barcodes
-    // No need for this anymore since cutadapt has an --rc option, so unknown reads are now missing reads
-    //ch_unknown = ch_input_f
-    //           | filter { meta, fastq ->
-    //                    meta.id.contains('unknown')
-    //           }
-
-    //
-    // MODULE: Run SEQKIT reverse complement
-    //
-
-    // Reverse complement reads and run cutadapt again on unknown
-    // rc reads and trim again based on forward barcodes
-    //SEQKIT_REVCOMP_A (
-    //    ch_unknown
-    //)
-
-    // Trim based on forward barcodes again
-    //CUTADAPT_F_RC (
-    //    SEQKIT_REVCOMP_A.out.fastx
-    //)
-
-    // Remmove 'unknown_' prefix from metadata and flatten the output channel.
-    // This is done so that reads can be concatenated based on the metadata
-    // This reads are not unknown anymore
-    //ch_unknown = flattenAndMap(CUTADAPT_F_RC.out.reads)
-    //           | map { meta, fastq ->
-    //               def cleaned_meta = meta.id.replaceFirst(/unknown_/, '') // Remove the 'unknown_' prefix to be able to merge
-    //               [meta + [id: cleaned_meta], fastq] // Return updated metadata and fastq
-    //           }
-
-    // Group known and unknown (not uknown anymore) reads together based on metadata
-    //ch_input_f = ch_input_f
-    //           | mix(ch_unknown)
-    //           | groupTuple()
-
-    // Concatenate grouped reads together based on metadata.
-    //CAT_CAT (
-    //    ch_input_f
-    //)
-
-    //
-    // MODULE: Run SEQKIT reverse complement
-    //
-
-    // Barcodes are attached to both ends of the reads, so we need to reverse complement the reads
-    // to trim and demultiplex based the other end
-
-    //SEQKIT_REVCOMP_B (
-    //    CAT_CAT.out.file_out
-    //)
-
     // Run cutadapt on the reverse complemented reads to trim reverse barcodes
     CUTADAPT_R (
        ch_input_f
@@ -182,15 +111,6 @@ workflow NANOPOREMETABARCODING {
                            def count = fastq.countFastq()
                            count > params.filt_fastq && !meta.id.contains('unknown') // Filter out FASTQs with less than x reads and with unknown primer combinations
                       }
-
-    //
-    // MODULE: Run FastQC
-    //
-    //FASTQC (
-    //    ch_input
-    //)
-    //ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]})
-    //ch_versions = ch_versions.mix(FASTQC.out.versions.first())
 
 
     // Prepare data for Nanoplot and amplicon_sorter
@@ -330,24 +250,11 @@ workflow NANOPOREMETABARCODING {
         SEQKIT_REPLACE.out.fastx
     )
 
-    // Join consensus and amplicon sequences based on metadata and separate them in
-    // a multichannel (keeps grouped amplicons and their respective consensus sequence in sync)
-    //ch_minimap = GUNZIP_SEQKIT_GREP_A.out.gunzip // Grouped amplicons
-    //           | join(GUNZIP_SEQKIT_GREP_C.out.gunzip) // Consensus
-    //           | multiMap { meta, amps, cons -> // meta: metadata, amps: amplicon sequences, cons: consensus sequences
-    //                        amps : [ meta, amps] // Return a tuple with metadata and amplicon sequences
-    //                        cons : [ meta, cons ] // Return a tuple with metadata and consensus sequences
-    //           }
-
     // For running medaka without running minimap2. Medaka already aligns basecalls (amplicons here)
     // to the consensus sequences, so perhaps we can skip minimap2 step, at least for now
     // Make sure this is working as expected
     ch_medaka = GUNZIP_SEQKIT_GREP_A.out.gunzip
               | join(GUNZIP_SEQKIT_GREP_C.out.gunzip)
-
-    //
-    // MODULE: Run Minimap2
-    //
 
 
 
@@ -410,18 +317,6 @@ workflow NANOPOREMETABARCODING {
         ch_corrected_concat,
         ch_blast.first() // .first() so that channel can be used several times
     )
-
-    //
-    // MODULE: Run blast best hit
-    //
-
-    // To annotate the consensus (or ASVs) sequences, we need to estabish a criteria
-    // to select the best blast hit. In this case the best blast hit is established first
-    // by bitscore and second by evalue
-
-    //BEST_HIT (
-    //    BLAST_BLASTN.out.txt
-    //)
 
     // Join blast hits channel with number of reads per ASV channel
     ch_assign_taxonomy = BLAST_BLASTN.out.txt
