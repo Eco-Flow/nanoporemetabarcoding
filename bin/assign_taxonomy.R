@@ -20,30 +20,30 @@ parser$add_argument('--opident', type = 'numeric', help = 'Identity threshold (i
 
 args <- parser$parse_args()
 
+# Load blast hits
 Blastout <- read.table(args$blast_hits)
 
+# Filter blast hits to retain only the best hit for each ASV based on bitscore, evalue, and percent identity
+blast_filtered <- Blastout %>%
+  rename(qseqid = V1, sseqid = V2, pident = V3, length = V4,
+         mismatch = V5, gapopen = V6, qstart = V7, qend = V8,
+         sstart = V9, send = V10, evalue = V11, bitscore = V12) %>%
+  group_by(qseqid) %>%
+  filter(bitscore == max(bitscore)) %>%
+  filter(evalue   == min(evalue)) %>%
+  filter(pident   == max(pident)) %>%
+  ungroup() %>%
+  dplyr::select(qseqid, sseqid, pident, length, mismatch, gapopen, qstart, qend, sstart, send, evalue, bitscore)
+
+# Load read counts
 read_counts <- read.csv(args$read_counts, header=FALSE)
 
+# Column names for read counts - assuming the first column is ASV and the second column is read count
 colnames(read_counts) <- c("ASV", "read_count")
 
+# Debugging: Check the structure of the loaded data
 head(Blastout)
 head(read_counts)
-
-# Load hits table
-blast_filtered <- Blastout %>%
-  mutate(qseqid = V1,
-         sseqid = V2,
-         pident = V3,
-         length = V4,
-         mismatch = V5,
-         gapopen = V6,
-         qstart = V7,
-         qend = V8,
-         sstart = V9,
-         send = V10,
-         evalue = V11,
-         bitscore = V12) %>%
-  dplyr::select(qseqid, sseqid, pident, length, mismatch, gapopen, qstart, qend, sstart, send, evalue, bitscore)
 
 # Create SQLite database - can be stored centrally to avoid replication across projects - this seems to variably work, so the below steps avoid it
 #prepareDatabase('accessionTaxa.sql')
@@ -66,19 +66,32 @@ write.csv(sseqids, "ASV_table.csv", row.names = FALSE)
 print(sseqids)
 
 ASV.ids <- sseqids %>%
-  mutate(assigned_taxon = if_else(!is.na(order) & order == "Araneae",
-                                if_else(pident > args$gpident, genus,
-                                         if_else(pident > args$fpident, family,
-                                                 if_else(pident > args$opident, order,
-                                                         phylum))),
-        if_else(pident > args$spident, species, # Species and genus level assignment where not in Jordan's original code. Is there a reason for this?
-            if_else(pident > args$gpident, genus,
-                if_else(pident > args$fpident, family,
-                     if_else(pident > args$opident, order,
-                         phylum)))))) %>%
-  #dplyr::select(taxaId, ASV, Taxon) %>%
+  # Assign taxonomic rank based on percent identity thresholds
+  mutate(Taxon = if_else(pident > args$spident, "species", if_else(pident > args$gpident, "genus", if_else(pident > args$fpident, "family", if_else(pident > args$opident, "order", "class"))))) %>%
+  # Set the order of taxonomic ranks for filtering
+  mutate(Taxon = factor(Taxon, levels = c("species", "genus", "family", "order", "class"), ordered = TRUE)) %>%
+  # Filter unnecessary columns
   dplyr::select(!c(sseqid,seqid2)) %>%
-  #mutate(ASV = str_remove(ASV, "_")) %>%
+  group_by(ASV) %>%
+  # Resolve taxonomic assignment. If the ASV has multiple hits,
+  # assign the most specific taxon that is consistent across all hits.
+  # If there are conflicting assignments at a given rank, move up to
+  # the next rank until a consistent assignment is found or assign "Unassigned"
+  # if no consistent assignment is found.
+  mutate(Resolved.taxon = case_when(Taxon == "species" & n_distinct(species) == 1 ~ coalesce(first(species), "Unassigned"),
+                                    Taxon %in% c("species", "genus") & n_distinct(genus) == 1 ~ coalesce(first(genus), "Unassigned"),
+                                    Taxon %in% c("species", "genus", "family") & n_distinct(family) == 1 ~ coalesce(first(family), "Unassigned"),
+                                    Taxon %in% c("species", "genus", "family", "order") & n_distinct(order) == 1 ~ coalesce(first(order), "Unassigned"),
+                                    Taxon %in% c("species", "genus", "family", "order", "class") & n_distinct(class) == 1 ~ coalesce(first(class), "Unassigned"),
+                                    TRUE ~ coalesce(phylum, "Unassigned"))) %>%
+  filter(Taxon == min(Taxon)) %>%
+  ungroup() %>%
+  #rename(assigned_taxon = Resolved.taxon) %>%
+  group_by(ASV) %>%
+  # Collapse multiple hits for the same ASV to a single taxonomic assignment
+  # (all hits should have the same Resolved.taxon after the above filtering)
+  summarise(Resolved.taxon = first(Resolved.taxon), .groups = "drop") %>%
+  ungroup() %>%
   mutate(sample_name = str_remove(ASV, "_\\d+_\\d+$")) %>%
   relocate(sample_name, .before = 1)
 
@@ -97,15 +110,6 @@ ASV.ids.read_counts <- merge(ASV.ids, read_counts, by = "ASV", all.x = TRUE) %>%
                         relocate(read_count, .before = 3)
 
 write.csv(ASV.ids.read_counts, "ASV_table_final.csv", row.names = FALSE)
-
-#Plate.metabar <- merge(ASV.ids, asv_tab2, by = "ASV") %>%
-#  dplyr::select(-ASV) %>%
-#  pivot_longer(cols = -Taxon, names_to = "Sample", values_to = "Reads") %>%
-#  group_by(Taxon, Sample) %>%
-#  summarise(Reads = sum(Reads, na.rm = TRUE)) %>%
-#  pivot_wider(names_from = "Sample", values_from = "Reads")
-
-#write.csv(Plate.metabar, "asign_tax_output.csv")
 
 
 

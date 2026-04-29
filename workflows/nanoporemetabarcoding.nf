@@ -355,7 +355,7 @@ workflow NANOPOREMETABARCODING {
     // MODULE: Run Medaka
     //
 
- 
+
     MEDAKA (
         ch_medaka
     )
@@ -419,12 +419,12 @@ workflow NANOPOREMETABARCODING {
     // to select the best blast hit. In this case the best blast hit is established first
     // by bitscore and second by evalue
 
-    BEST_HIT (
-        BLAST_BLASTN.out.txt
-    )
+    //BEST_HIT (
+    //    BLAST_BLASTN.out.txt
+    //)
 
     // Join blast hits channel with number of reads per ASV channel
-    ch_assign_taxonomy = BEST_HIT.out.best_hit
+    ch_assign_taxonomy = BLAST_BLASTN.out.txt
                        | join(ch_merged, by: 0)
                        | multiMap { meta, blast, csv ->
                                 blast: [meta, blast]

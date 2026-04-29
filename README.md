@@ -294,30 +294,27 @@ The files listed below will be created in the results directory (set by `--outdi
 
 ### Taxonomy assignment
 
-The pipeline outputs ASV tables in `.csv` format. The `ASV_taxa_final.csv` table contains the following columns:
+Each consensus sequence (ASV) is assigned a taxon using a two-step approach:
 
-- `sample_name`: Name of the sample. It is made of `<fastq_id>sample_id<>`.
-- `ASV`: ASV id.
-- `pident`: Percent identity of the alignment.
+1. **Rank assignment by percent identity**: each BLAST hit is assigned to a taxonomic rank based on configurable percent identity thresholds (species, genus, family, order) (see options **Assign taxonomy options:** in the [Parameters](#parameters) section).
+2. **Last Common Ancestor (LCA) consensus**: because each ASV can have multiple BLAST hits, the final taxon is resolved by finding the most specific rank at which all hits agree. If hits disagree at the assigned rank, the pipeline falls back to progressively coarser ranks (genus → family → order → class → phylum) until a consensus is reached. If no consensus can be found, the ASV is labelled `Unassigned`.
+
+The final output is `ASV_taxa_final.csv`, one row per ASV, with the following columns:
+
+- `sample_name`: Sample name, derived from the combination of FASTQ id and sample id.
+- `ASV`: ASV identifier.
+- `Resolved.taxon`: Final consensus taxon assigned to the ASV.
+- `read_count`: Number of reads assigned to the ASV.
+- `pident`: Percent identity of the best BLAST alignment.
 - `length`: Alignment length.
-- `mismatch`: Number of non-identical aligned positions (excluding gaps).
-- `gapopen`: Number of gap openings in the alignment
-- `qstart`: Start position of the alignment on the query sequence.
-- `qend`: End position of the alignment on the query sequence.
-- `sstart`: Start position of the alignment on the subject (database hit) sequence.
-- `send`: End position of the alignment on the subject sequence.
-- `evalue`: Expect value. The lower the more significant. Depends on the dabase size.
-- `bitscore`: Bit score. The higher the better the alignment. Independent of the dabase size.
-- `taxaId`: Assigned NCBI taxon id.
-- `domain`: Assigned domain.
-- `phylum`: Assigned phylum.
-- `class`: Assigned class.
-- `order`: Assigned order.
-- `family`: Assigned family.
-- `genus`: Assigned genus.
-- `species`: Assigned species.
-- `assigned_taxon`: Assigned taxonomic rank according to to the percentage identitity.
-- `read_count`: ASV read count.
+- `mismatch`: Number of mismatched positions in the alignment (excluding gaps).
+- `gapopen`: Number of gap openings in the alignment.
+- `qstart`/`qend`: Start and end positions of the alignment on the query (ASV) sequence.
+- `sstart`/`send`: Start and end positions of the alignment on the subject (database) sequence.
+- `evalue`: Expect value — the lower, the more significant the match. Depends on database size.
+- `bitscore`: Bit score — the higher, the better the alignment. Independent of database size.
+- `taxaId`: NCBI taxonomy ID of the matched sequence.
+- `phylum`, `class`, `order`, `family`, `genus`, `species`: Full taxonomic lineage of the matched sequence.
 
 <details markdown="1">
 <summary>Output files</summary>
