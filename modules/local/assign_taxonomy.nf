@@ -16,7 +16,8 @@ process ASSIGN_TAXONOMY {
 
     output:
     tuple val(meta), path("*.csv")   , emit: tax_csv
-    path "versions.yml"              , emit: versions
+    tuple val("${task.process}"), val("R"), eval("R --version | head -n1 | cut -d' ' -f3"), topic: versions, emit: versions_r
+    tuple val("${task.process}"), val("taxonomizr"), eval("Rscript -e 'packageVersion(\"taxonomizr\")' | sed 's/.*\\s//; s/[\\[\\]']//g'"), topic: versions, emit: versions_taxonomizr
 
     when:
     task.ext.when == null || task.ext.when
@@ -32,9 +33,5 @@ process ASSIGN_TAXONOMY {
     --sql_db $sql_db \\
     $args
 
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        R: \$(R --version | head -n1 | cut -d" " -f3)
-    END_VERSIONS
     """
 }

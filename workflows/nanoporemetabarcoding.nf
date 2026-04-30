@@ -3,36 +3,35 @@
     IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { FASTQC                          } from '../modules/nf-core/fastqc/main'
-include { MULTIQC                         } from '../modules/nf-core/multiqc/main'
-include { PORECHOP_PORECHOP               } from '../modules/nf-core/porechop/porechop/main'
-include { NANOPLOT                        } from '../modules/nf-core/nanoplot/main'
-include { NANOFILT                        } from '../modules/nf-core/nanofilt/main'
-include { SEQKIT_SEQ as SEQKIT_REVCOMP_A  } from '../modules/nf-core/seqkit/seq/main'
-include { SEQKIT_SEQ as SEQKIT_REVCOMP_B  } from '../modules/nf-core/seqkit/seq/main'
-include { CUTADAPT as CUTADAPT_F          } from '../modules/nf-core/cutadapt/main'
-include { CUTADAPT as CUTADAPT_F_RC       } from '../modules/nf-core/cutadapt/main'
-include { CUTADAPT as CUTADAPT_R          } from '../modules/nf-core/cutadapt/main'
-include { AMPLICON_SORTER                 } from '../modules/local/amplicon_sorter'
-include { SEQKIT_GREP as SEQKIT_AMPLICONS } from '../modules/nf-core/seqkit/grep/main'
-include { SEQKIT_GREP as SEQKIT_CONSENSUS } from '../modules/nf-core/seqkit/grep/main'
-include { GUNZIP                          } from '../modules/nf-core/gunzip/main'
-include { GUNZIP as GUNZIP_SEQKIT_GREP_A  } from '../modules/nf-core/gunzip/main'
-include { GUNZIP as GUNZIP_SEQKIT_GREP_C  } from '../modules/nf-core/gunzip/main'
-include { MEDAKA                          } from '../modules/nf-core/medaka/main'
-include { CAT_CAT                         } from '../modules/nf-core/cat/cat/main'
-include { CAT_CAT as CAT_CAT_MEDAKA       } from '../modules/nf-core/cat/cat/main'
+include { FASTQC                               } from '../modules/nf-core/fastqc/main'
+include { MULTIQC                              } from '../modules/nf-core/multiqc/main'
+include { PORECHOP_PORECHOP                    } from '../modules/nf-core/porechop/porechop/main'
+include { NANOPLOT                             } from '../modules/nf-core/nanoplot/main'
+include { NANOFILT                             } from '../modules/nf-core/nanofilt/main'
+include { SEQKIT_SEQ as SEQKIT_REVCOMP_A       } from '../modules/nf-core/seqkit/seq/main'
+include { SEQKIT_SEQ as SEQKIT_REVCOMP_B       } from '../modules/nf-core/seqkit/seq/main'
+include { CUTADAPT as CUTADAPT_F               } from '../modules/nf-core/cutadapt/main'
+include { CUTADAPT as CUTADAPT_F_RC            } from '../modules/nf-core/cutadapt/main'
+include { CUTADAPT as CUTADAPT_R               } from '../modules/nf-core/cutadapt/main'
+include { AMPLICON_SORTER                      } from '../modules/local/amplicon_sorter'
+include { SEQKIT_GREP as SEQKIT_AMPLICONS      } from '../modules/nf-core/seqkit/grep/main'
+include { SEQKIT_GREP as SEQKIT_CONSENSUS      } from '../modules/nf-core/seqkit/grep/main'
+include { GUNZIP                               } from '../modules/nf-core/gunzip/main'
+include { GUNZIP as GUNZIP_SEQKIT_GREP_A       } from '../modules/nf-core/gunzip/main'
+include { GUNZIP as GUNZIP_SEQKIT_GREP_C       } from '../modules/nf-core/gunzip/main'
+include { MEDAKA                               } from '../modules/nf-core/medaka/main'
+include { FIND_CONCATENATE as FIND_CONCATENATE } from '../modules/nf-core/find/concatenate/main'
 //include { DIAMOND_BLASTX                  } from '../modules/nf-core/diamond/blastx/main'
-include { BLAST_MAKEBLASTDB               } from '../modules/nf-core/blast/makeblastdb/main'
-include { BLAST_BLASTN                    } from '../modules/nf-core/blast/blastn/main'
-include { SEQKIT_REPLACE                  } from '../modules/nf-core/seqkit/replace/main'
-include { BEST_HIT                        } from '../modules/local/blast_best_hit'
-include { ASSIGN_TAXONOMY                 } from '../modules/local/assign_taxonomy'
-include { paramsSummaryMap                } from 'plugin/nf-schema'
-include { paramsSummaryMultiqc            } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { softwareVersionsToYAML          } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { methodsDescriptionText          } from '../subworkflows/local/utils_nfcore_nanoporemetabarcoding_pipeline'
-include { validateInputParameters         } from '../subworkflows/local/utils_nfcore_nanoporemetabarcoding_pipeline'
+include { BLAST_MAKEBLASTDB                    } from '../modules/nf-core/blast/makeblastdb/main'
+include { BLAST_BLASTN                         } from '../modules/nf-core/blast/blastn/main'
+include { SEQKIT_REPLACE                       } from '../modules/nf-core/seqkit/replace/main'
+include { BEST_HIT                             } from '../modules/local/blast_best_hit'
+include { ASSIGN_TAXONOMY                      } from '../modules/local/assign_taxonomy'
+include { paramsSummaryMap                     } from 'plugin/nf-schema'
+include { paramsSummaryMultiqc                 } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { softwareVersionsToYAML               } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { methodsDescriptionText               } from '../subworkflows/local/utils_nfcore_nanoporemetabarcoding_pipeline'
+include { validateInputParameters              } from '../subworkflows/local/utils_nfcore_nanoporemetabarcoding_pipeline'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -46,8 +45,8 @@ workflow NANOPOREMETABARCODING {
     ch_samplesheet // channel: samplesheet read in from --input
     main:
 
-    ch_versions = Channel.empty()
-    ch_multiqc_files = Channel.empty()
+    ch_versions = channel.empty()
+    ch_multiqc_files = channel.empty()
 
     // Prepare the samplesheet channel
     ch_input = ch_samplesheet
@@ -57,7 +56,7 @@ workflow NANOPOREMETABARCODING {
              }
 
     // Prepare metadata channel
-    ch_metadata = params.metadata ? Channel.fromPath(params.metadata, checkIfExists: true)
+    ch_metadata = params.metadata ? channel.fromPath(params.metadata, checkIfExists: true)
                 | splitCsv(header: true)
                 | map { row -> [row.id, row.primer_comb, row.sample] }
                 | validateInputParameters // Validate metadata so that there are no duplicated values, prob should also check whether fastqs in samplesheet and metadata match
@@ -83,6 +82,7 @@ workflow NANOPOREMETABARCODING {
         ch_input,
         []
     )
+    ch_versions = ch_versions.mix(NANOFILT.out.versions)
 
     //
     // MODULE: Run CUTADAPT
@@ -156,11 +156,12 @@ workflow NANOPOREMETABARCODING {
     //
 
     // If skip_nanoplot is set to true, skip this module
-    ch_nanoplot = params.skip_nanoplot ? Channel.empty() : ch_raw.mix(ch_filt).mix(ch_amplicon_sort)
+    ch_nanoplot = params.skip_nanoplot ? channel.empty() : ch_raw.mix(ch_filt).mix(ch_amplicon_sort)
 
     NANOPLOT (
         ch_nanoplot
     )
+    ch_versions = ch_versions.mix(NANOPLOT.out.versions)
 
     // // Original name out.txt channel is stats.txt, so multiqc keeps overwritting. Each file needs to have an unique name
     ch_nanoplot_renamed = NANOPLOT.out.txt
@@ -220,9 +221,9 @@ workflow NANOPOREMETABARCODING {
     // Split FASTA files into individual consensus sequence and amplicon sequences
     // for minimap/medaka. Retain group information in the meta so that each consesus
     // sequence is processed together with its respective grouped amplicon sequences
-    pattern_amplicons = Channel.of("^\\d+\$") // Amplicon sequences are named with a number
+    pattern_amplicons = channel.of("^\\d+\$") // Amplicon sequences are named with a number
                       | collectFile(name: 'pattern.txt')
-    pattern_consensus = Channel.of("^consensus\$") // Consensus sequences are named 'consensus'
+    pattern_consensus = channel.of("^consensus\$") // Consensus sequences are named 'consensus'
                       | collectFile(name: 'pattern.txt')
 
     // Split into amplicons (each fasta is a group of amplicons without the consensus)
@@ -266,6 +267,7 @@ workflow NANOPOREMETABARCODING {
     MEDAKA (
         ch_medaka
     )
+    ch_versions = ch_versions.mix(MEDAKA.out.versions)
 
     // Concatenate corrected consensus sequences so they can be blasted all together
     // This is very important buecause if they are blasted induvidually the dabaase has
@@ -277,34 +279,35 @@ workflow NANOPOREMETABARCODING {
                  }
                  | groupTuple(by: 0)
 
-    CAT_CAT_MEDAKA (
+    FIND_CONCATENATE (
         ch_corrected
     )
 
-    ch_corrected_concat = CAT_CAT_MEDAKA.out.file_out
+    ch_corrected_concat = FIND_CONCATENATE.out.file_out
 
     //
     // MODULE: Run makeblastdb
     //
 
     // Prepare ch_databse channel to build a custom database for blast
-    ch_database = (params.custom_db && !params.blast_db) ? Channel.fromPath(params.custom_db)
+    ch_database = (params.custom_db && !params.blast_db) ? channel.fromPath(params.custom_db)
                 | map { db ->
                         [[id:'database'], db]
-                } : Channel.empty() // If no custom database is provided, use an empty channel
+                } : channel.empty() // If no custom database is provided, use an empty channel
 
 
     BLAST_MAKEBLASTDB (
-        ch_database
+        ch_database,
+        []
     )
 
     // Mix in case an already built blast database is already give. People should only input a
     // path to make the database or give the built database. This shouldn't be possible,
     // will write code later to prevent it
-    ch_prebuilt_db = params.blast_db ? Channel.fromPath(params.blast_db)
+    ch_prebuilt_db = params.blast_db ? channel.fromPath(params.blast_db)
                    | map { db ->
                             [[id:'prebuilt_database'], db]
-                   } : Channel.empty() // If no prebuild database is provided, use an empty channel
+                   } : channel.empty() // If no prebuild database is provided, use an empty channel
 
 
     ch_blast = BLAST_MAKEBLASTDB.out.db.mix(ch_prebuilt_db)
@@ -315,7 +318,10 @@ workflow NANOPOREMETABARCODING {
 
     BLAST_BLASTN (
         ch_corrected_concat,
-        ch_blast.first() // .first() so that channel can be used several times
+        ch_blast.first(), // .first() so that channel can be used several times
+        [],
+        [],
+        []
     )
 
     // Join blast hits channel with number of reads per ASV channel
@@ -332,7 +338,7 @@ workflow NANOPOREMETABARCODING {
     //
     // MODULE: Run assign taxonomy
     //
-    ch_sql_db = Channel.fromPath(params.sql_db)
+    ch_sql_db = channel.fromPath(params.sql_db)
 
     ASSIGN_TAXONOMY(
         ch_assign_taxonomy.blast,
