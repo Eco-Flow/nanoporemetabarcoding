@@ -3,9 +3,9 @@ process NANOFILT {
     label 'process_single'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/nanofilt:2.8.0--py_0':
-        'biocontainers/nanofilt:2.8.0--py_0' }"
+        'quay.io/biocontainers/nanofilt:2.8.0--py_0' }"
 
     input:
     tuple val(meta), path(reads)
@@ -38,11 +38,9 @@ process NANOFILT {
     """
 
     stub:
-    def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "filtered_${meta.id}"
-    def sum    = summary_file ? "--summary ${summary_file}" : ''
     """
-    touch ${prefix}.fastq.gz
+    echo "" | gzip > ${prefix}.fastq.gz
     touch ${prefix}.log
 
     cat <<-END_VERSIONS > versions.yml
