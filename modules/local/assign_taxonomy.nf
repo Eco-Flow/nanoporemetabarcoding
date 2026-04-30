@@ -16,8 +16,12 @@ process ASSIGN_TAXONOMY {
 
     output:
     tuple val(meta), path("*.csv")   , emit: tax_csv
-    tuple val("${task.process}"), val("R"), eval("R --version | head -n1 | cut -d' ' -f3"), topic: versions, emit: versions_r
-    tuple val("${task.process}"), val("taxonomizr"), eval("Rscript -e 'packageVersion(\"taxonomizr\")' | sed 's/.*\\s//; s/[\\[\\]']//g'"), topic: versions, emit: versions_taxonomizr
+    tuple val("${task.process}"), val("R"), eval('Rscript -e "cat(as.character(getRversion()))"'), topic: versions, emit: versions_r
+    tuple val("${task.process}"), val("taxonomizr"), eval('Rscript -e "cat(as.character(packageVersion(\'taxonomizr\')))"'), topic: versions, emit: versions_taxonomizr
+    tuple val("${task.process}"), val("argparse"), eval('Rscript -e "cat(as.character(packageVersion(\'argparse\')))"'), topic: versions, emit: versions_argparse
+    tuple val("${task.process}"), val("dplyr"), eval('Rscript -e "cat(as.character(packageVersion(\'dplyr\')))"'), topic: versions, emit: versions_dplyr
+    tuple val("${task.process}"), val("tidyr"), eval('Rscript -e "cat(as.character(packageVersion(\'tidyr\')))"'), topic: versions, emit: versions_tidyr
+    tuple val("${task.process}"), val("stringr"), eval('Rscript -e "cat(as.character(packageVersion(\'stringr\')))"'), topic: versions, emit: versions_stringr
 
     when:
     task.ext.when == null || task.ext.when

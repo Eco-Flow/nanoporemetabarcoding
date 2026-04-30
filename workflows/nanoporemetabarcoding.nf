@@ -232,10 +232,6 @@ workflow NANOPOREMETABARCODING {
         pattern_amplicons.first()
     )
 
-    GUNZIP_SEQKIT_GREP_A (
-        SEQKIT_AMPLICONS.out.filter
-    )
-
     // Split into consensus (each fasta is a consensus without the grouped amplicons)
     SEQKIT_CONSENSUS (
         ch_group,
@@ -247,15 +243,11 @@ workflow NANOPOREMETABARCODING {
         SEQKIT_CONSENSUS.out.filter
     )
 
-    GUNZIP_SEQKIT_GREP_C (
-        SEQKIT_REPLACE.out.fastx
-    )
-
     // For running medaka without running minimap2. Medaka already aligns basecalls (amplicons here)
     // to the consensus sequences, so perhaps we can skip minimap2 step, at least for now
     // Make sure this is working as expected
-    ch_medaka = GUNZIP_SEQKIT_GREP_A.out.gunzip
-              | join(GUNZIP_SEQKIT_GREP_C.out.gunzip)
+    ch_medaka = SEQKIT_AMPLICONS.out.filter
+              | join(SEQKIT_REPLACE.out.fastx)
 
 
 

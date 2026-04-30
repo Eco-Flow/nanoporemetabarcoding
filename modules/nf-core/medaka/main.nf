@@ -28,7 +28,7 @@ process MEDAKA {
         -d $assembly \\
         -o ./
 
-    mv consensus.fasta ${prefix}.fa
+    mv medaka/consensus.fasta ${prefix}.fa
 
     gzip -n ${prefix}.fa
 

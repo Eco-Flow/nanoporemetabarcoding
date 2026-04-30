@@ -13,8 +13,10 @@ process AMPLICON_SORTER {
     tuple val(meta), path("${meta.id}/results.csv")           , emit: results_csv, optional: true
     tuple val(meta), path("${meta.id}/*/*_[0-9]*_[0-9]*.fasta") , emit: fastas, optional: true // Numbers only as there are unisgned sequences with _nongroup_ and _unique_ labels
     tuple val("${task.process}"), val("python"), eval("python3 --version | sed '1!d; s/.* //'"), topic: versions, emit: versions_python
-    tuple val("${task.process}"), val("amplicon_sorter"), eval("python3 bin/amplicon_sorter.py --version"), topic: versions, emit: versions_amplicon_sorter
+    tuple val("${task.process}"), val("amplicon_sorter"), eval("python3 ${projectDir}/bin/amplicon_sorter.py --version"), topic: versions, emit: versions_amplicon_sorter
     tuple val("${task.process}"), val("edlib"), eval("pip freeze | grep edlib | cut -d'=' -f3"), topic: versions, emit: versions_edlib
+    tuple val("${task.process}"), val("biopython"), eval("pip freeze | grep biopython | cut -d'=' -f3"), topic: versions, emit: versions_biopython
+    tuple val("${task.process}"), val("matplotlib"), eval("pip freeze | grep matplotlib | cut -d'=' -f3"), topic: versions, emit: versions_matplotlib
 
     when:
     task.ext.when == null || task.ext.when
