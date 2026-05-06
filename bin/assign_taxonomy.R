@@ -1,4 +1,6 @@
 
+# Written by Fernando Duarte and Jordan Cuff
+
 library(argparse)
 library(dplyr)
 library(tidyr)
@@ -45,8 +47,9 @@ colnames(read_counts) <- c("ASV", "read_count")
 head(Blastout)
 head(read_counts)
 
-# Create SQLite database - can be stored centrally to avoid replication across projects - this seems to variably work, so the below steps avoid it
-#prepareDatabase('accessionTaxa.sql')
+# Create SQLite database - can be stored centrally to
+# avoid replication across projects - this seems to variably work, so the below steps avoid it
+# prepareDatabase('accessionTaxa.sql')
 
 print(accessionToTaxa(data.frame(blast_filtered)$sseqid,args$sql_db))
 
@@ -63,8 +66,7 @@ sseqids$Taxonomic.ranks <- NULL
 
 write.csv(sseqids, "ASV_table.csv", row.names = FALSE)
 
-print(sseqids)
-
+# Assign taxonomic ranks to ASVs based on percent identity thresholds and resolve conflicts
 ASV.ids <- sseqids %>%
   # Assign taxonomic rank based on percent identity thresholds
   mutate(Taxon = if_else(pident > args$spident, "species", if_else(pident > args$gpident, "genus", if_else(pident > args$fpident, "family", if_else(pident > args$opident, "order", "class"))))) %>%
@@ -95,20 +97,14 @@ ASV.ids <- sseqids %>%
   mutate(sample_name = str_remove(ASV, "_\\d+_\\d+$")) %>%
   relocate(sample_name, .before = 1)
 
-print("debug")
-
-print(ASV.ids)
-
+# Write the ASV table with assigned taxonomy to a CSV file
 write.csv(ASV.ids, "ASV_table_assigned.csv", row.names = FALSE)
-
-print("Debug read count")
-
-print(read_counts)
 
 # Merge reads counts bease on the ASV column
 ASV.ids.read_counts <- merge(ASV.ids, read_counts, by = "ASV", all.x = TRUE) %>%
                         relocate(read_count, .before = 3)
 
+# Write the final ASV table with assigned taxonomy and read counts to a CSV file
 write.csv(ASV.ids.read_counts, "ASV_table_final.csv", row.names = FALSE)
 
 
