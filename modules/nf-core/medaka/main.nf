@@ -12,7 +12,7 @@ process MEDAKA {
 
     output:
     tuple val(meta), path("*.fa.gz"), emit: assembly
-    path "versions.yml"             , emit: versions
+    tuple val("${task.process}"), val('medaka'), eval('medaka --version 2>&1 | sed "s/medaka //g"'), topic: versions, emit: versions_medaka
 
     when:
     task.ext.when == null || task.ext.when
@@ -28,13 +28,16 @@ process MEDAKA {
         -d $assembly \\
         -o ./
 
-    mv medaka/consensus.fasta ${prefix}.fa
+    mv \$(find . -name "consensus.fasta") ${prefix}.fa
 
     gzip -n ${prefix}.fa
 
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        medaka: \$( medaka --version 2>&1 | sed 's/medaka //g' )
-    END_VERSIONS
+    """
+
+    stub:
+    def prefix = task.ext.prefix ?: "${meta.id}"
+    """
+    echo "" | gzip > ${prefix}.fa.gz
+
     """
 }

@@ -259,7 +259,6 @@ workflow NANOPOREMETABARCODING {
     MEDAKA (
         ch_medaka
     )
-    ch_versions = ch_versions.mix(MEDAKA.out.versions)
 
     // Concatenate corrected consensus sequences so they can be blasted all together
     // This is very important buecause if they are blasted induvidually the dabaase has
