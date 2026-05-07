@@ -82,7 +82,6 @@ workflow NANOPOREMETABARCODING {
         ch_input,
         []
     )
-    ch_versions = ch_versions.mix(NANOFILT.out.versions)
 
     //
     // MODULE: Run CUTADAPT
