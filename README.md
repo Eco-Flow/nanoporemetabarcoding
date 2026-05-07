@@ -157,15 +157,24 @@ The id of the metadata should match the id of the samplesheet (see [usage](#usag
 
 4. Primer-tag overlap. To calculate mismatches with the `--error-rate` option, cutadapt considers only the aligned region (overlap) between primer and read. The minimum length of this overlap is set by the `--overlap` option. For example, with an error rate of 0.2 (20%) and a 20 bp primer, if the required overlap is 10 bp and there are 3 mismatches in that region, the match is rejected because the mismatch rate is 3/10 = 30%, which is above the 20% threshold. But if the overlap is 20 bp and there are 3 mismatches, the match is accepted because the mismatch rate is 3/20 = 15%, which is below the 20% threshold. If your primers are very similar, it is often best to set `--overlap` to at least the length of the longest primer to avoid spurious matches.
 
-**Nanofilt options:**
+**Filtering options:**
 
-Nanofilt is run before demultiplexing and tag+primer trimming:
+Filtering tools are run before demultiplexing and tag+primer trimming. User can specify which tool to use changing the `filter_tool` parameter to either `nanofilt` or `chopper`. Default: `nanofilt`:
 
 ```
+    // Filtering options
+    filter_tool                = 'nanofilt' // Tool to use for filtering reads by quality and length. Options: 'nanofilt' or 'chopper'
+
     // Nanofilt options
-    nano_quality                = null // Minimun read quality (phred score)
-    nano_read_length            = 250 // Minimum reads length
+    nano_quality                = null
+    nano_read_length            = 250
+
+    // Chopper options
+    chopper_quality             = null
+    chopper_read_length         = 250
 ```
+
+Results between filtering tools should be identical, but `nanofilt` might be removed in the future since it's not longer supported.
 
 4. Filter FASTQs with a mumber of reads equal or lower than (changing this value is not recommended):
 
@@ -273,7 +282,8 @@ The files listed below will be created in the results directory (set by `--outdi
 
 - `nanoplot/`
   - `raw/<fastq_id>`: Folder that contains  the raw reads quality report.
-  - `filtered/<fastq_id>`: Folder contains the filtered -after nanofilt- reads quality report.
+  - `filtered_nanofilt/<fastq_id>`: Folder contains the filtered -after nanofilt- reads quality report.
+  - `filtered_chopper/<fastq_id>`: Folder contains the filtered -after chopper- reads quality report.
   - `demultiplexed/<fastq_id>/<sample_id>`: Contains the duemultiplexed reads quality report.
 
 </details>
