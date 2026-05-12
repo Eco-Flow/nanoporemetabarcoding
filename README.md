@@ -296,8 +296,8 @@ The files listed below will be created in the results directory (set by `--outdi
 
 Each consensus sequence (ASV) is assigned a taxon using a two-step approach:
 
-1. **Rank assignment by percent identity**: each BLAST hit is assigned to a taxonomic rank based on configurable percent identity thresholds (species, genus, family, order) (see options **Assign taxonomy options:** in the [Parameters](#parameters) section).
-2. **Last Common Ancestor (LCA) consensus**: because each ASV can have multiple BLAST hits, the final taxon is resolved by finding the most specific rank at which all hits agree. If hits disagree at the assigned rank, the pipeline falls back to progressively coarser ranks (genus → family → order → class → phylum) until a consensus is reached. If no consensus can be found, the ASV is labelled `Unassigned`.
+1. **Rank assignment by percent identity**: each BLAST hit is assigned to a taxonomic rank based on percent identity thresholds (species, genus, family, order) (see options **Assign taxonomy options:** in the [Parameters](#parameters) section).
+2. **Last Common Rank (LCR) consensus**: because each ASV can have multiple BLAST hits, the final taxon is resolved by finding the most specific rank at which all hits agree. If hits disagree at the assigned rank, the pipeline falls back to progressively coarser ranks (genus → family → order → class → phylum) until a consensus is reached. If no consensus can be found, the ASV is labelled `Unassigned`.
 
 The final output is `ASV_taxa_final.csv`, one row per ASV, with the following columns:
 
@@ -311,9 +311,9 @@ The final output is `ASV_taxa_final.csv`, one row per ASV, with the following co
 - `bitscore`: Bit score — the higher, the better the alignment. Independent of database size.
 - `taxaId`: NCBI taxonomy ID of the matched sequence.
 - `phylum`, `class`, `order`, `family`, `genus`, `species`: Full taxonomic lineage of the matched sequence.
-- `Resolved.taxon`: Final consensus taxon assigned to the ASV.
+- `Resolved.taxon`: Final consensus taxon assigned to the ASV. A trailing `*` indicates that one or more BLAST hits had no taxonomy in the database and were excluded from the LCR resolution. This ASV can be classified as `Unasigned` instead for a more conservative approach.
 
-`ASV_table_pre-assigned.csv` contains the per-hit taxonomy assignments before LCA consensus resolution — one row per BLAST hit rather than one row per ASV.
+`ASV_table_pre-assigned.csv` contains the per-hit taxonomy assignments before LCR consensus resolution — one row per BLAST hit rather than one row per ASV.
 
 <details markdown="1">
 <summary>Output files</summary>

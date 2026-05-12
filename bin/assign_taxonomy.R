@@ -75,6 +75,15 @@ ASV.ids <- sseqids %>%
   # Filter unnecessary columns
   dplyr::select(!c(sseqid,seqid2)) %>%
   group_by(ASV) %>%
+  # Flag and remove hits with no taxonomy at any rank (accession not found in DB).
+  # If at least one valid hit exists, discard all-NA hits and mark the result with "*".
+  # If all hits are all-NA, keep them so the ASV still appears as "Unassigned".
+  mutate(
+    all_na_row    = is.na(phylum) & is.na(class) & is.na(order) & is.na(family) & is.na(genus) & is.na(species),
+    has_valid_hit = any(!all_na_row),
+    flagged       = has_valid_hit & any(all_na_row)
+  ) %>%
+  filter(!all_na_row | !has_valid_hit) %>%
   # Resolve taxonomic assignment. If the ASV has multiple hits,
   # assign the most specific taxon that is consistent across all hits.
   # If there are conflicting assignments at a given rank, move up to
@@ -86,6 +95,7 @@ ASV.ids <- sseqids %>%
                                     Taxon %in% c("species", "genus", "family", "order") & n_distinct(order) == 1 ~ coalesce(first(order), "Unassigned"),
                                     Taxon %in% c("species", "genus", "family", "order", "class") & n_distinct(class) == 1 ~ coalesce(first(class), "Unassigned"),
                                     TRUE ~ coalesce(phylum, "Unassigned"))) %>%
+  mutate(Resolved.taxon = if_else(flagged, paste0(Resolved.taxon, "*"), Resolved.taxon)) %>%
   filter(Taxon == min(Taxon)) %>%
   ungroup() %>% # Might be rdundant
   group_by(ASV) %>% # Might be redundant
