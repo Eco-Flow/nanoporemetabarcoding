@@ -64,7 +64,7 @@ taxonomic.df <- as.data.frame(sseqids$Taxonomic.ranks, stringsAsFactors = FALSE)
 sseqids <- cbind(sseqids, taxonomic.df)
 sseqids$Taxonomic.ranks <- NULL
 
-write.csv(sseqids, "ASV_table.csv", row.names = FALSE)
+write.csv(sseqids, "ASV_table_pre-assigned.csv", row.names = FALSE)
 
 # Assign taxonomic ranks to ASVs based on percent identity thresholds and resolve conflicts
 ASV.ids <- sseqids %>%
@@ -115,7 +115,7 @@ ASV.ids <- sseqids %>%
   relocate(sample_name, .before = 1)
 
 # Write the ASV table with assigned taxonomy to a CSV file
-write.csv(ASV.ids, "ASV_table_assigned.csv", row.names = FALSE)
+#write.csv(ASV.ids, "ASV_table_assigned.csv", row.names = FALSE)
 
 # Merge reads counts bease on the ASV column
 ASV.ids.read_counts <- merge(ASV.ids, read_counts, by = "ASV", all.x = TRUE) %>%

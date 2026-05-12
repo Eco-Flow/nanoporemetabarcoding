@@ -313,11 +313,14 @@ The final output is `ASV_taxa_final.csv`, one row per ASV, with the following co
 - `phylum`, `class`, `order`, `family`, `genus`, `species`: Full taxonomic lineage of the matched sequence.
 - `Resolved.taxon`: Final consensus taxon assigned to the ASV.
 
+`ASV_table_pre-assigned.csv` contains the per-hit taxonomy assignments before LCA consensus resolution — one row per BLAST hit rather than one row per ASV.
+
 <details markdown="1">
 <summary>Output files</summary>
 
 - `assign_taxa/`
-  - `<fastq_id>/ASV_taxa_final.csv`: ASV table with reads counts.
+  - `<fastq_id>/ASV_taxa_final.csv`: Taxonomy resolved ASV table with reads counts.
+  - `<fastq_id>/ASV_taxa_final.csv`: Per-hit ASV table pre-taxonomy assignment.
 <!--  - `<fastq_id>/ASV_taxa.csv`: ASV table.
   - `<fastq_id>/ASV_filtered.csv`:  ASV table with the assigned taxonomic rank according to the percetage identity parameters (see [Parameters](#parameters) section). -->
 
