@@ -51,7 +51,7 @@ Steps:
    - Annotation is based on the best blast hit per consensus. And best blast hit is based on:
      1. First on the bit score
      2. Second on the e-value
-8. Assign taxonomy to blast hits using taxonomizr ([`taxonomizr`](https://github.com/sherrillmix/taxonomizr)). It only works with NCBI accessions (GenBank and RefSeq)
+8. Assign taxonomy to blast hits using taxonomizr ([`taxonomizr`](https://github.com/sherrillmix/taxonomizr)). Only works with NCBI accessions (GenBank and RefSeq). If an ASV has multiple hits with the same top bitscore, e-value, and percent identity, the lowest common taxonomic rank across all hits is assigned.
 
 <!-- 1. Read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))2. Present QC for raw reads ([`MultiQC`](http://multiqc.info/)) -->
 
@@ -301,20 +301,17 @@ Each consensus sequence (ASV) is assigned a taxon using a two-step approach:
 
 The final output is `ASV_taxa_final.csv`, one row per ASV, with the following columns:
 
-- `sample_name`: Sample name, derived from the combination of FASTQ id and sample id.
 - `ASV`: ASV identifier.
-- `Resolved.taxon`: Final consensus taxon assigned to the ASV.
+- `sample_name`: Sample name, derived from the combination of FASTQ id and sample id.
 - `read_count`: Number of reads assigned to the ASV.
-- `pident`: Percent identity of the best BLAST alignment.
-- `length`: Alignment length.
-- `mismatch`: Number of mismatched positions in the alignment (excluding gaps).
-- `gapopen`: Number of gap openings in the alignment.
-- `qstart`/`qend`: Start and end positions of the alignment on the query (ASV) sequence.
-- `sstart`/`send`: Start and end positions of the alignment on the subject (database) sequence.
+- `pident`: Mean percent identity of the best BLAST alignment.
+- `length`: Mean alignment length.
+- `mismatch`: Mean number of mismatched positions in the alignment (excluding gaps).
 - `evalue`: Expect value — the lower, the more significant the match. Depends on database size.
 - `bitscore`: Bit score — the higher, the better the alignment. Independent of database size.
 - `taxaId`: NCBI taxonomy ID of the matched sequence.
 - `phylum`, `class`, `order`, `family`, `genus`, `species`: Full taxonomic lineage of the matched sequence.
+- `Resolved.taxon`: Final consensus taxon assigned to the ASV.
 
 <details markdown="1">
 <summary>Output files</summary>

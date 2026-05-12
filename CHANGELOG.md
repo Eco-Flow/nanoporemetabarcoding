@@ -9,8 +9,37 @@ Initial release of nf-core/nanoporemetabarcoding, created with the [nf-core](htt
 
 ### `Added`
 
+- Read filtering and trimming with [`NanoFilt`](https://github.com/wdecoster/nanofilt)
+- Read QC with [`NanoPlot`](https://github.com/wdecoster/NanoPlot) on raw, filtered, and demultiplexed reads
+- MultiQC report aggregating NanoPlot QC results
+- Two-step tag+primer demultiplexing with [`Cutadapt`](https://github.com/marcelm/cutadapt): first on forward tags/primers, then on matching reverse tags/primers
+- Optional metadata file to map primer-tag combinations to sample names
+- Samplesheet and metadata input validation
+- Amplicon grouping into consensus sequences with [`amplicon_sorter`](https://github.com/avierstr/amplicon_sorter)
+- Consensus sequence polishing with [`Medaka`](https://github.com/nanoporetech/medaka)
+- Custom BLAST database creation with [`makeblastdb`](https://www.ncbi.nlm.nih.gov/books/NBK279690/)
+- Consensus sequence annotation with [`blastn`](https://www.ncbi.nlm.nih.gov/books/NBK279690/)
+- Taxonomy assignment from BLAST hits using [`taxonomizr`](https://github.com/sherrillmix/taxonomizr) (NCBI GenBank and RefSeq accessions only)
+- Configurable percent identity thresholds for taxonomy assignment at species, genus, family, and order level (`--spident`, `--gpident`, `--fpident`, `--opident`)
+- Lowest Common Ancestor (LCA) consensus logic: when an ASV has multiple equally good BLAST hits, the most specific taxonomic rank consistent across all hits is assigned; falls back to coarser ranks if hits disagree, labelling as `Unassigned` if no consensus is found
+- Read count per ASV included in the final taxonomy output table
+- Version tracking for all pipeline tools including R packages (`argparse`, `dplyr`, `tidyr`, `stringr`, `taxonomizr`)
+
 ### `Fixed`
 
+- Medaka consensus polishing not running correctly
+- NanoPlot results not being picked up by MultiQC
+- Tool versions not being reported correctly in pipeline output
+- Sample renaming using incorrect sample identifier
+
 ### `Dependencies`
+
+- [`NanoFilt`](https://github.com/wdecoster/nanofilt)
+- [`NanoPlot`](https://github.com/wdecoster/NanoPlot)
+- [`Cutadapt`](https://github.com/marcelm/cutadapt)
+- [`amplicon_sorter`](https://github.com/avierstr/amplicon_sorter)
+- [`Medaka`](https://github.com/nanoporetech/medaka)
+- BLAST+ (`makeblastdb`, `blastn`)
+- R packages: `argparse`, `dplyr`, `tidyr`, `stringr`, `taxonomizr`
 
 ### `Deprecated`

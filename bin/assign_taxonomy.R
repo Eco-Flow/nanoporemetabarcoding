@@ -87,12 +87,29 @@ ASV.ids <- sseqids %>%
                                     Taxon %in% c("species", "genus", "family", "order", "class") & n_distinct(class) == 1 ~ coalesce(first(class), "Unassigned"),
                                     TRUE ~ coalesce(phylum, "Unassigned"))) %>%
   filter(Taxon == min(Taxon)) %>%
-  ungroup() %>%
-  #rename(assigned_taxon = Resolved.taxon) %>%
-  group_by(ASV) %>%
-  # Collapse multiple hits for the same ASV to a single taxonomic assignment
-  # (all hits should have the same Resolved.taxon after the above filtering)
-  summarise(Resolved.taxon = first(Resolved.taxon), .groups = "drop") %>%
+  ungroup() %>% # Might be rdundant
+  group_by(ASV) %>% # Might be redundant
+  summarise(
+    pident         = mean(pident), # Should be the same across all hits for a given ASV, but we take the mean just in case
+    length         = mean(length),
+    mismatch       = mean(mismatch),
+    #gapopen        = mean(gapopen),
+    #qstart         = mean(qstart),
+    #qend           = mean(qend),
+    #sstart         = mean(sstart),
+    #send           = mean(send),
+    evalue         = mean(evalue), # Should be the same across all hits for a given ASV, but we take the mean just in case
+    bitscore       = mean(bitscore), # Should be the same across all hits for a given ASV, but we take the mean just in case
+    taxaId         = getId(Resolved.taxon, args$sql_db),
+    phylum         = if_else(n_distinct(phylum)  == 1, first(phylum),  NA_character_),
+    class          = if_else(n_distinct(class)   == 1, first(class),   NA_character_),
+    order          = if_else(n_distinct(order)   == 1, first(order),   NA_character_),
+    family         = if_else(n_distinct(family)  == 1, first(family),  NA_character_),
+    genus          = if_else(n_distinct(genus)   == 1, first(genus),   NA_character_),
+    species        = if_else(n_distinct(species) == 1, first(species), NA_character_),
+    Resolved.taxon = first(Resolved.taxon),
+    .groups = "drop"
+  ) %>%
   ungroup() %>%
   mutate(sample_name = str_remove(ASV, "_\\d+_\\d+$")) %>%
   relocate(sample_name, .before = 1)
