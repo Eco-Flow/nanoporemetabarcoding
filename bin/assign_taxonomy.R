@@ -110,7 +110,7 @@ ASV.ids <- sseqids %>%
     #send           = mean(send),
     evalue         = mean(evalue), # Should be the same across all hits for a given ASV, but we take the mean just in case
     bitscore       = mean(bitscore), # Should be the same across all hits for a given ASV, but we take the mean just in case
-    taxaId         = getId(Resolved.taxon, args$sql_db),
+    #taxaId         = getId(Resolved.taxon, args$sql_db),
     phylum         = if_else(n_distinct(phylum)  == 1, first(phylum),  NA_character_),
     class          = if_else(n_distinct(class)   == 1, first(class),   NA_character_),
     order          = if_else(n_distinct(order)   == 1, first(order),   NA_character_),
@@ -121,6 +121,7 @@ ASV.ids <- sseqids %>%
     .groups = "drop"
   ) %>%
   ungroup() %>%
+  mutate(taxaId = sapply(getId(gsub("\\*", "", Resolved.taxon), args$sql_db), `[`, 1)) %>%
   mutate(sample_name = str_remove(ASV, "_\\d+_\\d+$")) %>%
   relocate(sample_name, .before = 1)
 
