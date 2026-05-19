@@ -121,7 +121,7 @@ ASV.ids <- sseqids %>%
     .groups = "drop"
   ) %>%
   ungroup() %>%
-  mutate(taxaId = sapply(getId(gsub("\\*", "", Resolved.taxon), args$sql_db), `[`, 1)) %>%
+  mutate(taxaId = sapply(getId(gsub("\\*", "", Resolved.taxon), args$sql_db), `[`, 1)) %>% # Get taxaId for the resolved taxon, removing the "*" flag if present
   mutate(sample_name = str_remove(ASV, "_\\d+_\\d+$")) %>%
   relocate(sample_name, .before = 1)
 
