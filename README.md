@@ -311,7 +311,7 @@ The final output is `ASV_taxa_final.csv`, one row per ASV, with the following co
 - `bitscore`: Bit score — the higher, the better the alignment. Independent of database size.
 - `taxaId`: NCBI taxonomy ID of the matched sequence.
 - `phylum`, `class`, `order`, `family`, `genus`, `species`: Full taxonomic lineage of the matched sequence.
-- `Resolved.taxon`: Final consensus taxon assigned to the ASV. A trailing `*` indicates that one or more BLAST hits had no taxonomy in the database and were excluded from the LCR resolution. This ASV can be classified as `Unasigned` instead for a more conservative approach.
+- `Resolved.taxon`: Final consensus taxon assigned to the ASV. A trailing `*` indicates that one or more BLAST hits for the same ASV had no taxonomy in the database and were excluded from the LCR resolution. This ASV can be classified as `Unasigned` instead for a more conservative approach.
 
 `ASV_table_pre-assigned.csv` contains the per-hit taxonomy assignments before LCR consensus resolution — one row per BLAST hit rather than one row per ASV.
 
