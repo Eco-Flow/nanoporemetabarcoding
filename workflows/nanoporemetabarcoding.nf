@@ -3,36 +3,35 @@
     IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { FASTQC                          } from '../modules/nf-core/fastqc/main'
-include { MULTIQC                         } from '../modules/nf-core/multiqc/main'
-include { PORECHOP_PORECHOP               } from '../modules/nf-core/porechop/porechop/main'
-include { NANOPLOT                        } from '../modules/nf-core/nanoplot/main'
-include { NANOFILT                        } from '../modules/nf-core/nanofilt/main'
-include { SEQKIT_SEQ as SEQKIT_REVCOMP_A  } from '../modules/nf-core/seqkit/seq/main'
-include { SEQKIT_SEQ as SEQKIT_REVCOMP_B  } from '../modules/nf-core/seqkit/seq/main'
-include { CUTADAPT as CUTADAPT_F          } from '../modules/nf-core/cutadapt/main'
-include { CUTADAPT as CUTADAPT_F_RC       } from '../modules/nf-core/cutadapt/main'
-include { CUTADAPT as CUTADAPT_R          } from '../modules/nf-core/cutadapt/main'
-include { AMPLICON_SORTER                 } from '../modules/local/amplicon_sorter'
-include { SEQKIT_GREP as SEQKIT_AMPLICONS } from '../modules/nf-core/seqkit/grep/main'
-include { SEQKIT_GREP as SEQKIT_CONSENSUS } from '../modules/nf-core/seqkit/grep/main'
-include { GUNZIP                          } from '../modules/nf-core/gunzip/main'
-include { GUNZIP as GUNZIP_SEQKIT_GREP_A  } from '../modules/nf-core/gunzip/main'
-include { GUNZIP as GUNZIP_SEQKIT_GREP_C  } from '../modules/nf-core/gunzip/main'
-include { MEDAKA                          } from '../modules/nf-core/medaka/main'
-include { CAT_CAT                         } from '../modules/nf-core/cat/cat/main'
-include { CAT_CAT as CAT_CAT_MEDAKA       } from '../modules/nf-core/cat/cat/main'
+include { FASTQC                               } from '../modules/nf-core/fastqc/main'
+include { MULTIQC                              } from '../modules/nf-core/multiqc/main'
+include { PORECHOP_PORECHOP                    } from '../modules/nf-core/porechop/porechop/main'
+include { NANOPLOT                             } from '../modules/nf-core/nanoplot/main'
+include { NANOFILT                             } from '../modules/nf-core/nanofilt/main'
+include { SEQKIT_SEQ as SEQKIT_REVCOMP_A       } from '../modules/nf-core/seqkit/seq/main'
+include { SEQKIT_SEQ as SEQKIT_REVCOMP_B       } from '../modules/nf-core/seqkit/seq/main'
+include { CUTADAPT as CUTADAPT_F               } from '../modules/nf-core/cutadapt/main'
+include { CUTADAPT as CUTADAPT_F_RC            } from '../modules/nf-core/cutadapt/main'
+include { CUTADAPT as CUTADAPT_R               } from '../modules/nf-core/cutadapt/main'
+include { AMPLICON_SORTER                      } from '../modules/local/amplicon_sorter'
+include { SEQKIT_GREP as SEQKIT_AMPLICONS      } from '../modules/nf-core/seqkit/grep/main'
+include { SEQKIT_GREP as SEQKIT_CONSENSUS      } from '../modules/nf-core/seqkit/grep/main'
+include { GUNZIP                               } from '../modules/nf-core/gunzip/main'
+include { GUNZIP as GUNZIP_SEQKIT_GREP_A       } from '../modules/nf-core/gunzip/main'
+include { GUNZIP as GUNZIP_SEQKIT_GREP_C       } from '../modules/nf-core/gunzip/main'
+include { MEDAKA                               } from '../modules/nf-core/medaka/main'
+include { FIND_CONCATENATE as FIND_CONCATENATE } from '../modules/nf-core/find/concatenate/main'
 //include { DIAMOND_BLASTX                  } from '../modules/nf-core/diamond/blastx/main'
-include { BLAST_MAKEBLASTDB               } from '../modules/nf-core/blast/makeblastdb/main'
-include { BLAST_BLASTN                    } from '../modules/nf-core/blast/blastn/main'
-include { SEQKIT_REPLACE                  } from '../modules/nf-core/seqkit/replace/main'
-include { BEST_HIT                        } from '../modules/local/blast_best_hit'
-include { ASSIGN_TAXONOMY                 } from '../modules/local/assign_taxonomy'
-include { paramsSummaryMap                } from 'plugin/nf-schema'
-include { paramsSummaryMultiqc            } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { softwareVersionsToYAML          } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { methodsDescriptionText          } from '../subworkflows/local/utils_nfcore_nanoporemetabarcoding_pipeline'
-include { validateInputParameters         } from '../subworkflows/local/utils_nfcore_nanoporemetabarcoding_pipeline'
+include { BLAST_MAKEBLASTDB                    } from '../modules/nf-core/blast/makeblastdb/main'
+include { BLAST_BLASTN                         } from '../modules/nf-core/blast/blastn/main'
+include { SEQKIT_REPLACE                       } from '../modules/nf-core/seqkit/replace/main'
+include { BEST_HIT                             } from '../modules/local/blast_best_hit'
+include { ASSIGN_TAXONOMY                      } from '../modules/local/assign_taxonomy'
+include { paramsSummaryMap                     } from 'plugin/nf-schema'
+include { paramsSummaryMultiqc                 } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { softwareVersionsToYAML               } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { methodsDescriptionText               } from '../subworkflows/local/utils_nfcore_nanoporemetabarcoding_pipeline'
+include { validateInputParameters              } from '../subworkflows/local/utils_nfcore_nanoporemetabarcoding_pipeline'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -46,8 +45,8 @@ workflow NANOPOREMETABARCODING {
     ch_samplesheet // channel: samplesheet read in from --input
     main:
 
-    ch_versions = Channel.empty()
-    ch_multiqc_files = Channel.empty()
+    ch_versions = channel.empty()
+    ch_multiqc_files = channel.empty()
 
     // Prepare the samplesheet channel
     ch_input = ch_samplesheet
@@ -57,7 +56,7 @@ workflow NANOPOREMETABARCODING {
              }
 
     // Prepare metadata channel
-    ch_metadata = params.metadata ? Channel.fromPath(params.metadata, checkIfExists: true)
+    ch_metadata = params.metadata ? channel.fromPath(params.metadata, checkIfExists: true)
                 | splitCsv(header: true)
                 | map { row -> [row.id, row.primer_comb, row.sample] }
                 | validateInputParameters // Validate metadata so that there are no duplicated values, prob should also check whether fastqs in samplesheet and metadata match
@@ -73,23 +72,6 @@ workflow NANOPOREMETABARCODING {
         validateSamplesheetMetadata(ch_input_fastqs, ch_metadata_fastqs)
     }
 
-    // Make sure fastqs in samplesheet and metadata match
-    //def validateSamplesheetMetadata ( input_channel,metadata_channel )
-    //ch_metadata_fastqs.join(ch_input_fastqs)
-    //| map { key, input_fastq, metadata_fastq ->
-    //                def input_sorted = input_fastq.sort()
-    //                def metadata_sorted = metadata_fastq.sort()
-    //                        if (metadata_sorted != input_sorted) {
-    //                            def missing_in_metadata = input_sorted - metadata_sorted
-    //                            def missing_in_input = metadata_sorted - input_sorted
-    //
-    //                            def error_msg = "ID mismatch between samplesheet and metadata:\n"
-    //                            if (missing_in_metadata) error_msg += "In samplesheet but not metadata: ${missing_in_metadata.join(', ')}\n"
-    //                            if (missing_in_input) error_msg += "In metadata but not samplesheet: ${missing_in_input.join(', ')}"
-    //                            error(error_msg)
-    //                        }
-    //        return "validation_passed"
-    //}
     //
     // MODULE: Run Nanoplot
     //
@@ -116,60 +98,6 @@ workflow NANOPOREMETABARCODING {
     // (check for the function flattenAndMap in the functions section)
     ch_input_f = flattenAndMap(CUTADAPT_F.out.reads, true)
 
-    // Get unkwon reads to reverse complement them later and trim again based on forward barcodes
-    // We filter out reads that are unknown as they are probably reverse complemented with regard
-    // to the forward barcodes. This is done so that we can trim them again based on the forward barcodes
-    // No need for this anymore since cutadapt has an --rc option, so unknown reads are now missing reads
-    //ch_unknown = ch_input_f
-    //           | filter { meta, fastq ->
-    //                    meta.id.contains('unknown')
-    //           }
-
-    //
-    // MODULE: Run SEQKIT reverse complement
-    //
-
-    // Reverse complement reads and run cutadapt again on unknown
-    // rc reads and trim again based on forward barcodes
-    //SEQKIT_REVCOMP_A (
-    //    ch_unknown
-    //)
-
-    // Trim based on forward barcodes again
-    //CUTADAPT_F_RC (
-    //    SEQKIT_REVCOMP_A.out.fastx
-    //)
-
-    // Remmove 'unknown_' prefix from metadata and flatten the output channel.
-    // This is done so that reads can be concatenated based on the metadata
-    // This reads are not unknown anymore
-    //ch_unknown = flattenAndMap(CUTADAPT_F_RC.out.reads)
-    //           | map { meta, fastq ->
-    //               def cleaned_meta = meta.id.replaceFirst(/unknown_/, '') // Remove the 'unknown_' prefix to be able to merge
-    //               [meta + [id: cleaned_meta], fastq] // Return updated metadata and fastq
-    //           }
-
-    // Group known and unknown (not uknown anymore) reads together based on metadata
-    //ch_input_f = ch_input_f
-    //           | mix(ch_unknown)
-    //           | groupTuple()
-
-    // Concatenate grouped reads together based on metadata.
-    //CAT_CAT (
-    //    ch_input_f
-    //)
-
-    //
-    // MODULE: Run SEQKIT reverse complement
-    //
-
-    // Barcodes are attached to both ends of the reads, so we need to reverse complement the reads
-    // to trim and demultiplex based the other end
-
-    //SEQKIT_REVCOMP_B (
-    //    CAT_CAT.out.file_out
-    //)
-
     // Run cutadapt on the reverse complemented reads to trim reverse barcodes
     CUTADAPT_R (
        ch_input_f
@@ -182,15 +110,6 @@ workflow NANOPOREMETABARCODING {
                            def count = fastq.countFastq()
                            count > params.filt_fastq && !meta.id.contains('unknown') // Filter out FASTQs with less than x reads and with unknown primer combinations
                       }
-
-    //
-    // MODULE: Run FastQC
-    //
-    //FASTQC (
-    //    ch_input
-    //)
-    //ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]})
-    //ch_versions = ch_versions.mix(FASTQC.out.versions.first())
 
 
     // Prepare data for Nanoplot and amplicon_sorter
@@ -236,11 +155,12 @@ workflow NANOPOREMETABARCODING {
     //
 
     // If skip_nanoplot is set to true, skip this module
-    ch_nanoplot = params.skip_nanoplot ? Channel.empty() : ch_raw.mix(ch_filt).mix(ch_amplicon_sort)
+    ch_nanoplot = params.skip_nanoplot ? channel.empty() : ch_raw.mix(ch_filt).mix(ch_amplicon_sort)
 
     NANOPLOT (
         ch_nanoplot
     )
+    ch_versions = ch_versions.mix(NANOPLOT.out.versions)
 
     // // Original name out.txt channel is stats.txt, so multiqc keeps overwritting. Each file needs to have an unique name
     ch_nanoplot_renamed = NANOPLOT.out.txt
@@ -300,19 +220,15 @@ workflow NANOPOREMETABARCODING {
     // Split FASTA files into individual consensus sequence and amplicon sequences
     // for minimap/medaka. Retain group information in the meta so that each consesus
     // sequence is processed together with its respective grouped amplicon sequences
-    pattern_amplicons = Channel.of("^\\d+\$") // Amplicon sequences are named with a number
+    pattern_amplicons = channel.of("^\\d+\$") // Amplicon sequences are named with a number
                       | collectFile(name: 'pattern.txt')
-    pattern_consensus = Channel.of("^consensus\$") // Consensus sequences are named 'consensus'
+    pattern_consensus = channel.of("^consensus\$") // Consensus sequences are named 'consensus'
                       | collectFile(name: 'pattern.txt')
 
     // Split into amplicons (each fasta is a group of amplicons without the consensus)
     SEQKIT_AMPLICONS (
         ch_group,
         pattern_amplicons.first()
-    )
-
-    GUNZIP_SEQKIT_GREP_A (
-        SEQKIT_AMPLICONS.out.filter
     )
 
     // Split into consensus (each fasta is a consensus without the grouped amplicons)
@@ -326,28 +242,11 @@ workflow NANOPOREMETABARCODING {
         SEQKIT_CONSENSUS.out.filter
     )
 
-    GUNZIP_SEQKIT_GREP_C (
-        SEQKIT_REPLACE.out.fastx
-    )
-
-    // Join consensus and amplicon sequences based on metadata and separate them in
-    // a multichannel (keeps grouped amplicons and their respective consensus sequence in sync)
-    //ch_minimap = GUNZIP_SEQKIT_GREP_A.out.gunzip // Grouped amplicons
-    //           | join(GUNZIP_SEQKIT_GREP_C.out.gunzip) // Consensus
-    //           | multiMap { meta, amps, cons -> // meta: metadata, amps: amplicon sequences, cons: consensus sequences
-    //                        amps : [ meta, amps] // Return a tuple with metadata and amplicon sequences
-    //                        cons : [ meta, cons ] // Return a tuple with metadata and consensus sequences
-    //           }
-
     // For running medaka without running minimap2. Medaka already aligns basecalls (amplicons here)
     // to the consensus sequences, so perhaps we can skip minimap2 step, at least for now
     // Make sure this is working as expected
-    ch_medaka = GUNZIP_SEQKIT_GREP_A.out.gunzip
-              | join(GUNZIP_SEQKIT_GREP_C.out.gunzip)
-
-    //
-    // MODULE: Run Minimap2
-    //
+    ch_medaka = SEQKIT_AMPLICONS.out.filter
+              | join(SEQKIT_REPLACE.out.fastx)
 
 
 
@@ -355,7 +254,7 @@ workflow NANOPOREMETABARCODING {
     // MODULE: Run Medaka
     //
 
- 
+
     MEDAKA (
         ch_medaka
     )
@@ -370,34 +269,35 @@ workflow NANOPOREMETABARCODING {
                  }
                  | groupTuple(by: 0)
 
-    CAT_CAT_MEDAKA (
+    FIND_CONCATENATE (
         ch_corrected
     )
 
-    ch_corrected_concat = CAT_CAT_MEDAKA.out.file_out
+    ch_corrected_concat = FIND_CONCATENATE.out.file_out
 
     //
     // MODULE: Run makeblastdb
     //
 
     // Prepare ch_databse channel to build a custom database for blast
-    ch_database = (params.custom_db && !params.blast_db) ? Channel.fromPath(params.custom_db)
+    ch_database = (params.custom_db && !params.blast_db) ? channel.fromPath(params.custom_db)
                 | map { db ->
                         [[id:'database'], db]
-                } : Channel.empty() // If no custom database is provided, use an empty channel
+                } : channel.empty() // If no custom database is provided, use an empty channel
 
 
     BLAST_MAKEBLASTDB (
-        ch_database
+        ch_database,
+        []
     )
 
     // Mix in case an already built blast database is already give. People should only input a
     // path to make the database or give the built database. This shouldn't be possible,
     // will write code later to prevent it
-    ch_prebuilt_db = params.blast_db ? Channel.fromPath(params.blast_db)
+    ch_prebuilt_db = params.blast_db ? channel.fromPath(params.blast_db)
                    | map { db ->
                             [[id:'prebuilt_database'], db]
-                   } : Channel.empty() // If no prebuild database is provided, use an empty channel
+                   } : channel.empty() // If no prebuild database is provided, use an empty channel
 
 
     ch_blast = BLAST_MAKEBLASTDB.out.db.mix(ch_prebuilt_db)
@@ -408,23 +308,14 @@ workflow NANOPOREMETABARCODING {
 
     BLAST_BLASTN (
         ch_corrected_concat,
-        ch_blast.first() // .first() so that channel can be used several times
-    )
-
-    //
-    // MODULE: Run blast best hit
-    //
-
-    // To annotate the consensus (or ASVs) sequences, we need to estabish a criteria
-    // to select the best blast hit. In this case the best blast hit is established first
-    // by bitscore and second by evalue
-
-    BEST_HIT (
-        BLAST_BLASTN.out.txt
+        ch_blast.first(), // .first() so that channel can be used several times
+        [],
+        [],
+        []
     )
 
     // Join blast hits channel with number of reads per ASV channel
-    ch_assign_taxonomy = BEST_HIT.out.best_hit
+    ch_assign_taxonomy = BLAST_BLASTN.out.txt
                        | join(ch_merged, by: 0)
                        | multiMap { meta, blast, csv ->
                                 blast: [meta, blast]
@@ -437,7 +328,7 @@ workflow NANOPOREMETABARCODING {
     //
     // MODULE: Run assign taxonomy
     //
-    ch_sql_db = Channel.fromPath(params.sql_db)
+    ch_sql_db = channel.fromPath(params.sql_db)
 
     ASSIGN_TAXONOMY(
         ch_assign_taxonomy.blast,
@@ -448,7 +339,25 @@ workflow NANOPOREMETABARCODING {
     //
     // Collate and save software versions
     //
-    softwareVersionsToYAML(ch_versions)
+    def topic_versions = channel.topic("versions")
+        .distinct()
+        .branch { entry ->
+            versions_file: entry instanceof Path
+            versions_tuple: true
+        }
+
+    def topic_versions_string = topic_versions.versions_tuple
+        .map { process, tool, version ->
+            [ process[process.lastIndexOf(':')+1..-1], "  ${tool}: ${version}" ]
+        }
+        .groupTuple(by:0)
+        .map { process, tool_versions ->
+            tool_versions.unique().sort()
+            "${process}:\n${tool_versions.join('\n')}"
+        }
+
+    softwareVersionsToYAML(ch_versions.mix(topic_versions.versions_file))
+        .mix(topic_versions_string)
         .collectFile(
             storeDir: "${params.outdir}/pipeline_info",
             name: 'nf_core_'  +  'nanoporemetabarcoding_software_'  + 'mqc_'  + 'versions.yml',
@@ -460,41 +369,31 @@ workflow NANOPOREMETABARCODING {
     //
     // MODULE: MultiQC
     //
-    ch_multiqc_config        = Channel.fromPath(
-        "$projectDir/assets/multiqc_config.yml", checkIfExists: true)
-    ch_multiqc_custom_config = params.multiqc_config ?
-        Channel.fromPath(params.multiqc_config, checkIfExists: true) :
-        Channel.empty()
-    ch_multiqc_logo          = params.multiqc_logo ?
-        Channel.fromPath(params.multiqc_logo, checkIfExists: true) :
-        Channel.empty()
-
-    summary_params      = paramsSummaryMap(
-        workflow, parameters_schema: "nextflow_schema.json")
-    ch_workflow_summary = Channel.value(paramsSummaryMultiqc(summary_params))
-    ch_multiqc_files = ch_multiqc_files.mix(
-        ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
-    ch_multiqc_custom_methods_description = params.multiqc_methods_description ?
-        file(params.multiqc_methods_description, checkIfExists: true) :
-        file("$projectDir/assets/methods_description_template.yml", checkIfExists: true)
-    ch_methods_description                = Channel.value(
-        methodsDescriptionText(ch_multiqc_custom_methods_description))
-
     ch_multiqc_files = ch_multiqc_files.mix(ch_collated_versions)
-    ch_multiqc_files = ch_multiqc_files.mix(
-        ch_methods_description.collectFile(
-            name: 'methods_description_mqc.yaml',
-            sort: true
-        )
-    )
 
-    MULTIQC (
-        ch_multiqc_files.collect(),
-        ch_multiqc_config.toList(),
-        ch_multiqc_custom_config.toList(),
-        ch_multiqc_logo.toList(),
-        [],
-        []
+    def ch_summary_params = paramsSummaryMap(workflow, parameters_schema: "nextflow_schema.json")
+    def ch_workflow_summary = channel.value(paramsSummaryMultiqc(ch_summary_params))
+    ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
+
+    def ch_multiqc_custom_methods_description = params.multiqc_methods_description
+        ? file(params.multiqc_methods_description, checkIfExists: true)
+        : file("${projectDir}/assets/methods_description_template.yml", checkIfExists: true)
+    def ch_methods_description = channel.value(methodsDescriptionText(ch_multiqc_custom_methods_description))
+    ch_multiqc_files = ch_multiqc_files.mix(ch_methods_description.collectFile(name: 'methods_description_mqc.yaml', sort: true))
+
+    MULTIQC(
+        ch_multiqc_files.flatten().collect().map { files ->
+            [
+                [id: 'nanopremetabarcoding'],
+                files,
+                params.multiqc_config
+                    ? file(params.multiqc_config, checkIfExists: true)
+                    : file("${projectDir}/assets/multiqc_config.yml", checkIfExists: true),
+                params.multiqc_logo ? file(params.multiqc_logo, checkIfExists: true) : [],
+                [],
+                [],
+            ]
+        }
     )
 
     emit:

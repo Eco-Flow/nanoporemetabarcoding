@@ -1,4 +1,6 @@
 
+# Written by Fernando Duarte and Jordan Cuff
+
 library(argparse)
 library(dplyr)
 library(tidyr)
@@ -20,33 +22,34 @@ parser$add_argument('--opident', type = 'numeric', help = 'Identity threshold (i
 
 args <- parser$parse_args()
 
+# Load blast hits
 Blastout <- read.table(args$blast_hits)
 
+# Filter blast hits to retain only the best hit for each ASV based on bitscore, evalue, and percent identity
+blast_filtered <- Blastout %>%
+  rename(qseqid = V1, sseqid = V2, pident = V3, length = V4,
+         mismatch = V5, gapopen = V6, qstart = V7, qend = V8,
+         sstart = V9, send = V10, evalue = V11, bitscore = V12) %>%
+  group_by(qseqid) %>%
+  filter(bitscore == max(bitscore)) %>%
+  filter(evalue   == min(evalue)) %>%
+  filter(pident   == max(pident)) %>%
+  ungroup() %>%
+  dplyr::select(qseqid, sseqid, pident, length, mismatch, gapopen, qstart, qend, sstart, send, evalue, bitscore)
+
+# Load read counts
 read_counts <- read.csv(args$read_counts, header=FALSE)
 
+# Column names for read counts - assuming the first column is ASV and the second column is read count
 colnames(read_counts) <- c("ASV", "read_count")
 
+# Debugging: Check the structure of the loaded data
 head(Blastout)
 head(read_counts)
 
-# Load hits table
-blast_filtered <- Blastout %>%
-  mutate(qseqid = V1,
-         sseqid = V2,
-         pident = V3,
-         length = V4,
-         mismatch = V5,
-         gapopen = V6,
-         qstart = V7,
-         qend = V8,
-         sstart = V9,
-         send = V10,
-         evalue = V11,
-         bitscore = V12) %>%
-  dplyr::select(qseqid, sseqid, pident, length, mismatch, gapopen, qstart, qend, sstart, send, evalue, bitscore)
-
-# Create SQLite database - can be stored centrally to avoid replication across projects - this seems to variably work, so the below steps avoid it
-#prepareDatabase('accessionTaxa.sql')
+# Create SQLite database - can be stored centrally to
+# avoid replication across projects - this seems to variably work, so the below steps avoid it
+# prepareDatabase('accessionTaxa.sql')
 
 print(accessionToTaxa(data.frame(blast_filtered)$sseqid,args$sql_db))
 
@@ -61,51 +64,76 @@ taxonomic.df <- as.data.frame(sseqids$Taxonomic.ranks, stringsAsFactors = FALSE)
 sseqids <- cbind(sseqids, taxonomic.df)
 sseqids$Taxonomic.ranks <- NULL
 
-write.csv(sseqids, "ASV_table.csv", row.names = FALSE)
+write.csv(sseqids, "ASV_table_pre-assigned.csv", row.names = FALSE)
 
-print(sseqids)
-
+# Assign taxonomic ranks to ASVs based on percent identity thresholds and resolve conflicts
 ASV.ids <- sseqids %>%
-  mutate(assigned_taxon = if_else(!is.na(order) & order == "Araneae",
-                                if_else(pident > args$gpident, genus,
-                                         if_else(pident > args$fpident, family,
-                                                 if_else(pident > args$opident, order,
-                                                         phylum))),
-        if_else(pident > args$spident, species, # Species and genus level assignment where not in Jordan's original code. Is there a reason for this?
-            if_else(pident > args$gpident, genus,
-                if_else(pident > args$fpident, family,
-                     if_else(pident > args$opident, order,
-                         phylum)))))) %>%
-  #dplyr::select(taxaId, ASV, Taxon) %>%
+  # Assign taxonomic rank based on percent identity thresholds
+  mutate(Taxon = if_else(pident > args$spident, "species", if_else(pident > args$gpident, "genus", if_else(pident > args$fpident, "family", if_else(pident > args$opident, "order", "class"))))) %>%
+  # Set the order of taxonomic ranks for filtering
+  mutate(Taxon = factor(Taxon, levels = c("species", "genus", "family", "order", "class"), ordered = TRUE)) %>%
+  # Filter unnecessary columns
   dplyr::select(!c(sseqid,seqid2)) %>%
-  #mutate(ASV = str_remove(ASV, "_")) %>%
+  group_by(ASV) %>%
+  # Flag and remove hits with no taxonomy at any rank (accession not found in DB).
+  # If at least one valid hit exists, discard all-NA hits and mark the result with "*".
+  # If all hits are all-NA, keep them so the ASV still appears as "Unassigned".
+  mutate(
+    all_na_row    = is.na(phylum) & is.na(class) & is.na(order) & is.na(family) & is.na(genus) & is.na(species),
+    has_valid_hit = any(!all_na_row),
+    flagged       = has_valid_hit & any(all_na_row)
+  ) %>%
+  filter(!all_na_row | !has_valid_hit) %>%
+  # Resolve taxonomic assignment. If the ASV has multiple hits,
+  # assign the most specific taxon that is consistent across all hits.
+  # If there are conflicting assignments at a given rank, move up to
+  # the next rank until a consistent assignment is found or assign "Unassigned"
+  # if no consistent assignment is found.
+  mutate(Resolved.taxon = case_when(Taxon == "species" & n_distinct(species) == 1 ~ coalesce(first(species), "Unassigned"),
+                                    Taxon %in% c("species", "genus") & n_distinct(genus) == 1 ~ coalesce(first(genus), "Unassigned"),
+                                    Taxon %in% c("species", "genus", "family") & n_distinct(family) == 1 ~ coalesce(first(family), "Unassigned"),
+                                    Taxon %in% c("species", "genus", "family", "order") & n_distinct(order) == 1 ~ coalesce(first(order), "Unassigned"),
+                                    Taxon %in% c("species", "genus", "family", "order", "class") & n_distinct(class) == 1 ~ coalesce(first(class), "Unassigned"),
+                                    TRUE ~ coalesce(phylum, "Unassigned"))) %>%
+  mutate(Resolved.taxon = if_else(flagged, paste0(Resolved.taxon, "*"), Resolved.taxon)) %>%
+  filter(Taxon == min(Taxon)) %>%
+  ungroup() %>% # Might be rdundant
+  group_by(ASV) %>% # Might be redundant
+  summarise(
+    pident         = mean(pident), # Should be the same across all hits for a given ASV, but we take the mean just in case
+    length         = mean(length),
+    mismatch       = mean(mismatch),
+    #gapopen        = mean(gapopen),
+    #qstart         = mean(qstart),
+    #qend           = mean(qend),
+    #sstart         = mean(sstart),
+    #send           = mean(send),
+    evalue         = mean(evalue), # Should be the same across all hits for a given ASV, but we take the mean just in case
+    bitscore       = mean(bitscore), # Should be the same across all hits for a given ASV, but we take the mean just in case
+    #taxaId         = getId(Resolved.taxon, args$sql_db),
+    phylum         = if_else(n_distinct(phylum)  == 1, first(phylum),  NA_character_),
+    class          = if_else(n_distinct(class)   == 1, first(class),   NA_character_),
+    order          = if_else(n_distinct(order)   == 1, first(order),   NA_character_),
+    family         = if_else(n_distinct(family)  == 1, first(family),  NA_character_),
+    genus          = if_else(n_distinct(genus)   == 1, first(genus),   NA_character_),
+    species        = if_else(n_distinct(species) == 1, first(species), NA_character_),
+    Resolved.taxon = first(Resolved.taxon),
+    .groups = "drop"
+  ) %>%
+  ungroup() %>%
+  mutate(taxaId = sapply(getId(gsub("\\*", "", Resolved.taxon), args$sql_db), `[`, 1)) %>% # Get taxaId for the resolved taxon, removing the "*" flag if present
   mutate(sample_name = str_remove(ASV, "_\\d+_\\d+$")) %>%
   relocate(sample_name, .before = 1)
 
-print("debug")
-
-print(ASV.ids)
-
-write.csv(ASV.ids, "ASV_table_assigned.csv", row.names = FALSE)
-
-print("Debug read count")
-
-print(read_counts)
+# Write the ASV table with assigned taxonomy to a CSV file
+#write.csv(ASV.ids, "ASV_table_assigned.csv", row.names = FALSE)
 
 # Merge reads counts bease on the ASV column
 ASV.ids.read_counts <- merge(ASV.ids, read_counts, by = "ASV", all.x = TRUE) %>%
                         relocate(read_count, .before = 3)
 
+# Write the final ASV table with assigned taxonomy and read counts to a CSV file
 write.csv(ASV.ids.read_counts, "ASV_table_final.csv", row.names = FALSE)
-
-#Plate.metabar <- merge(ASV.ids, asv_tab2, by = "ASV") %>%
-#  dplyr::select(-ASV) %>%
-#  pivot_longer(cols = -Taxon, names_to = "Sample", values_to = "Reads") %>%
-#  group_by(Taxon, Sample) %>%
-#  summarise(Reads = sum(Reads, na.rm = TRUE)) %>%
-#  pivot_wider(names_from = "Sample", values_from = "Reads")
-
-#write.csv(Plate.metabar, "asign_tax_output.csv")
 
 
 

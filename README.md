@@ -51,7 +51,7 @@ Steps:
    - Annotation is based on the best blast hit per consensus. And best blast hit is based on:
      1. First on the bit score
      2. Second on the e-value
-8. Assign taxonomy to blast hits using taxonomizr ([`taxonomizr`](https://github.com/sherrillmix/taxonomizr)). It only works with NCBI accessions (GenBank and RefSeq)
+8. Assign taxonomy to blast hits using taxonomizr ([`taxonomizr`](https://github.com/sherrillmix/taxonomizr)). Only works with NCBI accessions (GenBank and RefSeq). If an ASV has multiple hits with the same top bitscore, e-value, and percent identity, the lowest common taxonomic rank across all hits is assigned.
 
 <!-- 1. Read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))2. Present QC for raw reads ([`MultiQC`](http://multiqc.info/)) -->
 
@@ -294,36 +294,33 @@ The files listed below will be created in the results directory (set by `--outdi
 
 ### Taxonomy assignment
 
-The pipeline outputs ASV tables in `.csv` format. The `ASV_taxa_final.csv` table contains the following columns:
+Each consensus sequence (ASV) is assigned a taxon using a two-step approach:
 
-- `sample_name`: Name of the sample. It is made of `<fastq_id>sample_id<>`.
-- `ASV`: ASV id.
-- `pident`: Percent identity of the alignment.
-- `length`: Alignment length.
-- `mismatch`: Number of non-identical aligned positions (excluding gaps).
-- `gapopen`: Number of gap openings in the alignment
-- `qstart`: Start position of the alignment on the query sequence.
-- `qend`: End position of the alignment on the query sequence.
-- `sstart`: Start position of the alignment on the subject (database hit) sequence.
-- `send`: End position of the alignment on the subject sequence.
-- `evalue`: Expect value. The lower the more significant. Depends on the dabase size.
-- `bitscore`: Bit score. The higher the better the alignment. Independent of the dabase size.
-- `taxaId`: Assigned NCBI taxon id.
-- `domain`: Assigned domain.
-- `phylum`: Assigned phylum.
-- `class`: Assigned class.
-- `order`: Assigned order.
-- `family`: Assigned family.
-- `genus`: Assigned genus.
-- `species`: Assigned species.
-- `assigned_taxon`: Assigned taxonomic rank according to to the percentage identitity.
-- `read_count`: ASV read count.
+1. **Rank assignment by percent identity**: each BLAST hit is assigned to a taxonomic rank based on percent identity thresholds (species, genus, family, order) (see options **Assign taxonomy options:** in the [Parameters](#parameters) section).
+2. **Last Common Rank (LCR) consensus**: because each ASV can have multiple BLAST hits, the final taxon is resolved by finding the most specific rank at which all hits agree. If hits disagree at the assigned rank, the pipeline falls back to progressively coarser ranks (genus → family → order → class → phylum) until a consensus is reached. If no consensus can be found, the ASV is labelled `Unassigned`.
+
+The final output is `ASV_taxa_final.csv`, one row per ASV, with the following columns:
+
+- `ASV`: ASV identifier.
+- `sample_name`: Sample name, derived from the combination of FASTQ id and sample id.
+- `read_count`: Number of reads assigned to the ASV.
+- `pident`: Mean percent identity of the best BLAST alignment.
+- `length`: Mean alignment length.
+- `mismatch`: Mean number of mismatched positions in the alignment (excluding gaps).
+- `evalue`: Expect value — the lower, the more significant the match. Depends on database size.
+- `bitscore`: Bit score — the higher, the better the alignment. Independent of database size.
+- `taxaId`: NCBI taxonomy ID of the matched sequence.
+- `phylum`, `class`, `order`, `family`, `genus`, `species`: Full taxonomic lineage of the matched sequence.
+- `Resolved.taxon`: Final consensus taxon assigned to the ASV. A trailing `*` indicates that one or more BLAST hits for the same ASV had no taxonomy in the database and were excluded from the LCR resolution. This ASV can be classified as `Unasigned` instead for a more conservative approach.
+
+`ASV_table_pre-assigned.csv` contains the per-hit taxonomy assignments before LCR consensus resolution — one row per BLAST hit rather than one row per ASV.
 
 <details markdown="1">
 <summary>Output files</summary>
 
 - `assign_taxa/`
-  - `<fastq_id>/ASV_taxa_final.csv`: ASV table with reads counts.
+  - `<fastq_id>/ASV_taxa_final.csv`: Taxonomy resolved ASV table with reads counts.
+  - `<fastq_id>/ASV_taxa_final.csv`: Per-hit ASV table pre-taxonomy assignment.
 <!--  - `<fastq_id>/ASV_taxa.csv`: ASV table.
   - `<fastq_id>/ASV_filtered.csv`:  ASV table with the assigned taxonomic rank according to the percetage identity parameters (see [Parameters](#parameters) section). -->
 
