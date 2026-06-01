@@ -1,2 +1,11 @@
+nf_core_version: 3.3.2
 repository_type: pipeline
-nf_core_version: "3.0.0"
+template:
+  author: Fernando Duarte,  Chris Wyatt
+  description: Metabarcoding analysis using nanopore sequecing
+  force: false
+  is_nfcore: true
+  name: nanoporemetabarcoding
+  org: nf-core
+  outdir: .
+  version: 1.0.0dev
