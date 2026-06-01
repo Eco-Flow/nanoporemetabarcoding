@@ -27,6 +27,7 @@ include { BLAST_BLASTN                         } from '../modules/nf-core/blast/
 include { SEQKIT_REPLACE                       } from '../modules/nf-core/seqkit/replace/main'
 include { BEST_HIT                             } from '../modules/local/blast_best_hit'
 include { ASSIGN_TAXONOMY                      } from '../modules/local/assign_taxonomy'
+include { CHOPPER                              } from '../modules/nf-core/chopper/main'
 include { paramsSummaryMap                     } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc                 } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML               } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -77,11 +78,19 @@ workflow NANOPOREMETABARCODING {
     //
 
     // Check modules.config for arguments to pass to Nanofilt
-
-    NANOFILT (
-        ch_input,
-        []
-    )
+    if (params.filter_tool == 'nanofilt') {
+        NANOFILT (
+            ch_input,
+            []
+        )
+        ch_filtered = NANOFILT.out.filtreads
+    } else if (params.filter_tool == 'chopper') {
+        CHOPPER (
+            ch_input,
+            []
+        )
+        ch_filtered = CHOPPER.out.fastq
+    }
 
     //
     // MODULE: Run CUTADAPT
@@ -91,7 +100,7 @@ workflow NANOPOREMETABARCODING {
     // set in the nextflow.config file
 
     CUTADAPT_F (
-        NANOFILT.out.filtreads
+        ch_filtered
     )
 
     // Flatten the output channel (FASTQs) from cutadapt demultiplex into indidual channels (FASTQ)
@@ -141,13 +150,14 @@ workflow NANOPOREMETABARCODING {
     ch_raw       = ch_input
                  | map {
                     meta, fastq ->
-                    [[id:"raw_${meta.id}"], fastq]
+                    [[id:"${meta.id}", type:"raw"], fastq]
                  }
 
-    ch_filt     = NANOFILT.out.filtreads
+    ch_filt     = ch_filtered
                 | map {
                     meta, fastq ->
-                    [[id:"filt_${meta.id}"], fastq]
+                    def type = params.filter_tool == 'nanofilt' ? "filtered_nanofilt" : "filtered_chopper"
+                     [[id:"${meta.id}", type:type], fastq]
                 }
 
     //
