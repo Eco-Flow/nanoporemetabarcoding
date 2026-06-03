@@ -134,6 +134,3 @@ ASV.ids.read_counts <- merge(ASV.ids, read_counts, by = "ASV", all.x = TRUE) %>%
 
 # Write the final ASV table with assigned taxonomy and read counts to a CSV file
 write.csv(ASV.ids.read_counts, "ASV_table_final.csv", row.names = FALSE)
-
-
-
