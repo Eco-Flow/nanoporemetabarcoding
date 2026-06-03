@@ -269,12 +269,11 @@ The files listed below will be created in the results directory (set by `--outdi
 
 [`NanoPlot`](https://github.com/wdecoster/NanoPlot) is a tool that outputs QC reports for raw, filtered -after nanofilt-, and demultiplexed reads. Nanoplot reports are store inside the nanoplot folder, and come in different formats.
 
-
 <details markdown="1">
 <summary>Output files</summary>
 
 - `nanoplot/`
-  - `raw/<fastq_id>`: Folder that contains  the raw reads quality report.
+  - `raw/<fastq_id>`: Folder that contains the raw reads quality report.
   - `filtered/<fastq_id>`: Folder contains the filtered -after nanofilt- reads quality report.
   - `demultiplexed/<fastq_id>/<sample_id>`: Contains the duemultiplexed reads quality report.
 
@@ -323,10 +322,8 @@ The final output is `ASV_taxa_final.csv`, one row per ASV, with the following co
 - `assign_taxa/`
   - `<fastq_id>/ASV_taxa_final.csv`: Taxonomy resolved ASV table with reads counts.
   - `<fastq_id>/ASV_taxa_final.csv`: Per-hit ASV table pre-taxonomy assignment.
-<!--  - `<fastq_id>/ASV_taxa.csv`: ASV table.
-  - `<fastq_id>/ASV_filtered.csv`:  ASV table with the assigned taxonomic rank according to the percetage identity parameters (see [Parameters](#parameters) section). -->
-
-
+  <!--  - `<fastq_id>/ASV_taxa.csv`: ASV table.
+  - `<fastq_id>/ASV_filtered.csv`: ASV table with the assigned taxonomic rank according to the percetage identity parameters (see [Parameters](#parameters) section). -->
 
 </details>
 
