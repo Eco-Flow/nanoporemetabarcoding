@@ -15,7 +15,8 @@ process ASSIGN_TAXONOMY {
     path(sql_db)
 
     output:
-    tuple val(meta), path("*.csv")   , emit: tax_csv
+    tuple val(meta), path("*.csv")                  , emit: tax_csvs
+    tuple val(meta), path("ASV_table_final.csv"), emit: final_csv
     tuple val("${task.process}"), val("R"), eval('Rscript -e "cat(as.character(getRversion()))"'), topic: versions, emit: versions_r
     tuple val("${task.process}"), val("taxonomizr"), eval('Rscript -e "cat(as.character(packageVersion(\'taxonomizr\')))"'), topic: versions, emit: versions_taxonomizr
     tuple val("${task.process}"), val("argparse"), eval('Rscript -e "cat(as.character(packageVersion(\'argparse\')))"'), topic: versions, emit: versions_argparse
