@@ -2,7 +2,7 @@ process ASSIGN_TAXONOMY {
     tag "$meta.id"
     label 'process_single'
 
-    conda "bioconda::r-argparse=1.0.1 bioconda::r-taxonomizr=0.7.1 conda-forge::r-tidyverse=2.0.0"
+    conda "${moduleDir}/environment.yml"
     container 'quay.io/fduarte001/assign_taxa:v1.0'
 
     //container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -38,5 +38,16 @@ process ASSIGN_TAXONOMY {
     --sql_db $sql_db \\
     $args
 
+    """
+
+    stub:
+    def args = task.ext.args ?: ''
+    def prefix = task.ext.prefix ?: "${meta.id}"
+
+    """
+    echo $args
+    
+    touch ${prefix}.csv
+    touch ASV_table_final.csv
     """
 }
