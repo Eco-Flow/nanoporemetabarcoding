@@ -26,13 +26,13 @@ df <- df[c("sample_name", "read_count", args$tax)]
 
 # Pivot to wide format to create abundance community matrix
 df_abundance <- df |>
-    pivot_wider(names_from = all_of(args$tax), values_from = read_count, values_fill = 0)
+    pivot_wider(names_from = all_of(args$tax), values_from = read_count, values_fill = 0, values_fn = sum)
 
 # Pivot to wide format to create presence/absence community matrix
 df_presence_absence <- df |>
     mutate(presence = ifelse(read_count > 0, 1, 0)) |>
     select(!read_count) |>
-    pivot_wider(names_from = all_of(args$tax), values_from = presence, values_fill = 0)
+    pivot_wider(names_from = all_of(args$tax), values_from = presence, values_fill = 0, values_fn = max)
 
 # Save output files
 write.csv(df_abundance, paste0(args$prefix, "_abundance.csv"), row.names = FALSE)
