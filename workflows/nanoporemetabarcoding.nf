@@ -32,7 +32,7 @@ include { paramsSummaryMap                     } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc                 } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML               } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText               } from '../subworkflows/local/utils_nfcore_nanoporemetabarcoding_pipeline'
-include { validateInputParameters              } from '../subworkflows/local/utils_nfcore_nanoporemetabarcoding_pipeline'
+include { validateMetadata                     } from '../subworkflows/local/utils_nfcore_nanoporemetabarcoding_pipeline'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -65,7 +65,7 @@ workflow NANOPOREMETABARCODING {
     ch_metadata = params.metadata ? channel.fromPath(params.metadata, checkIfExists: true)
                 | splitCsv(header: true)
                 | map { row -> [row.id, row.primer_comb, row.sample] }
-                | validateInputParameters // Validate metadata so that there are no duplicated values, prob should also check whether fastqs in samplesheet and metadata match
+                | validateMetadata // Validate metadata so that there are no duplicated values, prob should also check whether fastqs in samplesheet and metadata match
                 | map { fastq, primer_comb, sample -> [[id:primer_comb, single_end:true, old_id:fastq], sample] }
                 : null // null if no metadata is provided
 
@@ -475,8 +475,8 @@ workflow NANOPOREMETABARCODING {
 // input single values. Use flattenAndMap so that each FASTQ is emitted seprately
 // Function to flatten output channel (FASTQs) from cutadapt demultiplex into indidual channels (FASTQ)
 
-    // Make sure fastqs in samplesheet and metadata match
-    def validateSamplesheetMetadata (input_channel, metadata_channel) {
+// Make sure fastqs in samplesheet and metadata match
+def validateSamplesheetMetadata (input_channel, metadata_channel) {
         metadata_channel
             |join(input_channel)
             | map { key, input_fastq, metadata_fastq ->
@@ -496,7 +496,7 @@ workflow NANOPOREMETABARCODING {
     }
 
 def flattenAndMap(ch_fastqs, preserve_old_id = false) { // preserve_old_id becuase this change only needs to be done on the first cutadapt process
-    ch_fastq = ch_fastqs
+    def ch_fastq = ch_fastqs
              | flatMap { meta, fastqs ->
                    // Use flatMap instead of map + flatten
                    fastqs.collect { fastq ->
@@ -513,8 +513,6 @@ def flattenAndMap(ch_fastqs, preserve_old_id = false) { // preserve_old_id becua
     return ch_fastq
 }
 
-// Export the function
-return this
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

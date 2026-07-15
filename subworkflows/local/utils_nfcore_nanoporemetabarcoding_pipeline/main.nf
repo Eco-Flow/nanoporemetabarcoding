@@ -171,14 +171,11 @@ workflow PIPELINE_COMPLETION {
 //
 // Check and validate pipeline parameters
 //
-def validateInputParameters() {
-    genomeExistsError()
-}
 
 //
 // Check and validate pipeline parameters
 //
-def validateInputParameters(metadata) {
+def validateMetadata(metadata) {
     def valid_metadata = metadata
                        | groupTuple // Group first according to fastq (make sure there are no repeated values within groups)
                        | map { fastq, primer_comb, sample ->
@@ -192,7 +189,7 @@ def validateInputParameters(metadata) {
                                         [fastq, primer_comb, sample]
                                     }
                         }
-                        |transpose // Ungroups
+                        | transpose // Ungroups
 
     return valid_metadata
     //genomeExistsError()
