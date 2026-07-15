@@ -169,11 +169,14 @@ workflow PIPELINE_COMPLETION {
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 //
-// Check and validate pipeline parameters
+// Validate pipeline parameters (called by PIPELINE_INITIALISATION)
 //
+def validateInputParameters() {
+    // Parameter validation is handled by nf-schema; add pipeline-specific checks here if needed
+}
 
 //
-// Check and validate pipeline parameters
+// Check and validate metadata channel
 //
 def validateMetadata(metadata) {
     def valid_metadata = metadata

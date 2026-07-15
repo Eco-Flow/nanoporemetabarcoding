@@ -11,7 +11,7 @@ process ASSIGN_TAXONOMY {
 
     input:
     tuple val(meta), path(blast_hits)
-    tuple val(meta), path(read_counts)
+    tuple val(meta2), path(read_counts)
     path(sql_db)
 
     output:
