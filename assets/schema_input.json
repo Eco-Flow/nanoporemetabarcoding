@@ -9,8 +9,8 @@
         "properties": {
             "id": {
                 "type": "string",
-                "pattern": "^\\S+$",
-                "errorMessage": "Sample name must be provided and cannot contain spaces",
+                "pattern": "^[^\\s_]+$",
+                "errorMessage": "Sample name must be provided and cannot contain spaces or underscores",
                 "meta": ["id"]
             },
             "fastq": {

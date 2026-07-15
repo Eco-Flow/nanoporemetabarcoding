@@ -123,7 +123,8 @@ ASV.ids <- sseqids %>%
   ungroup() %>%
   mutate(taxaId = sapply(getId(gsub("\\*", "", Resolved.taxon), args$sql_db), `[`, 1)) %>% # Get taxaId for the resolved taxon, removing the "*" flag if present
   mutate(sample_name = str_remove(ASV, "_\\d+_\\d+$")) %>%
-  relocate(sample_name, .before = 1)
+  mutate(barcode = str_remove(sample_name, "_.*")) %>%
+  relocate(barcode, sample_name, .before = 1)
 
 # Write the ASV table with assigned taxonomy to a CSV file
 #write.csv(ASV.ids, "ASV_table_assigned.csv", row.names = FALSE)

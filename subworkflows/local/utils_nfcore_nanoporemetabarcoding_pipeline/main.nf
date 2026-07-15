@@ -169,16 +169,16 @@ workflow PIPELINE_COMPLETION {
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 //
-// Check and validate pipeline parameters
+// Validate pipeline parameters (called by PIPELINE_INITIALISATION)
 //
 def validateInputParameters() {
-    genomeExistsError()
+    // Parameter validation is handled by nf-schema; add pipeline-specific checks here if needed
 }
 
 //
-// Check and validate pipeline parameters
+// Check and validate metadata channel
 //
-def validateInputParameters(metadata) {
+def validateMetadata(metadata) {
     def valid_metadata = metadata
                        | groupTuple // Group first according to fastq (make sure there are no repeated values within groups)
                        | map { fastq, primer_comb, sample ->
@@ -192,7 +192,7 @@ def validateInputParameters(metadata) {
                                         [fastq, primer_comb, sample]
                                     }
                         }
-                        |transpose // Ungroups
+                        | transpose // Ungroups
 
     return valid_metadata
     //genomeExistsError()

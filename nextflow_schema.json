@@ -235,16 +235,18 @@
         "tags_f": {
             "type": "string",
             "description": "Path to forward primer-tags in FASTA format",
-            "pattern": "\\.fn?a(sta)?(\\.gz)?$"
+            "pattern": "\\.fn?a(sta)?(\\.gz)?$",
+            "default": "./test_data/primers_f.fasta"
         },
         "tags_r": {
             "type": "string",
             "description": "Path to reverse primer-tags in FASTA format",
-            "pattern": "\\.fn?a(sta)?(\\.gz)?$"
+            "pattern": "\\.fn?a(sta)?(\\.gz)?$",
+            "default": "./test_data/primers_r.fasta"
         },
         "error_rate": {
             "type": "number",
-            "default": 2,
+            "default": 2.0,
             "description": "Error rate for cutadapt"
         },
         "overlap": {
@@ -310,6 +312,16 @@
         "sql_db": {
             "type": "string",
             "default": "s3://nanopore-metabarcoding/nameNode.sqlite"
+        },
+        "tax_list": {
+            "type": "string",
+            "default": "phylum,class,order",
+            "description": "Comma-separated list of taxonomic levels to include in proportion plots (e.g. phylum,class,order)"
+        },
+        "community_tax": {
+            "type": "string",
+            "default": "species",
+            "description": "Taxonomic level used to aggregate reads when building the community matrix (e.g. species, genus, family)"
         }
     }
 }

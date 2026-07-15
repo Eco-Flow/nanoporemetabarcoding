@@ -13,7 +13,7 @@ include { SEQKIT_SEQ as SEQKIT_REVCOMP_B       } from '../modules/nf-core/seqkit
 include { CUTADAPT as CUTADAPT_F               } from '../modules/nf-core/cutadapt/main'
 include { CUTADAPT as CUTADAPT_F_RC            } from '../modules/nf-core/cutadapt/main'
 include { CUTADAPT as CUTADAPT_R               } from '../modules/nf-core/cutadapt/main'
-include { AMPLICON_SORTER                      } from '../modules/local/amplicon_sorter'
+include { AMPLICON_SORTER                      } from '../modules/local/ampliconsorter/main'
 include { SEQKIT_GREP as SEQKIT_AMPLICONS      } from '../modules/nf-core/seqkit/grep/main'
 include { SEQKIT_GREP as SEQKIT_CONSENSUS      } from '../modules/nf-core/seqkit/grep/main'
 include { GUNZIP                               } from '../modules/nf-core/gunzip/main'
@@ -25,13 +25,14 @@ include { FIND_CONCATENATE as FIND_CONCATENATE } from '../modules/nf-core/find/c
 include { BLAST_MAKEBLASTDB                    } from '../modules/nf-core/blast/makeblastdb/main'
 include { BLAST_BLASTN                         } from '../modules/nf-core/blast/blastn/main'
 include { SEQKIT_REPLACE                       } from '../modules/nf-core/seqkit/replace/main'
-include { BEST_HIT                             } from '../modules/local/blast_best_hit'
-include { ASSIGN_TAXONOMY                      } from '../modules/local/assign_taxonomy'
+include { ASSIGN_TAXONOMY                      } from '../modules/local/assigntaxonomy/main'
+include { COMMUNITY_MATRIX                     } from '../modules/local/communitymatrix/main'
+include { PLOT_TAXONOMY                        } from '../modules/local/plottaxonomy/main'
 include { paramsSummaryMap                     } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc                 } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML               } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText               } from '../subworkflows/local/utils_nfcore_nanoporemetabarcoding_pipeline'
-include { validateInputParameters              } from '../subworkflows/local/utils_nfcore_nanoporemetabarcoding_pipeline'
+include { validateMetadata                     } from '../subworkflows/local/utils_nfcore_nanoporemetabarcoding_pipeline'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -64,7 +65,7 @@ workflow NANOPOREMETABARCODING {
     ch_metadata = params.metadata ? channel.fromPath(params.metadata, checkIfExists: true)
                 | splitCsv(header: true)
                 | map { row -> [row.id, row.primer_comb, row.sample] }
-                | validateInputParameters // Validate metadata so that there are no duplicated values, prob should also check whether fastqs in samplesheet and metadata match
+                | validateMetadata // Validate metadata so that there are no duplicated values, prob should also check whether fastqs in samplesheet and metadata match
                 | map { fastq, primer_comb, sample -> [[id:primer_comb, single_end:true, old_id:fastq], sample] }
                 : null // null if no metadata is provided
 
@@ -146,21 +147,28 @@ workflow NANOPOREMETABARCODING {
     ch_raw       = ch_input
                  | map {
                     meta, fastq ->
-                    [[id:"raw_${meta.id}"], fastq]
+                    [[id:"raw_${meta.id}", old_id:"${meta.id}", step:"raw"], fastq]
                  }
 
     ch_filt     = NANOFILT.out.filtreads
                 | map {
                     meta, fastq ->
-                    [[id:"filt_${meta.id}"], fastq]
+                    [[id:"filt_${meta.id}", old_id:"${meta.id}", step:"cleaned"], fastq]
                 }
+
+    ch_demultiplexed = ch_amplicon_sort
+                     | map {
+                        meta, fastq ->
+                        def new_meta = meta + [step: 'demultiplexed']
+                        [new_meta, fastq]
+                     }
 
     //
     // MODULE: Run Nanoplot
     //
 
     // If skip_nanoplot is set to true, skip this module
-    ch_nanoplot = params.skip_nanoplot ? channel.empty() : ch_raw.mix(ch_filt).mix(ch_amplicon_sort)
+    ch_nanoplot = params.skip_nanoplot ? channel.empty() : ch_raw.mix(ch_filt).mix(ch_demultiplexed)
 
     NANOPLOT (
         ch_nanoplot
@@ -173,12 +181,59 @@ workflow NANOPOREMETABARCODING {
                                     def selectedFile = stats instanceof List ? stats[0] : stats // Not sure why, but sometimes there are two stats files. If that's the case, select the first one [0], which are the original stats
                                     //["${meta.id}_stats.txt", selected_file.text]
                                     def prefix = meta.old_id ? "${meta.old_id}_${meta.id}" :  "${meta.id}"
-                                    def renamedFile = selectedFile.copyTo("${workflow.workDir}/renamed_files/${prefix}_stats.txt") //Save renamed files inside the work directory
+                                    def renamedFile = selectedFile.copyTo("${workflow.workDir}/renamed_files/${prefix}.txt") //Save renamed files inside the work directory
                                     //def renamed_file = selected_file.copyTo("${meta.id}_stats.txt")
                                     [meta, renamedFile]
                         }
 
     ch_multiqc_files    = ch_multiqc_files.mix(ch_nanoplot_renamed.map { meta, stats -> stats }).collect()
+
+    // Channel for reads per step table
+    ch_reads_per_step = ch_nanoplot_renamed
+                      | map { meta, stats ->
+                                [meta.step, meta.old_id, stats] // [meta, stats] is in preparation for strict syntax (in the future)
+                      }
+                      | map { step, old_id, file ->
+                                def reads = file.readLines().find { l -> l.startsWith('Number of reads') } // Find the line that starts with 'Number of reads'
+                                reads = reads?.split(/\s+/)?.last()?.replaceAll(',', '')?.toFloat()?.toLong() ?: 0 // Extract the number of reads, remove commas, convert to float and then to long. If the line is not found, default to 0
+                                [step, old_id, reads]
+                      }
+                      | groupTuple(by: [0, 1])
+                      | map { step, old_id, reads_list ->
+                                [step, old_id, reads_list.sum()]
+                      }
+                      | groupTuple()
+                      // This part was written by claude
+                      | collect
+                      | map { entries ->
+                                // collect flattens tuples into a flat ArrayBag: [step, [ids], [counts], step, ...]
+                                // so we iterate in steps of 3
+                                def steps = []
+                                def idMap = [:]
+                                (0..<entries.size()).step(3).each { i ->
+                                    def step   = entries[i].toString()
+                                    def ids    = entries[i + 1] as List
+                                    def counts = entries[i + 2] as List
+                                    steps.add(step)
+                                    ids.eachWithIndex { id, j ->
+                                        def idStr = id.toString()
+                                        if (!idMap.containsKey(idStr)) idMap[idStr] = [:]
+                                        idMap[idStr][step] = counts[j]
+                                    }
+                                }
+
+                                def header = (["id"] + steps).join(",")
+                                def rows = idMap.collect { id, stepMap ->
+                                    ([id] + steps.collect { s -> stepMap.containsKey(s) ? stepMap[s] : 0 }).join(",")
+                                }.sort()
+                                ([header] + rows).join("\n")
+                      }
+                      | collectFile(name: 'reads_per_step.csv', storeDir: "${params.outdir}/reads_per_step", newLine: true) // Save the reads per step table in the output directory under pipeline_info folder
+
+
+
+
+
 
     //
     // MODULE: Run Amplicon Sorter
@@ -206,7 +261,6 @@ workflow NANOPOREMETABARCODING {
                             def excludePatterns = ['_unique.fasta', '_consensussequences.fasta', '_nogroup_unique.fasta']
                             return !excludePatterns.any { pattern -> filename.endsWith(pattern) }
              }
-             | view()
              | map { meta, fasta ->
                 // Get the filename without extension
                  def basename = fasta.baseName
@@ -327,9 +381,6 @@ workflow NANOPOREMETABARCODING {
                                 csv: [meta,csv]
                        }
 
-    ch_assign_taxonomy.blast.view()
-    ch_assign_taxonomy.csv.view()
-
     //
     // MODULE: Run assign taxonomy
     //
@@ -339,6 +390,20 @@ workflow NANOPOREMETABARCODING {
         ch_assign_taxonomy.blast,
         ch_assign_taxonomy.csv,
         ch_sql_db.first()
+    )
+
+    //
+    // MODULE: Run build community matrix
+    //
+    COMMUNITY_MATRIX(
+        ASSIGN_TAXONOMY.out.final_csv
+    )
+
+    //
+    // MODULE: Run plot taxonomy
+    //
+    PLOT_TAXONOMY(
+        ASSIGN_TAXONOMY.out.final_csv.map { _meta, table -> table }.collect().map { table -> [[id: 'ASV_table'], table] } // Map to have a consistent meta and emit as plot
     )
 
     //
@@ -410,8 +475,8 @@ workflow NANOPOREMETABARCODING {
 // input single values. Use flattenAndMap so that each FASTQ is emitted seprately
 // Function to flatten output channel (FASTQs) from cutadapt demultiplex into indidual channels (FASTQ)
 
-    // Make sure fastqs in samplesheet and metadata match
-    def validateSamplesheetMetadata (input_channel, metadata_channel) {
+// Make sure fastqs in samplesheet and metadata match
+def validateSamplesheetMetadata (input_channel, metadata_channel) {
         metadata_channel
             |join(input_channel)
             | map { key, input_fastq, metadata_fastq ->
@@ -431,7 +496,7 @@ workflow NANOPOREMETABARCODING {
     }
 
 def flattenAndMap(ch_fastqs, preserve_old_id = false) { // preserve_old_id becuase this change only needs to be done on the first cutadapt process
-    ch_fastq = ch_fastqs
+    def ch_fastq = ch_fastqs
              | flatMap { meta, fastqs ->
                    // Use flatMap instead of map + flatten
                    fastqs.collect { fastq ->
@@ -448,8 +513,6 @@ def flattenAndMap(ch_fastqs, preserve_old_id = false) { // preserve_old_id becua
     return ch_fastq
 }
 
-// Export the function
-return this
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

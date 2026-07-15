@@ -2,6 +2,7 @@ process AMPLICON_SORTER {
     tag "$meta.id"
     label 'process_medium'
 
+    conda "${moduleDir}/environment.yml"
     container 'community.wave.seqera.io/library/pip_biopython_edlib_matplotlib:2788dbec4d078d0a'
 
     input:
@@ -34,4 +35,15 @@ process AMPLICON_SORTER {
 
     """
 
+    stub:
+    def args = task.ext.args ?: ''
+    def prefix = task.ext.prefix ?: "${meta.id}"
+
+    """
+    echo $args
+    mkdir -p ${prefix}
+    touch ${prefix}/consensusfile.fasta
+    touch ${prefix}/results.txt
+    touch ${prefix}/results.csv
+    """
 }

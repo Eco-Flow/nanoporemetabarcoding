@@ -5,6 +5,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## v1.0.0dev - [date]
 
+### `Added`
+
+- Community matrix output from taxonomy assignment results, with both abundance and presence/absence matrices ([`vegan`](https://github.com/vegandevs/vegan), [`tidyr`](https://tidyr.tidyverse.org/))
+- Configurable taxonomic level for community matrix construction (`--community_tax`)
+- Taxonomy proportion plots per barcode and per sample using [`ggplot2`](https://ggplot2.tidyverse.org/), with configurable taxonomic levels (`--tax_list`) and minimum fraction threshold for rare taxa grouping
+- Sample name validation now rejects underscores in addition to spaces
+- Synthetic wasp test dataset (`wasp_test_data/`) built from real Nanopore reads, replacing the earlier fully-synthetic version that was too sparse for `amplicon_sorter` to cluster reliably
+- New `test_synth` profile (`conf/test_synth.config`) to run the pipeline against the synthetic wasp dataset
+
+### `Changed`
+
+- Local modules (`AMPLICON_SORTER`, `ASSIGN_TAXONOMY`, `PLOT_TAXONOMY`, `COMMUNITY_MATRIX`) migrated to nf-core module structure with `environment.yml`, `meta.yml`, and test stubs
+- `AMPLICON_SORTER` and `MEDAKA` intermediate outputs disabled from `publishDir` by default to reduce storage usage
+- `FIND_CONCATENATE` intermediate outputs disabled from `publishDir` by default
+- `BLAST_MAKEBLASTDB` `publishDir` `enable` typo corrected to `enabled`
+- `MEDAKA` input staging mode set to `copy` to avoid symlink issues
+- `MEDAKA` output prefix now includes the barcode identifier (`old_id`) to ensure unique filenames across barcodes
+
+### `Fixed`
+
+- `BLAST_MAKEBLASTDB` publish directory config used incorrect key `enable` instead of `enabled`
+- Community matrix `pivot_wider` now correctly aggregates multiple ASVs mapping to the same taxon per sample (`values_fn = sum` for abundance, `values_fn = max` for presence/absence)
+
+---
+
+## v1.0.0dev - [date] (initial)
+
 Initial release of nf-core/nanoporemetabarcoding, created with the [nf-core](https://nf-co.re/) template.
 
 ### `Added`
