@@ -185,7 +185,7 @@ workflow NANOPOREMETABARCODING {
                                     //def renamed_file = selected_file.copyTo("${meta.id}_stats.txt")
                                     [meta, renamedFile]
                         }
-    
+
     ch_multiqc_files    = ch_multiqc_files.mix(ch_nanoplot_renamed.map { meta, stats -> stats }).collect()
 
     // Channel for reads per step table

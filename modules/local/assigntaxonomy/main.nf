@@ -46,7 +46,7 @@ process ASSIGN_TAXONOMY {
 
     """
     echo $args
-    
+
     touch ${prefix}.csv
     touch ASV_table_final.csv
     """

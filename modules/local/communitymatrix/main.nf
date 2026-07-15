@@ -11,7 +11,7 @@ process COMMUNITY_MATRIX {
     tuple val(meta), path(table)
 
     output:
-    tuple val(meta), path("*.csv")    
+    tuple val(meta), path("*.csv")
     tuple val("${task.process}"), val('argparse'), eval('Rscript -e "cat(as.character(packageVersion(\'argparse\')))"'), topic: versions, emit: versions_argparse
     tuple val("${task.process}"), val('dplyr'), eval('Rscript -e "cat(as.character(packageVersion(\'dplyr\')))"'), topic: versions, emit: versions_dplyr
     tuple val("${task.process}"), val('tidyr'), eval('Rscript -e "cat(as.character(packageVersion(\'tidyr\')))"'), topic: versions, emit: versions_tidyr
@@ -37,7 +37,7 @@ process COMMUNITY_MATRIX {
 
     """
     echo $args
-    
+
     touch ${prefix}.csv
     """
 }

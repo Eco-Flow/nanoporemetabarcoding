@@ -39,7 +39,7 @@ process PLOT_TAXONOMY {
 
     """
     echo $args
-    
+
     touch ${prefix}.png
     """
 }

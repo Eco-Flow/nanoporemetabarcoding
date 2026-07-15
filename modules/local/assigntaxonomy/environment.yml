@@ -4,6 +4,6 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - bioconda::r-argparse=1.0.1 
+  - bioconda::r-argparse=1.0.1
   - bioconda::r-taxonomizr=0.7.1
   - conda-forge::r-tidyverse=2.0.0
