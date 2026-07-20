@@ -110,8 +110,7 @@ workflow NANOPOREMETABARCODING {
     )
 
     // Filter out FASTQs with less than 10 reads
-    ch_input_filtered = CUTADAPT_R.out.reads
-                      | flattenAndMap
+    ch_input_filtered = flattenAndMap(CUTADAPT_R.out.reads)
                       | filter { meta, fastq ->
                            def count = fastq.countFastq()
                            count > params.filt_fastq && !meta.id.contains('unknown') // Filter out FASTQs with less than x reads and with unknown primer combinations
@@ -478,8 +477,8 @@ workflow NANOPOREMETABARCODING {
 // Make sure fastqs in samplesheet and metadata match
 def validateSamplesheetMetadata (input_channel, metadata_channel) {
         metadata_channel
-            |join(input_channel)
-            | map { key, input_fastq, metadata_fastq ->
+            .join(input_channel)
+            .map { key, input_fastq, metadata_fastq ->
                         def input_sorted = input_fastq.sort()
                         def metadata_sorted = metadata_fastq.sort()
                                 if (metadata_sorted != input_sorted) {
@@ -497,7 +496,7 @@ def validateSamplesheetMetadata (input_channel, metadata_channel) {
 
 def flattenAndMap(ch_fastqs, preserve_old_id = false) { // preserve_old_id becuase this change only needs to be done on the first cutadapt process
     def ch_fastq = ch_fastqs
-             | flatMap { meta, fastqs ->
+             .flatMap { meta, fastqs ->
                    // Use flatMap instead of map + flatten
                    fastqs.collect { fastq ->
                        def name = fastq.name.toString().replaceAll(/\.trim\.fastq\.gz$/, '')
