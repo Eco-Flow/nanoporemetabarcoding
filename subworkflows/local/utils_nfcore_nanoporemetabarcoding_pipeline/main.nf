@@ -180,8 +180,8 @@ def validateInputParameters() {
 //
 def validateMetadata(metadata) {
     def valid_metadata = metadata
-                       | groupTuple // Group first according to fastq (make sure there are no repeated values within groups)
-                       | map { fastq, primer_comb, sample ->
+                       .groupTuple() // Group first according to fastq (make sure there are no repeated values within groups)
+                       .map { fastq, primer_comb, sample ->
                                     def duplicates_primer_comb = primer_comb.countBy { it }.findAll { key, count -> count > 1 }.keySet() // This will check for duplicated values
                                     def duplicates_sample = sample.countBy { it }.findAll { key, count -> count > 1 }.keySet()
                                     if (!duplicates_primer_comb.isEmpty()) {
@@ -192,7 +192,7 @@ def validateMetadata(metadata) {
                                         [fastq, primer_comb, sample]
                                     }
                         }
-                        | transpose // Ungroups
+                        .transpose() // Ungroups
 
     return valid_metadata
     //genomeExistsError()
