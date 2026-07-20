@@ -1,0 +1,3 @@
+id,fastq
+plate01,wasp_test_data/barcode01/plate1_combined.fastq.gz
+plate02,wasp_test_data/barcode02/plate2_combined.fastq.gz
