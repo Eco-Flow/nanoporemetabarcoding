@@ -161,9 +161,13 @@ The id of the metadata should match the id of the samplesheet (see [usage](#usag
 
 4. Primer-tag overlap. To calculate mismatches with the `--error-rate` option, cutadapt considers only the aligned region (overlap) between primer and read. The minimum length of this overlap is set by the `--overlap` option. For example, with an error rate of 0.2 (20%) and a 20 bp primer, if the required overlap is 10 bp and there are 3 mismatches in that region, the match is rejected because the mismatch rate is 3/10 = 30%, which is above the 20% threshold. But if the overlap is 20 bp and there are 3 mismatches, the match is accepted because the mismatch rate is 3/20 = 15%, which is below the 20% threshold. If your primers are very similar, it is often best to set `--overlap` to at least the length of the longest primer to avoid spurious matches.
 
+```
+    overlap                     = null // Minimum overlap length for an adapter to be found
+```
+
 **Nanofilt options:**
 
-Nanofilt is run before demultiplexing and tag+primer trimming:
+1. Nanofilt is run before demultiplexing and tag+primer trimming:
 
 ```
     // Nanofilt options
@@ -171,7 +175,7 @@ Nanofilt is run before demultiplexing and tag+primer trimming:
     nano_read_length            = 250 // Minimum reads length
 ```
 
-4. Filter FASTQs with a mumber of reads equal or lower than (changing this value is not recommended):
+2. Filter FASTQs with a mumber of reads equal or lower than (changing this value is not recommended):
 
 ```
     filt_fastq                  = 0
