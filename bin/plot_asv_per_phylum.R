@@ -64,8 +64,7 @@ for (tax in taxa) {
     p <- ggplot(counts, aes(x = barcode, y = relative_abundance, fill = .data[[tax]])) +
         geom_col() +
         scale_y_continuous(labels = function(x) paste0(round(x * 100), "%")) +
-        labs(x = "Barcode", y = "Relative Abundance (%)", fill = toupper(tax),
-             title = paste("Relative Abundance per", toupper(tax), "per barcode")) +
+        labs(x = "Barcode", y = "ASV Composition (%)", fill = toupper(tax)) +
         theme_classic() +
         theme(
             axis.text.x    = element_text(angle = 45, hjust = 1),
