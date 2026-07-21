@@ -1,9 +1,11 @@
+<!--
 <h1>
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/images/nf-core-nanoporemetabarcoding_logo_dark.png">
     <img alt="nf-core/nanoporemetabarcoding" src="docs/images/nf-core-nanoporemetabarcoding_logo_light.png">
   </picture>
 </h1>
+-->
 
 [![Open in GitHub Codespaces](https://img.shields.io/badge/Open_In_GitHub_Codespaces-black?labelColor=grey&logo=github)](https://github.com/codespaces/new/nf-core/nanoporemetabarcoding)
 [![GitHub Actions CI Status](https://github.com/nf-core/nanoporemetabarcoding/actions/workflows/nf-test.yml/badge.svg)](https://github.com/nf-core/nanoporemetabarcoding/actions/workflows/nf-test.yml)
@@ -21,7 +23,7 @@
 
 ## Introduction
 
-**nf-core/nanoporemetabarcoding** is a bioinformatics pipeline for processing nanopore metabarcoding data.
+**Eco-Flow/nanoporemetabarcoding** is a bioinformatics pipeline for processing nanopore metabarcoding data.
 
 Overview:
 
