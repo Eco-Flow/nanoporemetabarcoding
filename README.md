@@ -331,7 +331,7 @@ The final output is `ASV_taxa_final.csv`, one row per ASV, with the following co
 
 ## Credits
 
-nf-core/nanoporemetabarcoding was originally written by Fernando Duarte, Chris Wyatt.
+Eco-Flow/nanoporemetabarcoding was originally written by Fernando Duarte, Chris Wyatt.
 
 We thank the following people for their extensive assistance in the development of this pipeline:
 
