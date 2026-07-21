@@ -1,9 +1,11 @@
+<!--
 <h1>
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/images/nf-core-nanoporemetabarcoding_logo_dark.png">
     <img alt="nf-core/nanoporemetabarcoding" src="docs/images/nf-core-nanoporemetabarcoding_logo_light.png">
   </picture>
 </h1>
+-->
 
 [![Open in GitHub Codespaces](https://img.shields.io/badge/Open_In_GitHub_Codespaces-black?labelColor=grey&logo=github)](https://github.com/codespaces/new/nf-core/nanoporemetabarcoding)
 [![GitHub Actions CI Status](https://github.com/nf-core/nanoporemetabarcoding/actions/workflows/nf-test.yml/badge.svg)](https://github.com/nf-core/nanoporemetabarcoding/actions/workflows/nf-test.yml)
@@ -21,7 +23,7 @@
 
 ## Introduction
 
-**nf-core/nanoporemetabarcoding** is a bioinformatics pipeline for processing nanopore metabarcoding data.
+**Eco-Flow/nanoporemetabarcoding** is a bioinformatics pipeline for processing nanopore metabarcoding data.
 
 Overview:
 
@@ -300,7 +302,7 @@ Each consensus sequence (ASV) is assigned a taxon using a two-step approach:
 1. **Rank assignment by percent identity**: each BLAST hit is assigned to a taxonomic rank based on percent identity thresholds (species, genus, family, order) (see options **Assign taxonomy options:** in the [Parameters](#parameters) section).
 2. **Last Common Rank (LCR) consensus**: because each ASV can have multiple BLAST hits, the final taxon is resolved by finding the most specific rank at which all hits agree. If hits disagree at the assigned rank, the pipeline falls back to progressively coarser ranks (genus → family → order → class → phylum) until a consensus is reached. If no consensus can be found, the ASV is labelled `Unassigned`.
 
-The final output is `ASV_taxa_final.csv`, one row per ASV, with the following columns:
+The final output is `ASV_table_final.csv`, one row per ASV, with the following columns:
 
 - `ASV`: ASV identifier.
 - `sample_name`: Sample name, derived from the combination of FASTQ id and sample id.
@@ -329,7 +331,7 @@ The final output is `ASV_taxa_final.csv`, one row per ASV, with the following co
 
 ## Credits
 
-nf-core/nanoporemetabarcoding was originally written by Fernando Duarte, Chris Wyatt.
+Eco-Flow/nanoporemetabarcoding was originally written by Fernando Duarte, Chris Wyatt.
 
 We thank the following people for their extensive assistance in the development of this pipeline:
 
