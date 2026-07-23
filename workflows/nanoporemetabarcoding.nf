@@ -24,6 +24,8 @@ include { FIND_CONCATENATE as FIND_CONCATENATE } from '../modules/nf-core/find/c
 //include { DIAMOND_BLASTX                  } from '../modules/nf-core/diamond/blastx/main'
 include { BLAST_MAKEBLASTDB                    } from '../modules/nf-core/blast/makeblastdb/main'
 include { BLAST_BLASTN                         } from '../modules/nf-core/blast/blastn/main'
+include { CHIMERA_DETECTION                    } from '../modules/local/chimera_detection/main'
+include { VSEARCH_UCHIMEDENOVO                 } from '../modules/local/vsearch/uchimedenovo/main'
 include { SEQKIT_REPLACE                       } from '../modules/nf-core/seqkit/replace/main'
 include { ASSIGN_TAXONOMY                      } from '../modules/local/assigntaxonomy/main'
 include { COMMUNITY_MATRIX                     } from '../modules/local/communitymatrix/main'
@@ -79,13 +81,27 @@ workflow NANOPOREMETABARCODING {
     }
 
     //
+    // MODULE: Run Porechop (optional, --run_porechop)
+    //
+    // Removes leftover adapters and, by default, splits reads that contain an
+    // internal adapter (ligation/split chimeras) before filtering and demux.
+    ch_reads = ch_input
+    if (params.run_porechop) {
+        PORECHOP_PORECHOP (
+            ch_input
+        )
+        ch_versions = ch_versions.mix(PORECHOP_PORECHOP.out.versions)
+        ch_reads    = PORECHOP_PORECHOP.out.reads
+    }
+
+    //
     // MODULE: Run Nanoplot
     //
 
     // Check modules.config for arguments to pass to Nanofilt
 
     NANOFILT (
-        ch_input,
+        ch_reads,
         []
     )
 
@@ -361,11 +377,39 @@ workflow NANOPOREMETABARCODING {
     ch_blast = BLAST_MAKEBLASTDB.out.db.mix(ch_prebuilt_db)
 
     //
+    // MODULE: Reference-based chimera detection (optional, --chimera_detection)
+    //
+    // Splits each polished consensus into halves and BLASTs them against the
+    // reference database. Sequences whose halves best-hit different subjects are
+    // flagged as putative chimeras and removed before the full-length BLAST.
+    ch_blast_query = ch_corrected_concat
+    if (params.chimera_detection) {
+        if (params.chimera_method == 'vsearch') {
+            // De novo chimera detection (abundance-based, no reference needed).
+            // Join the concatenated consensus with the per-ASV read counts (ch_merged,
+            // keyed by old_id) so vsearch can annotate abundance from real counts.
+            ch_vsearch_input = ch_corrected_concat.join(ch_merged, by: 0)
+            VSEARCH_UCHIMEDENOVO (
+                ch_vsearch_input
+            )
+            ch_versions    = ch_versions.mix(VSEARCH_UCHIMEDENOVO.out.versions)
+            ch_blast_query = VSEARCH_UCHIMEDENOVO.out.nonchimeras
+        } else {
+            // Reference-based chimera detection (split-BLAST against the database)
+            CHIMERA_DETECTION (
+                ch_corrected_concat,
+                ch_blast.first()
+            )
+            ch_blast_query = CHIMERA_DETECTION.out.fasta
+        }
+    }
+
+    //
     // MODULE: Run BLAST
     //
 
     BLAST_BLASTN (
-        ch_corrected_concat,
+        ch_blast_query,
         ch_blast.first(), // .first() so that channel can be used several times
         [],
         [],

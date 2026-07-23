@@ -3,6 +3,21 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.0.1 - [date]
+
+### `Added`
+
+- Optional chimera detection before the final BLAST, enabled with `--chimera_detection` and selected via `--chimera_method`:
+  - `blast` (default): reference-based detection that splits each polished consensus into 5′/3′ halves, BLASTs them against the reference database, and flags a sequence as chimeric only when the two halves share no reference subject in common among their top hits (tolerating redundant same-organism database entries rather than requiring an exact accession match). Configurable with `--chimera_min_identity`, `--chimera_min_coverage`, `--chimera_top_n` and `--chimera_bitscore_margin`. Emits a non-chimeric FASTA and a per-sequence report to `${outdir}/chimera_detection`
+  - `vsearch`: de novo detection with [`vsearch`](https://github.com/torognes/vsearch) `--uchime3_denovo` (abundance-based, no reference required). Per-ASV read counts from `amplicon_sorter` are written onto the consensus headers as `;size=N` annotations so vsearch uses real abundances. Emits non-chimeric/chimeric FASTAs and a UCHIME report to `${outdir}/chimera_detection`
+- Optional [`Porechop`](https://github.com/rrwick/Porechop) step on raw reads, enabled with `--run_porechop`, to trim residual adapters and split reads containing internal adapters (ligation/split chimeras) before filtering and demultiplexing
+
+### `Changed`
+
+- nf-schema plugin bumped to `2.7.3` for compatibility with Nextflow 26.04, restoring the `validation` config scope (and coercion of bare boolean CLI flags such as `--skip_nanoplot`)
+
+---
+
 ## v1.0.0dev - [date]
 
 ### `Added`

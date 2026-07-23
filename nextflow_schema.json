@@ -260,6 +260,11 @@
             "type": "integer",
             "default": 0
         },
+        "run_porechop": {
+            "type": "boolean",
+            "default": false,
+            "description": "Run Porechop on raw reads to trim adapters and split reads containing internal adapters (ligation chimeras) before filtering and demultiplexing."
+        },
         "blast_db": {
             "type": "string",
             "description": "Path to BLAST database"
@@ -286,6 +291,37 @@
         "qcov_hsp_perc": {
             "type": "integer",
             "default": 90
+        },
+        "chimera_detection": {
+            "type": "boolean",
+            "default": false,
+            "description": "Enable chimera detection before the final BLAST."
+        },
+        "chimera_method": {
+            "type": "string",
+            "default": "blast",
+            "enum": ["blast", "vsearch"],
+            "description": "Chimera detection method. 'blast' = reference-based split-BLAST against the database; 'vsearch' = de novo vsearch uchime3_denovo (abundance-based, no reference needed)."
+        },
+        "chimera_min_identity": {
+            "type": "integer",
+            "default": 90,
+            "description": "Minimum % identity for a sequence half's best hit to count during chimera detection"
+        },
+        "chimera_min_coverage": {
+            "type": "integer",
+            "default": 80,
+            "description": "Minimum % coverage of a sequence half by its alignment during chimera detection"
+        },
+        "chimera_top_n": {
+            "type": "integer",
+            "default": 10,
+            "description": "(blast method) Number of top reference hits to consider per sequence half when comparing halves"
+        },
+        "chimera_bitscore_margin": {
+            "type": "integer",
+            "default": 10,
+            "description": "(blast method) Keep hits within this percentage of a half's best bitscore when comparing the two halves' reference sets"
         },
         "nano_quality": {
             "type": "integer"

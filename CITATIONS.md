@@ -18,6 +18,14 @@
 
 > Ewels P, Magnusson M, Lundin S, Käller M. MultiQC: summarize analysis results for multiple tools and samples in a single report. Bioinformatics. 2016 Oct 1;32(19):3047-8. doi: 10.1093/bioinformatics/btw354. Epub 2016 Jun 16. PubMed PMID: 27312411; PubMed Central PMCID: PMC5039924.
 
+- [Porechop](https://github.com/rrwick/Porechop)
+
+> Wick RR, Judd LM, Gorrie CL, Holt KE. Completing bacterial genome assemblies with multiplex MinION sequencing. Microb Genom. 2017 Sep 14;3(10):e000132. doi: 10.1099/mgen.0.000132. PubMed PMID: 29177090; PubMed Central PMCID: PMC5695208.
+
+- [VSEARCH](https://pubmed.ncbi.nlm.nih.gov/27781170/)
+
+> Rognes T, Flouri T, Nichols B, Quince C, Mahé F. VSEARCH: a versatile open source tool for metagenomics. PeerJ. 2016 Oct 18;4:e2584. doi: 10.7717/peerj.2584. eCollection 2016. PubMed PMID: 27781170; PubMed Central PMCID: PMC5075697.
+
 ## Software packaging/containerisation tools
 
 - [Anaconda](https://anaconda.com)

@@ -41,6 +41,7 @@ Steps:
      workflows use the "tube map" design for that. See https://nf-co.re/docs/community/brand/workflow-schematics#examples for examples.   -->
 <!-- TODO nf-core: Fill in short bullet-pointed list of the default steps in the pipeline -->
 
+0. _(Optional)_ Adapter trimming and internal-adapter (ligation chimera) read splitting on raw reads ([`Porechop`](https://github.com/rrwick/Porechop)), enabled with `--run_porechop`
 1. Filtering and trimming ([`NanoFilt`](https://github.com/wdecoster/nanofilt))
 2. Read QC ([`NanoPlot`](https://github.com/wdecoster/NanoPlot))
    - Ran on both raw and filtered and trimmed reads
@@ -51,11 +52,12 @@ Steps:
 5. Consensus sequence correction ([`Medaka`](https://github.com/nanoporetech/medaka))
    - Correction using the consensus sequence from aplicon_sorter as reference and the grouped amplicon reads as the basecalled data
 6. Create custom BLAST database ([`makeblastdb`](https://www.ncbi.nlm.nih.gov/books/NBK279690/))
-7. Consensus sequence annotation based on database ([`blastn`](https://www.ncbi.nlm.nih.gov/books/NBK279690/))
+7. _(Optional)_ Chimera detection on the polished consensus sequences before annotation, enabled with `--chimera_detection`. Either reference-based split-BLAST against the database (`--chimera_method blast`, default) or de novo detection with [`vsearch`](https://github.com/torognes/vsearch) `--uchime3_denovo` (`--chimera_method vsearch`)
+8. Consensus sequence annotation based on database ([`blastn`](https://www.ncbi.nlm.nih.gov/books/NBK279690/))
    - Annotation is based on the best blast hit per consensus. And best blast hit is based on:
      1. First on the bit score
      2. Second on the e-value
-8. Assign taxonomy to blast hits using taxonomizr ([`taxonomizr`](https://github.com/sherrillmix/taxonomizr)). Only works with NCBI accessions (GenBank and RefSeq). If an ASV has multiple hits with the same top bitscore, e-value, and percent identity, the lowest common taxonomic rank across all hits is assigned.
+9. Assign taxonomy to blast hits using taxonomizr ([`taxonomizr`](https://github.com/sherrillmix/taxonomizr)). Only works with NCBI accessions (GenBank and RefSeq). If an ASV has multiple hits with the same top bitscore, e-value, and percent identity, the lowest common taxonomic rank across all hits is assigned.
 
 <!-- 1. Read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))2. Present QC for raw reads ([`MultiQC`](http://multiqc.info/)) -->
 
@@ -161,6 +163,20 @@ The id of the metadata should match the id of the samplesheet (see [usage](#usag
 
 4. Primer-tag overlap. To calculate mismatches with the `--error-rate` option, cutadapt considers only the aligned region (overlap) between primer and read. The minimum length of this overlap is set by the `--overlap` option. For example, with an error rate of 0.2 (20%) and a 20 bp primer, if the required overlap is 10 bp and there are 3 mismatches in that region, the match is rejected because the mismatch rate is 3/10 = 30%, which is above the 20% threshold. But if the overlap is 20 bp and there are 3 mismatches, the match is accepted because the mismatch rate is 3/20 = 15%, which is below the 20% threshold. If your primers are very similar, it is often best to set `--overlap` to at least the length of the longest primer to avoid spurious matches.
 
+**Porechop options:**
+
+Porechop is an optional step run on the raw reads, before Nanofilt, to trim any residual sequencing adapters and to split reads that contain an adapter in the middle (ligation/split chimeras, i.e. two molecules joined end-to-end). It is disabled by default:
+
+```
+    // Porechop options
+    run_porechop                = false // Set to true (or pass --run_porechop) to enable
+```
+
+By default Porechop splits reads with an internal adapter into separate reads. To discard those reads entirely instead, add `ext.args = '--discard_middle'` to the `PORECHOP_PORECHOP` block in `conf/modules.config`.
+
+> [!NOTE]
+> This catches _ligation_ chimeras (detectable by an internal adapter). PCR chimeras — recombinant amplicons with no internal adapter — are handled separately by the chimera detection step (see **Chimera detection options** below).
+
 **Nanofilt options:**
 
 Nanofilt is run before demultiplexing and tag+primer trimming:
@@ -220,6 +236,31 @@ Check `./test_data/primers_f.fasta` and `./test_data/primers_r.fasta` for exampl
 For more details, check the appendix section of the [blast documentation](https://www.ncbi.nlm.nih.gov/books/NBK279690/).
 
 <!-- You should supply **either** the path to an already built database or a custom FASTA collection with sequences to built a custom one. If both are supplied the pipeline will fail. -->
+
+**Chimera detection options:**
+
+Chimera detection is an optional step run on the polished consensus sequences, before the final BLAST annotation. It removes putative PCR chimeras (recombinant amplicons formed from two different templates) so they are not annotated and counted as real taxa. It is disabled by default:
+
+```
+    // Chimera detection options
+    chimera_detection          = false // Set to true (or pass --chimera_detection) to enable
+    chimera_method             = 'blast' // 'blast' (reference-based) or 'vsearch' (de novo)
+```
+
+Two methods are available via `--chimera_method`:
+
+1. `blast` (default): reference-based. Each consensus is split into a 5′ and 3′ half and both halves are BLASTed against the reference database. Rather than requiring the two halves to hit the *exact* same accession (which over-calls chimeras, since databases hold many near-identical entries for one organism), the module collects the set of plausible reference subjects for each half (top hits passing the identity/coverage cut-offs and within a bitscore margin of that half's best hit). A sequence is flagged as chimeric only when the two halves share **no** reference in common. Requires a database (`--blast_db` or `--custom_db`, which the run already provides). Behaviour is controlled by:
+
+```
+    chimera_min_identity       = 90 // Minimum % identity for a half's hit to count
+    chimera_min_coverage       = 80 // Minimum % coverage of a half by its alignment
+    chimera_top_n              = 10 // Number of top reference hits to consider per half
+    chimera_bitscore_margin    = 10 // Keep hits within this % of a half's best bitscore when comparing halves
+```
+
+Loosen detection (fewer chimera calls) by raising `chimera_top_n`/`chimera_bitscore_margin`, which lets more references count as "shared" between halves.
+
+2. `vsearch`: de novo detection with [`vsearch`](https://github.com/torognes/vsearch) `--uchime3_denovo`. No reference is needed; instead it relies on abundance skew (a chimera is rarer than its two parent sequences). The per-ASV read counts from `amplicon_sorter` are automatically written onto the consensus headers as `;size=N` annotations so vsearch can use real abundances. The strictness of de novo detection can be tuned with `--uchime2_denovo`/`--uchime_denovo` or the `--abskew` option via `ext.args` in the `VSEARCH_UCHIMEDENOVO` block of `conf/modules.config`.
 
 **Assign taxonomy options:**
 
@@ -292,6 +333,24 @@ The files listed below will be created in the results directory (set by `--outdi
   - `multiqc_report.html`: a standalone HTML file that can be viewed in your web browser.
   - `multiqc_data/`: directory containing parsed statistics from the different tools used in the pipeline.
   - `multiqc_plots/`: directory containing static images from the report in various formats.
+
+</details>
+
+### Chimera detection
+
+When chimera detection is enabled (`--chimera_detection`), the outputs of the selected method are written to the `chimera_detection/` folder. The non-chimeric sequences are what continue on to BLAST annotation.
+
+<details markdown="1">
+<summary>Output files</summary>
+
+- `chimera_detection/`
+  - `blast` method (`--chimera_method blast`):
+    - `<fastq_id>.nonchimeric.fasta`: Consensus sequences retained after removing putative chimeras.
+    - `<fastq_id>.chimeras.tsv`: Per-sequence report (`seq_id`, `h5_subjects`, `h3_subjects`, `shared_subjects`, `chimeric`) showing the plausible reference set for each half, any shared references, and the chimera call.
+  - `vsearch` method (`--chimera_method vsearch`):
+    - `<fastq_id>.nonchimeras.fasta`: Consensus sequences retained after removing putative chimeras.
+    - `<fastq_id>.chimeras.fasta`: Sequences flagged as chimeric.
+    - `<fastq_id>.uchime.txt`: vsearch UCHIME report.
 
 </details>
 
