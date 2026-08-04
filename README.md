@@ -49,7 +49,7 @@ Steps:
    2. Then, demultiplexing based on matching reverse tags-primers (combination of forward and reverse tags-primers)
 4. Group amplicons reads into "species" (consensus sequences) ([`amplicon_sorter`](https://github.com/avierstr/amplicon_sorter))
 5. Consensus sequence correction ([`Medaka`](https://github.com/nanoporetech/medaka))
-   - Correction using the consensus sequence from aplicon_sorter as reference and the grouped amplicon reads as the basecalled data
+   - Correction using the consensus sequence from amplicon_sorter as reference and the grouped amplicon reads as the basecalled data
 6. Create custom BLAST database ([`makeblastdb`](https://www.ncbi.nlm.nih.gov/books/NBK279690/))
 7. Consensus sequence annotation based on database ([`blastn`](https://www.ncbi.nlm.nih.gov/books/NBK279690/))
    - Annotation is based on the best blast hit per consensus. And best blast hit is based on:
@@ -84,7 +84,7 @@ The running time should be around 8 minutes on a machine with 12 cpus/threads.
      Explain what rows and columns represent. For instance (please edit as appropriate):
 -->
 
-For running the pipleine on your data, prepare a samplesheet with your input FASTQs that looks as follows:
+For running the pipeline on your data, prepare a samplesheet with your input FASTQs that looks as follows:
 
 ```csv
 id,fastq
@@ -124,7 +124,7 @@ You can optionally provide a metadata file in CSV format with the primer-tag com
     metadata                   = path/to/metadata.csv
 ```
 
-The strucutre of the CSV should be as follows:
+The structure of the CSV should be as follows:
 
 ```
 id,primer_comb,sample
@@ -153,7 +153,7 @@ The id of the metadata should match the id of the samplesheet (see [usage](#usag
     tags_r                      = 'path/to/reverse/primer-tag.fasta' // List of forward primer-tag combinations in fasta format
 ```
 
-3. Set the error rate for adapter removal. This can be a value between 0 and 1 (1 not included) if a maximum error rate wants to be applied to all adapters, or it can be equal or greater than 1, in which case it will be converted to a maximum error rate depending on the adapter length. Check [cutadatpt documentation](https://cutadapt.readthedocs.io/en/stable/guide.html) for more information:
+3. Set the error rate for adapter removal. This can be a value between 0 and 1 (1 not included) if a maximum error rate wants to be applied to all adapters, or it can be equal or greater than 1, in which case it will be converted to a maximum error rate depending on the adapter length. Check [cutadapt documentation](https://cutadapt.readthedocs.io/en/stable/guide.html) for more information:
 
 ```
     error_rate                  = 2 // Error rate for adapter removal
@@ -171,11 +171,11 @@ The id of the metadata should match the id of the samplesheet (see [usage](#usag
 
 ```
     // Nanofilt options
-    nano_quality                = null // Minimun read quality (phred score)
+    nano_quality                = null // Minimum read quality (phred score)
     nano_read_length            = 250 // Minimum reads length
 ```
 
-2. Filter FASTQs with a mumber of reads equal or lower than (changing this value is not recommended):
+2. Filter FASTQs with a number of reads equal or lower than (changing this value is not recommended):
 
 ```
     filt_fastq                  = 0
@@ -197,7 +197,7 @@ Check `./test_data/primers_f.fasta` and `./test_data/primers_r.fasta` for exampl
     custom_db                  = 'path/to/local/database.fasta' // Path to database to be built
 ```
 
-3. The E value describes the number of one can “expect” to see by chance when searching a database of a particular size. The lower the value, the more significant a match is:
+3. The E value describes the number of hits one can “expect” to see by chance when searching a database of a particular size. The lower the value, the more significant a match is:
 
 ```
     evalue                     = 0.001 // evalue cutoff
@@ -273,7 +273,7 @@ The files listed below will be created in the results directory (set by `--outdi
 
 #### Nanoplot
 
-[`NanoPlot`](https://github.com/wdecoster/NanoPlot) is a tool that outputs QC reports for raw, filtered -after nanofilt-, and demultiplexed reads. Nanoplot reports are store inside the nanoplot folder, and come in different formats.
+[`NanoPlot`](https://github.com/wdecoster/NanoPlot) is a tool that outputs QC reports for raw, filtered -after nanofilt-, and demultiplexed reads. Nanoplot reports are stored inside the nanoplot folder, and come in different formats.
 
 <details markdown="1">
 <summary>Output files</summary>
@@ -281,7 +281,7 @@ The files listed below will be created in the results directory (set by `--outdi
 - `nanoplot/`
   - `raw/<fastq_id>`: Folder that contains the raw reads quality report.
   - `filtered/<fastq_id>`: Folder contains the filtered -after nanofilt- reads quality report.
-  - `demultiplexed/<fastq_id>/<sample_id>`: Contains the duemultiplexed reads quality report.
+  - `demultiplexed/<fastq_id>/<sample_id>`: Contains the demultiplexed reads quality report.
 
 </details>
 
@@ -318,7 +318,7 @@ The final output is `ASV_table_final.csv`, one row per ASV, with the following c
 - `bitscore`: Bit score — the higher, the better the alignment. Independent of database size.
 - `taxaId`: NCBI taxonomy ID of the matched sequence.
 - `phylum`, `class`, `order`, `family`, `genus`, `species`: Full taxonomic lineage of the matched sequence.
-- `Resolved.taxon`: Final consensus taxon assigned to the ASV. A trailing `*` indicates that one or more BLAST hits for the same ASV had no taxonomy in the database and were excluded from the LCR resolution. This ASV can be classified as `Unasigned` instead for a more conservative approach.
+- `Resolved.taxon`: Final consensus taxon assigned to the ASV. A trailing `*` indicates that one or more BLAST hits for the same ASV had no taxonomy in the database and were excluded from the LCR resolution. This ASV can be classified as `Unassigned` instead for a more conservative approach.
 
 `ASV_table_pre-assigned.csv` contains the per-hit taxonomy assignments before LCR consensus resolution — one row per BLAST hit rather than one row per ASV.
 
