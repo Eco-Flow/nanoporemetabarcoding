@@ -127,7 +127,7 @@ You can optionally provide a metadata file in CSV format with the primer-tag com
 The structure of the CSV should be as follows:
 
 ```
-id,tag-primer_comb,sample
+id,tag_primer,sample
 fastq_id_1,<forward-primer-tag-id>_<forward-primer-tag-id>,sample1
 fastq_id_2,<forward-primer-tag-id>_<forward-primer-tag-id>,sample2
 ...
@@ -136,7 +136,7 @@ fastq_id_2,<forward-primer-tag-id>_<forward-primer-tag-id>,sample2
 > [!NOTE]
 > If <forward-primer-tag-id> and/or <forward-primer-tag-id> in the metadata samplesheet don't match the ids in the primer-tag FASTA files, demultiplexing won't work. Make sure they have the exact same name.
 
-The id of the metadata should match the id of the samplesheet (see [usage](#usage)), and values for the `tag-primer_comb` and `sample` fields should be unique within id groups. See `./test_data/metadata.csv` for an example. If set to `null` (value by default), the pipeline will use the primer-tag combination as the sample ID in the final ASV table.
+The id of the metadata should match the id of the samplesheet (see [usage](#usage)), and values for the `tag_primer` and `sample` fields should be unique within id groups. See `./test_data/metadata.csv` for an example. If set to `null` (value by default), the pipeline will use the primer-tag combination as the sample ID in the final ASV table.
 
 **Demultiplex options:**
 
