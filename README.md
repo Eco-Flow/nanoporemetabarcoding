@@ -144,13 +144,13 @@ The id of the metadata should match the id of the samplesheet (see [usage](#usag
 
 ```
     // Cutadapt options
-    tags_f                      = 'path/to/forward/primer-tag.fasta' // List of forward primer-tag combinations in fasta format
+    tag_primers_f                      = 'path/to/forward/primer-tag.fasta' // List of forward primer-tag combinations in fasta format
 ```
 
 2. List of reverse primer-tag combinations in FASTA format:
 
 ```
-    tags_r                      = 'path/to/reverse/primer-tag.fasta' // List of forward primer-tag combinations in fasta format
+    tag_primers_r                      = 'path/to/reverse/primer-tag.fasta' // List of forward primer-tag combinations in fasta format
 ```
 
 3. Set the error rate for adapter removal. This can be a value between 0 and 1 (1 not included) if a maximum error rate wants to be applied to all adapters, or it can be equal or greater than 1, in which case it will be converted to a maximum error rate depending on the adapter length. Check [cutadapt documentation](https://cutadapt.readthedocs.io/en/stable/guide.html) for more information:
@@ -171,17 +171,17 @@ The id of the metadata should match the id of the samplesheet (see [usage](#usag
 
 ```
     // Nanofilt options
-    nano_quality                = null // Minimum read quality (phred score)
-    nano_read_length            = 250 // Minimum reads length
+    min_read_quality                = null // Minimum read quality (phred score)
+    min_read_length            = 250 // Minimum reads length
 ```
 
 2. Filter FASTQs with a number of reads equal or lower than (changing this value is not recommended):
 
 ```
-    filt_fastq                  = 0
+    min_reads                  = 0
 ```
 
-Check `./test_data/primers_f.fasta` and `./test_data/primers_r.fasta` for examples of `tags_f` and `tags_r` files, respectively.
+Check `./test_data/primers_f.fasta` and `./test_data/primers_r.fasta` for examples of `tag_primers_f` and `tag_primers_r` files, respectively.
 
 **Blast options:**
 
@@ -231,10 +231,10 @@ For more details, check the appendix section of the [blast documentation](https:
 
 ```
     // Assign taxonomy options
-    spident                     = null // Identity threshold (in %) for taxonomy assignment at species level. If not set, the value by default will be 99. Set to > 100 if not wanting to assign species
-    gpident                     = null // Identity threshold (in %) for taxonomy assignment at genus level. If not set, the value by default will be 90
-    fpident                     = null // Identity threshold (in %) for taxonomy assignment at family level. If not set, the value by default will be 80
-    opident                     = null // Identity threshold (in %) for taxonomy assignment at order level. If not set, the value by default will be 70
+    min_pident_species                     = null // Identity threshold (in %) for taxonomy assignment at species level. If not set, the value by default will be 99. Set to > 100 if not wanting to assign species
+    min_pident_genus                     = null // Identity threshold (in %) for taxonomy assignment at genus level. If not set, the value by default will be 90
+    min_pident_family                     = null // Identity threshold (in %) for taxonomy assignment at family level. If not set, the value by default will be 80
+    min_pident_order                     = null // Identity threshold (in %) for taxonomy assignment at order level. If not set, the value by default will be 70
 ```
 
 2. Path to `taxonomizr` SQL database:
@@ -252,10 +252,10 @@ nextflow run main.nf \
    -profile <docker/singularity/.../institute> \
    --input samplesheet.csv \
    --outdir <OUTDIR>
-   --nano_quality 10
+   --min_read_quality 10
    --evalue 1e-10
-   --tags_f path/to/forward/tags+primers.fasta
-   --tags_r path/to/reverse/tags+primers.fasta
+   --tag_primers_f path/to/forward/tags+primers.fasta
+   --tag_primers_r path/to/reverse/tags+primers.fasta
    ...
 ```
 

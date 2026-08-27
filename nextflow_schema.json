@@ -232,13 +232,13 @@
             "description": "Path to metadata file with the sample and primer-tags combnations",
             "pattern": "\\.csv$"
         },
-        "tags_f": {
+        "tag_primers_f": {
             "type": "string",
             "description": "Path to forward primer-tags in FASTA format",
             "pattern": "\\.fn?a(sta)?(\\.gz)?$",
             "default": "./test_data/primers_f.fasta"
         },
-        "tags_r": {
+        "tag_primers_r": {
             "type": "string",
             "description": "Path to reverse primer-tags in FASTA format",
             "pattern": "\\.fn?a(sta)?(\\.gz)?$",
@@ -256,7 +256,7 @@
         "no_indels": {
             "type": "boolean"
         },
-        "filt_fastq": {
+        "min_reads": {
             "type": "integer",
             "default": 0
         },
@@ -287,33 +287,33 @@
             "type": "integer",
             "default": 90
         },
-        "nano_quality": {
+        "min_read_quality": {
             "type": "integer"
         },
-        "nano_read_length": {
+        "min_read_length": {
             "type": "integer",
             "default": 250
         },
         "skip_nanoplot": {
             "type": "boolean"
         },
-        "spident": {
+        "min_pident_species": {
             "type": "string"
         },
-        "gpident": {
+        "min_pident_genus": {
             "type": "string"
         },
-        "fpident": {
+        "min_pident_family": {
             "type": "string"
         },
-        "opident": {
+        "min_pident_order": {
             "type": "string"
         },
         "sql_db": {
             "type": "string",
             "default": "s3://nanopore-metabarcoding/nameNode.sqlite"
         },
-        "tax_list": {
+        "tax_levels": {
             "type": "string",
             "default": "phylum,class,order",
             "description": "Comma-separated list of taxonomic levels to include in proportion plots (e.g. phylum,class,order)"
