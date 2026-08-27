@@ -109,11 +109,11 @@ workflow NANOPOREMETABARCODING {
        ch_input_f
     )
 
-    // Filter out FASTQs with less than 10 reads
+    // Filter out FASTQs with less than min_reads reads
     ch_input_filtered = flattenAndMap(CUTADAPT_R.out.reads)
                       | filter { meta, fastq ->
                            def count = fastq.countFastq()
-                           count >= params.min_reads && !meta.id.contains('unknown') // Filter out FASTQs with less than x reads and with unknown primer combinations
+                           count > params.min_reads && !meta.id.contains('unknown')
                       }
 
 
