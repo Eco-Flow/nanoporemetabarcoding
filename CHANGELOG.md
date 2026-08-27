@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Changed`
 
+- Metadata CSV column `primer_comb` renamed to `tag_primer` to better reflect that values encode the tag+primer combination in sequencing order
 - Local modules (`AMPLICON_SORTER`, `ASSIGN_TAXONOMY`, `PLOT_TAXONOMY`, `COMMUNITY_MATRIX`) migrated to nf-core module structure with `environment.yml`, `meta.yml`, and test stubs
 - `AMPLICON_SORTER` and `MEDAKA` intermediate outputs disabled from `publishDir` by default to reduce storage usage
 - `FIND_CONCATENATE` intermediate outputs disabled from `publishDir` by default

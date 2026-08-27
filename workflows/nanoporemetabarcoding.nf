@@ -64,7 +64,7 @@ workflow NANOPOREMETABARCODING {
     // Prepare metadata channel
     ch_metadata = params.metadata ? channel.fromPath(params.metadata, checkIfExists: true)
                 | splitCsv(header: true)
-                | map { row -> [row.id, row.primer_comb, row.sample] }
+                | map { row -> [row.id, row.tag_primer, row.sample] }
                 | validateMetadata // Validate metadata so that there are no duplicated values, prob should also check whether fastqs in samplesheet and metadata match
                 | map { fastq, primer_comb, sample -> [[id:primer_comb, single_end:true, old_id:fastq], sample] }
                 : null // null if no metadata is provided
@@ -113,7 +113,7 @@ workflow NANOPOREMETABARCODING {
     ch_input_filtered = flattenAndMap(CUTADAPT_R.out.reads)
                       | filter { meta, fastq ->
                            def count = fastq.countFastq()
-                           count > params.filt_fastq && !meta.id.contains('unknown') // Filter out FASTQs with less than x reads and with unknown primer combinations
+                           count >= params.min_reads && !meta.id.contains('unknown') // Filter out FASTQs with less than x reads and with unknown primer combinations
                       }
 
 

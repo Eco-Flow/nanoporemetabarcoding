@@ -185,7 +185,7 @@ def validateMetadata(metadata) {
                                     def duplicates_primer_comb = primer_comb.countBy { it }.findAll { key, count -> count > 1 }.keySet() // This will check for duplicated values
                                     def duplicates_sample = sample.countBy { it }.findAll { key, count -> count > 1 }.keySet()
                                     if (!duplicates_primer_comb.isEmpty()) {
-                                        error("<primer_comb> column in metadata contains repeated values for ${fastq}: ${duplicates_primer_comb.join(', ')}")
+                                        error("<tag_primer> column in metadata contains repeated values for ${fastq}: ${duplicates_primer_comb.join(', ')}")
                                     } else if (!duplicates_sample.isEmpty()) {
                                          error("<sample> column in metadata contains repeated values for ${fastq}: ${duplicates_sample.join(', ')}")
                                     } else {
