@@ -109,26 +109,23 @@ workflow NANOPOREMETABARCODING {
        ch_input_f
     )
 
-    // Branch demultiplexed FASTQs: empty (0 reads, blank controls) vs pass (> min_reads)
-    ch_input_branched = flattenAndMap(CUTADAPT_R.out.reads)
-                      | filter { meta, _fastq -> !meta.id.contains('unknown') }
-                      | map { meta, fastq ->
-                            def count = fastq.countFastq()
-                            [meta, fastq, count]
-                        }
-                      | branch { _meta, _fastq, count ->
-                            empty: count == 0
-                            pass:  count > params.min_reads
-                        }
+    // Filter out FASTQs with less than min_reads reads and unknown primer combinations
+    ch_input_filtered = flattenAndMap(CUTADAPT_R.out.reads)
+                      | filter { meta, fastq ->
+                           def count = fastq.countFastq()
+                           count > params.min_reads && !meta.id.contains('unknown')
+                      }
 
-    ch_input_filtered = ch_input_branched.pass.map { meta, fastq, _count -> [meta, fastq] }
-
-    // Collect 0-read samples per barcode so they appear as blank-control rows in the final ASV table
+    // Find metadata entries absent from ch_input_filtered (never demultiplexed or below min_reads)
+    // so they appear as blank-control rows in the final ASV table
     ch_empty_per_barcode = ch_metadata
-                         ? ch_input_branched.empty
-                           | map { meta, fastq, _count -> [meta, fastq] }
-                           | join(ch_metadata)
-                           | map { meta, _fastq, sample ->
+                         ? ch_metadata
+                           | join(
+                               ch_input_filtered.map { meta, _fastq -> [meta, true] },
+                               remainder: true
+                             )
+                           | filter { _meta, _sample, passed -> passed == null }
+                           | map { meta, sample, _passed ->
                                    ["${meta.old_id}_empty_samples.txt", "${meta.old_id}_${sample}\n"]
                              }
                            | collectFile { filename, content -> [filename, content] }
