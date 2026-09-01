@@ -10,7 +10,7 @@ process ASSIGN_TAXONOMY {
     //    'quay.io/biocontainers/r-argparse:1.0.1--py36r3.3.2_0' }"
 
     input:
-    tuple val(meta), path(blast_hits)
+    tuple val(meta), path(blast_hits), path(empty_samples)
     tuple val(meta2), path(read_counts)
     path(sql_db)
 
@@ -30,12 +30,14 @@ process ASSIGN_TAXONOMY {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
+    def empty_arg = (empty_samples.name != 'NO_FILE') ? "--empty_samples ${empty_samples}" : ''
 
     """
     Rscript ${projectDir}/bin/assign_taxonomy.R \\
     $blast_hits \\
     $read_counts \\
     --sql_db $sql_db \\
+    $empty_arg \\
     $args
 
     """

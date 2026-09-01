@@ -109,17 +109,34 @@ workflow NANOPOREMETABARCODING {
        ch_input_f
     )
 
-    // Filter out FASTQs with less than min_reads reads
-    ch_input_filtered = flattenAndMap(CUTADAPT_R.out.reads)
-                      | filter { meta, fastq ->
-                      //     def count = fastq.countFastq()
-                         count > params.min_reads && !meta.id.contains('unknown')
-                      }
-                      //| branch {
-                      //    empty: { meta, fastq -> fastq.countFastq() <= params.min_reads }
-                      //    unknown: { meta, fastq -> meta.id.contains('unknown') }
-                      //    filtered: { meta, fastq -> fastq.countFastq() > params.min_reads && !meta.id.contains('unknown') }
-                      //}
+    // Branch demultiplexed FASTQs: empty (0 reads, blank controls) vs pass (> min_reads)
+    ch_input_branched = flattenAndMap(CUTADAPT_R.out.reads)
+                      | filter { meta, _fastq -> !meta.id.contains('unknown') }
+                      | map { meta, fastq ->
+                            def count = fastq.countFastq()
+                            [meta, fastq, count]
+                        }
+                      | branch { _meta, _fastq, count ->
+                            empty: count == 0
+                            pass:  count > params.min_reads
+                        }
+
+    ch_input_filtered = ch_input_branched.pass.map { meta, fastq, _count -> [meta, fastq] }
+
+    // Collect 0-read samples per barcode so they appear as blank-control rows in the final ASV table
+    ch_empty_per_barcode = ch_metadata
+                         ? ch_input_branched.empty
+                           | map { meta, fastq, _count -> [meta, fastq] }
+                           | join(ch_metadata)
+                           | map { meta, _fastq, sample ->
+                                   ["${meta.old_id}_empty_samples.txt", "${meta.old_id}_${sample}\n"]
+                             }
+                           | collectFile { filename, content -> [filename, content] }
+                           | map { file ->
+                                   def old_id = file.name.replaceAll('_empty_samples\\.txt$', '')
+                                   [[id: old_id], file]
+                             }
+                         : channel.empty()
 
 
     // Prepare data for Nanoplot and amplicon_sorter
@@ -386,8 +403,13 @@ workflow NANOPOREMETABARCODING {
     //
     ch_sql_db = channel.fromPath(params.sql_db)
 
+    // Pair each barcode's blast output with its 0-read samples file ([] when none exist)
+    ch_blast_with_empty = ch_assign_taxonomy.blast
+                        | join(ch_empty_per_barcode, remainder: true)
+                        | map { meta, blast, empty -> [meta, blast, empty ?: []] }
+
     ASSIGN_TAXONOMY(
-        ch_assign_taxonomy.blast,
+        ch_blast_with_empty,
         ch_assign_taxonomy.csv,
         ch_sql_db.first()
     )
