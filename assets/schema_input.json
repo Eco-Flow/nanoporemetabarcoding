@@ -7,13 +7,13 @@
     "items": {
         "type": "object",
         "properties": {
-            "sample": {
+            "id": {
                 "type": "string",
-                "pattern": "^\\S+$",
-                "errorMessage": "Sample name must be provided and cannot contain spaces",
+                "pattern": "^[^\\s_]+$",
+                "errorMessage": "Sample name must be provided and cannot contain spaces or underscores",
                 "meta": ["id"]
             },
-            "fastq_1": {
+            "fastq": {
                 "type": "string",
                 "format": "file-path",
                 "exists": true,
@@ -28,6 +28,6 @@
                 "errorMessage": "FastQ file for reads 2 cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'"
             }
         },
-        "required": ["sample", "fastq_1"]
+        "required": ["id", "fastq"]
     }
 }

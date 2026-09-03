@@ -1,0 +1,19 @@
+Changes in component 'nf-core/medaka'
+'modules/nf-core/medaka/environment.yml' is unchanged
+'modules/nf-core/medaka/meta.yml' is unchanged
+Changes in 'medaka/main.nf':
+--- modules/nf-core/medaka/main.nf
++++ modules/nf-core/medaka/main.nf
+@@ -28,7 +28,7 @@
+         -d $assembly \\
+         -o ./
+ 
+-    mv consensus.fasta ${prefix}.fa
++    mv \$(find . -name "consensus.fasta") ${prefix}.fa
+ 
+     gzip -n ${prefix}.fa
+ 
+
+'modules/nf-core/medaka/tests/main.nf.test.snap' is unchanged
+'modules/nf-core/medaka/tests/main.nf.test' is unchanged
+************************************************************

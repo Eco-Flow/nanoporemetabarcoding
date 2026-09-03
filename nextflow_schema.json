@@ -49,12 +49,6 @@
             "fa_icon": "fas fa-dna",
             "description": "Reference genome related files and options required for the workflow.",
             "properties": {
-                "genome": {
-                    "type": "string",
-                    "description": "Name of iGenomes reference.",
-                    "fa_icon": "fas fa-book",
-                    "help_text": "If using a reference genome configured in the pipeline using iGenomes, use this parameter to give the ID for the reference. This is then used to build the full paths for all required reference genome files e.g. `--genome GRCh38`. \n\nSee the [nf-core website docs](https://nf-co.re/usage/reference_genomes) for more details."
-                },
                 "fasta": {
                     "type": "string",
                     "format": "file-path",
@@ -64,20 +58,6 @@
                     "description": "Path to FASTA genome file.",
                     "help_text": "This parameter is *mandatory* if `--genome` is not specified. If you don't have a BWA index available this will be generated for you automatically. Combine with `--save_reference` to save BWA index for future runs.",
                     "fa_icon": "far fa-file-code"
-                },
-                "igenomes_ignore": {
-                    "type": "boolean",
-                    "description": "Do not load the iGenomes reference config.",
-                    "fa_icon": "fas fa-ban",
-                    "hidden": true,
-                    "help_text": "Do not load `igenomes.config` when running the pipeline. You may choose this option if you observe clashes between custom parameters and those supplied in `igenomes.config`."
-                },
-                "igenomes_base": {
-                    "type": "string",
-                    "description": "The base path to the igenomes reference files",
-                    "fa_icon": "fas fa-ban",
-                    "hidden": true,
-                    "default": "s3://ngi-igenomes/igenomes/"
                 }
             }
         },
@@ -245,5 +225,103 @@
         {
             "$ref": "#/$defs/generic_options"
         }
-    ]
+    ],
+    "properties": {
+        "metadata": {
+            "type": "string",
+            "description": "Path to metadata file with the sample and primer-tags combnations",
+            "pattern": "\\.csv$"
+        },
+        "tag_primers_f": {
+            "type": "string",
+            "description": "Path to forward primer-tags in FASTA format",
+            "pattern": "\\.fn?a(sta)?(\\.gz)?$",
+            "default": "./test_data/primers_f.fasta"
+        },
+        "tag_primers_r": {
+            "type": "string",
+            "description": "Path to reverse primer-tags in FASTA format",
+            "pattern": "\\.fn?a(sta)?(\\.gz)?$",
+            "default": "./test_data/primers_r.fasta"
+        },
+        "error_rate": {
+            "type": "number",
+            "default": 2.0,
+            "description": "Error rate for cutadapt"
+        },
+        "overlap": {
+            "type": "integer",
+            "description": "primer-tag overlap for cutadapt"
+        },
+        "no_indels": {
+            "type": "boolean"
+        },
+        "min_reads": {
+            "type": "integer",
+            "default": 0
+        },
+        "blast_db": {
+            "type": "string",
+            "description": "Path to BLAST database"
+        },
+        "custom_db": {
+            "type": "string"
+        },
+        "outfmt": {
+            "type": "integer",
+            "default": 6,
+            "description": "Output format for BLAST output"
+        },
+        "evalue": {
+            "type": "number",
+            "default": 0.001
+        },
+        "max_target_seqs": {
+            "type": "integer",
+            "default": 5
+        },
+        "max_hsps": {
+            "type": "string"
+        },
+        "qcov_hsp_perc": {
+            "type": "integer",
+            "default": 90
+        },
+        "min_read_quality": {
+            "type": "integer"
+        },
+        "min_read_length": {
+            "type": "integer",
+            "default": 250
+        },
+        "skip_nanoplot": {
+            "type": "boolean"
+        },
+        "min_pident_species": {
+            "type": "string"
+        },
+        "min_pident_genus": {
+            "type": "string"
+        },
+        "min_pident_family": {
+            "type": "string"
+        },
+        "min_pident_order": {
+            "type": "string"
+        },
+        "sql_db": {
+            "type": "string",
+            "default": "s3://nanopore-metabarcoding/nameNode.sqlite"
+        },
+        "tax_levels": {
+            "type": "string",
+            "default": "phylum,class,order",
+            "description": "Comma-separated list of taxonomic levels to include in proportion plots (e.g. phylum,class,order)"
+        },
+        "community_tax": {
+            "type": "string",
+            "default": "species",
+            "description": "Taxonomic level used to aggregate reads when building the community matrix (e.g. species, genus, family)"
+        }
+    }
 }
