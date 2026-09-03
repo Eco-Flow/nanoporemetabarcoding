@@ -116,24 +116,6 @@ workflow NANOPOREMETABARCODING {
                            count > params.min_reads && !meta.id.contains('unknown')
                       }
 
-    // Find metadata entries absent from ch_input_filtered (never demultiplexed or below min_reads)
-    // so they appear as blank-control rows in the final ASV table
-    ch_empty_per_barcode = ch_metadata
-                         ? ch_metadata
-                           | join(
-                               ch_input_filtered.map { meta, _fastq -> [meta, true] },
-                               remainder: true
-                             )
-                           | filter { _meta, _sample, passed -> passed == null }
-                           | map { meta, sample, _passed ->
-                                   ["${meta.old_id}_empty_samples.txt", "${meta.old_id}_${sample}\n"]
-                             }
-                           | collectFile { filename, content -> [filename, content] }
-                           | map { file ->
-                                   def old_id = file.name.replaceAll('_empty_samples\\.txt$', '')
-                                   [[id: old_id], file]
-                             }
-                         : channel.empty()
 
 
     // Prepare data for Nanoplot and amplicon_sorter
@@ -398,17 +380,14 @@ workflow NANOPOREMETABARCODING {
     //
     // MODULE: Run assign taxonomy
     //
-    ch_sql_db = channel.fromPath(params.sql_db)
-
-    // Pair each barcode's blast output with its 0-read samples file ([] when none exist)
-    ch_blast_with_empty = ch_assign_taxonomy.blast
-                        | join(ch_empty_per_barcode, remainder: true)
-                        | map { meta, blast, empty -> [meta, blast, empty ?: []] }
+    ch_sql_db      = channel.fromPath(params.sql_db)
+    ch_meta_file   = params.metadata ? channel.fromPath(params.metadata) : channel.value([])
 
     ASSIGN_TAXONOMY(
-        ch_blast_with_empty,
+        ch_assign_taxonomy.blast,
         ch_assign_taxonomy.csv,
-        ch_sql_db.first()
+        ch_sql_db.first(),
+        ch_meta_file.first()
     )
 
     //
