@@ -20,9 +20,11 @@ include { GUNZIP                               } from '../modules/nf-core/gunzip
 include { GUNZIP as GUNZIP_SEQKIT_GREP_A       } from '../modules/nf-core/gunzip/main'
 include { GUNZIP as GUNZIP_SEQKIT_GREP_C       } from '../modules/nf-core/gunzip/main'
 include { MEDAKA                               } from '../modules/nf-core/medaka/main'
-include { FIND_CONCATENATE as FIND_CONCATENATE } from '../modules/nf-core/find/concatenate/main'
+include { FIND_CONCATENATE as FIND_CONCATENATE     } from '../modules/nf-core/find/concatenate/main'
+include { FIND_CONCATENATE as FIND_CONCATENATE_ALL } from '../modules/nf-core/find/concatenate/main'
+include { MAFFT_ALIGN                              } from '../modules/nf-core/mafft/align/main'
 //include { DIAMOND_BLASTX                  } from '../modules/nf-core/diamond/blastx/main'
-include { BLAST_MAKEBLASTDB                    } from '../modules/nf-core/blast/makeblastdb/main'
+include { BLAST_MAKEBLASTDB                        } from '../modules/nf-core/blast/makeblastdb/main'
 include { BLAST_BLASTN                         } from '../modules/nf-core/blast/blastn/main'
 include { SEQKIT_REPLACE                       } from '../modules/nf-core/seqkit/replace/main'
 include { ASSIGN_TAXONOMY                      } from '../modules/local/assigntaxonomy/main'
@@ -332,6 +334,25 @@ workflow NANOPOREMETABARCODING {
     )
 
     ch_corrected_concat = FIND_CONCATENATE.out.file_out
+
+    // Concatenate all consensus sequences across all samples for cross-sample MOTU clustering
+    ch_all_corrected = MEDAKA.out.assembly
+                     | map { meta, fasta -> [[id: 'all_asvs'], fasta] }
+                     | groupTuple()
+
+    FIND_CONCATENATE_ALL (
+        ch_all_corrected
+    )
+
+    MAFFT_ALIGN (
+        FIND_CONCATENATE_ALL.out.file_out,
+        [[], []],
+        [[], []],
+        [[], []],
+        [[], []],
+        [[], []],
+        false
+    )
 
     //
     // MODULE: Run makeblastdb
