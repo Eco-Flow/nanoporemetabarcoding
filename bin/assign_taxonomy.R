@@ -18,6 +18,8 @@ parser$add_argument('--spident', type = 'numeric', help = 'Identity threshold (i
 parser$add_argument('--gpident', type = 'numeric', help = 'Identity threshold (in %) for taxonomy assignment at genus level', default = 90)
 parser$add_argument('--fpident', type = 'numeric', help = 'Identity threshold (in %) for taxonomy assignment at family level', default = 80)
 parser$add_argument('--opident', type = 'numeric', help = 'Identity threshold (in %) for taxonomy assignment at oder level', default = 70)
+parser$add_argument('--metadata', type = 'character', help = 'Metadata CSV (id, tag_primer, sample) used to detect absent samples and add them as blank-control rows', default = NULL)
+parser$add_argument('--barcode',  type = 'character', help = 'Barcode ID (id column) to filter the metadata to the current run', default = NULL)
 
 
 args <- parser$parse_args()
@@ -132,6 +134,38 @@ ASV.ids <- sseqids %>%
 # Merge reads counts bease on the ASV column
 ASV.ids.read_counts <- merge(ASV.ids, read_counts, by = "ASV", all.x = TRUE) %>%
                         relocate(read_count, .before = 3)
+
+# Append blank-control rows for samples absent from the ASV table
+if (!is.null(args$metadata) && !is.null(args$barcode)) {
+    meta_df      <- read.csv(args$metadata, header = TRUE)
+    barcode_meta <- meta_df[meta_df$id == args$barcode, ]
+    expected     <- paste0(barcode_meta$id, "_", barcode_meta$sample)
+    present      <- unique(na.omit(ASV.ids.read_counts$sample_name))
+    missing      <- setdiff(expected, present)
+    if (length(missing) > 0) {
+        empty_rows <- data.frame(
+            ASV            = NA_character_,
+            barcode        = args$barcode,
+            read_count     = 0L,
+            sample_name    = missing,
+            pident         = NA_real_,
+            length         = NA_real_,
+            mismatch       = NA_real_,
+            evalue         = NA_real_,
+            bitscore       = NA_real_,
+            phylum         = NA_character_,
+            class          = NA_character_,
+            order          = NA_character_,
+            family         = NA_character_,
+            genus          = NA_character_,
+            species        = NA_character_,
+            Resolved.taxon = NA_character_,
+            taxaId         = NA_character_,
+            stringsAsFactors = FALSE
+        )
+        ASV.ids.read_counts <- bind_rows(ASV.ids.read_counts, empty_rows)
+    }
+}
 
 # Write the final ASV table with assigned taxonomy and read counts to a CSV file
 write.csv(ASV.ids.read_counts, "ASV_table_final.csv", row.names = FALSE)

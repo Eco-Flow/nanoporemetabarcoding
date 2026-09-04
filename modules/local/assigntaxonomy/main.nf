@@ -13,6 +13,7 @@ process ASSIGN_TAXONOMY {
     tuple val(meta), path(blast_hits)
     tuple val(meta2), path(read_counts)
     path(sql_db)
+    path(metadata)
 
     output:
     tuple val(meta), path("*.csv")                  , emit: tax_csvs
@@ -30,12 +31,14 @@ process ASSIGN_TAXONOMY {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
+    def meta_arg = (metadata.name && metadata.name != 'NO_FILE') ? "--metadata ${metadata} --barcode ${meta.id}" : ''
 
     """
     Rscript ${projectDir}/bin/assign_taxonomy.R \\
     $blast_hits \\
     $read_counts \\
     --sql_db $sql_db \\
+    $meta_arg \\
     $args
 
     """

@@ -109,12 +109,13 @@ workflow NANOPOREMETABARCODING {
        ch_input_f
     )
 
-    // Filter out FASTQs with less than min_reads reads
+    // Filter out FASTQs with less than min_reads reads and unknown primer combinations
     ch_input_filtered = flattenAndMap(CUTADAPT_R.out.reads)
                       | filter { meta, fastq ->
                            def count = fastq.countFastq()
                            count > params.min_reads && !meta.id.contains('unknown')
                       }
+
 
 
     // Prepare data for Nanoplot and amplicon_sorter
@@ -228,10 +229,6 @@ workflow NANOPOREMETABARCODING {
                                 ([header] + rows).join("\n")
                       }
                       | collectFile(name: 'reads_per_step.csv', storeDir: "${params.outdir}/reads_per_step", newLine: true) // Save the reads per step table in the output directory under pipeline_info folder
-
-
-
-
 
 
     //
@@ -383,12 +380,14 @@ workflow NANOPOREMETABARCODING {
     //
     // MODULE: Run assign taxonomy
     //
-    ch_sql_db = channel.fromPath(params.sql_db)
+    ch_sql_db      = channel.fromPath(params.sql_db)
+    ch_meta_file   = params.metadata ? channel.fromPath(params.metadata) : channel.value([])
 
     ASSIGN_TAXONOMY(
         ch_assign_taxonomy.blast,
         ch_assign_taxonomy.csv,
-        ch_sql_db.first()
+        ch_sql_db.first(),
+        ch_meta_file.first()
     )
 
     //
