@@ -40,6 +40,11 @@
                         "git_sha": "0902eac3012baaf4f9ab6513c8c55acc9353c96c",
                         "installed_by": ["modules"]
                     },
+                    "mafft/align": {
+                        "branch": "master",
+                        "git_sha": "f0fc064c76250bf362d1900bbf8b62092f9f2a1b",
+                        "installed_by": ["modules"]
+                    },
                     "medaka": {
                         "branch": "master",
                         "git_sha": "36cd6ae607669767657ff5167dc6cc0508a5f349",
